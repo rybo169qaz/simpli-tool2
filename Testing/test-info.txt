@@ -1,0 +1,22 @@
+=====================================
+TEXT
+select -f cmdstr -k testjosephus
+
+./create_qr testjosephus.qr " select --known testjosephus "
+select -f qr -q testjosephus.qr
+
+
+=====================================
+AUDIO
+select -f cmdstr -k testcountingaudio
+
+./create_qr testcountingaudio.qr " select --known testcountingaudio "
+select -f qr -q testcountingaudio.qr
+
+=====================================
+VIDEO
+select -f cmdstr -k testsilentvideo
+
+./create_qr testsilentvideo.qr " select --known testsilentvideo "
+select -f qr -q testsilentvideo.qr
+=====================================

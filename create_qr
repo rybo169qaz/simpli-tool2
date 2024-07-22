@@ -1,0 +1,22 @@
+#!/bin/bash
+
+BASE_DIR='.'
+QR_TOOL='/usr/bin/qrencode'
+DEST_DIR="${BASE_DIR}/GenQR"
+border_size='5'
+pixel_size='8'
+
+opname="${DEST_DIR}/$1"
+data="$2"
+
+the_cwd=$(pwd)
+#printf "Invoked from dir\t: ${the_cwd}\n"
+
+mkdir ${DEST_DIR}
+
+printf "create_qr: filename=${opname} , border=${border_size} , pixel=${pixel_size} , data '${data}'\n"
+${QR_TOOL} -m ${border_size} -s ${pixel_size} -o ${opname} "${data}"
+#${QR_TOOL} -m ${border_size} -s ${pixel_size} -o ${opname} "${data}"
+printf "Note: Use the   'display'  command to show the generated png image.\n"
+
+

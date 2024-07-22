@@ -1,0 +1,5 @@
+Well-known name                : Text embedded in the QR code                  : How to invoke with the QR file                         
+============================== : ============================================= : ==================================================     
+testjosephus                   : select -w testjosephus                        : NONE                                                   
+testcountingaudio              : select -w testcountingaudio                   : NONE                                                   
+testsilentvideo                : select -w testsilentvideo                     : NONE                                                   

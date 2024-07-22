@@ -1,0 +1,19 @@
+#!/bin/bash
+
+BASE_DIR='pyplay'
+#BASE_DIR='MySimpleApp/pyplay'
+MEDIA_DIR="${BASE_DIR}/Media"
+
+pyinstaller -n pkgfile --onefile --log-level INFO \
+	--noconfirm \
+	--add-data="${MEDIA_DIR}/test-job.txt:Media/." \
+	--add-data="${MEDIA_DIR}/Proverbs_KJV.txt:Media/." \
+	--add-data="${MEDIA_DIR}/Life-Flavius-Josephus.txt:Media/." \
+	--add-data="${MEDIA_DIR}/spoken_1-20_seconds.m4a:Media/." \
+	--add-data="${MEDIA_DIR}/Hymn-372_Who-is-on.mp3:Media/." \
+	--add-data="${MEDIA_DIR}/test-video.mp4:Media/." \
+	--add-data="${MEDIA_DIR}/Nursing_moose_calf.mp4:Media/." \
+	--add-data="${MEDIA_DIR}/pot-on-wheel.mp4:Media/." \
+	--paths=${BASE_DIR} \
+	${BASE_DIR}/startplay.py
+
