@@ -5,7 +5,7 @@
 class InputParser:
     #initial_verbs = ['listw', 'listl', 'repl', 'help']
 
-    repl_verb_list = ['q', 'h', 'select', 'list']
+    repl_verb_list = ['q', 'h', 'select', 'list', 'add', 'delete']
     repl_resource_list = ['media', 'wdb', 'lfs']
 
     def __new__(cls):

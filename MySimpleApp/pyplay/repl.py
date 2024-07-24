@@ -1,6 +1,6 @@
 import os.path
 
-from utils import print_dict
+import utils
 from my_argparse import *
 from input_parse import InputParser
 import play_it
@@ -65,7 +65,8 @@ class Repl:
     def handle_media(self, verb, option_dict):
         fn = __name__ + ':' + 'handle_media'
         mod_mess(fn, f'Handling verb={verb}')
-        print_dict(option_dict)
+
+        utils.print_dict(option_dict, 'Provided options')
         well_known = option_dict.get('wellknown', None)
         uri = option_dict.get('uri', None)
 
@@ -83,17 +84,48 @@ class Repl:
             media_info = 'Media in local file system'
             media_info += verb_handling.list_all_media()
             mod_mess(__name__, media_info)
+
         else:
             exit_with_message(f'Unknown verb ({verb}', 96)
 
 
     def handle_wdb(self, verb, option_dict):
-        fn = __name__ + ':' + 'handle_db'
+        fn = __name__ + ':' + 'handle_wdb'
         mod_mess(fn, f'Handling verb={verb}')
-        print_dict(option_dict)
+        utils.print_dict(option_dict, 'Provided options')
 
         if verb == 'list':
-            mod_mess(__name__, WellKnownDB.list())
+            new_array = []
+            new_array.append('Well-known == Value')
+            new_array.append('===================')
+            the_list_obj = WellKnownDB.list()
+            for i in the_list_obj:
+                my_key, my_value = i
+                combi = f"{my_key} == {my_value}"
+                new_array.append(combi)
+
+            new_msg = utils.create_prefixed_list('\nList of well-known entries', 'End of list\n', '\t', '\n', new_array)
+            for x in new_msg:
+                print(f'{x}')
+
+        elif verb == 'add':
+            well_known = option_dict.get('wellknown', None)
+            uri = option_dict.get('uri', None)
+            is_success = WellKnownDB.add(well_known, uri)
+            if is_success:
+                print(f'Sucessfully added entry')
+            else:
+                print(f'Failedto add  entry')
+
+
+        elif verb == 'delete':
+            well_known = option_dict.get('wellknown', None)
+            is_success = WellKnownDB.delete(well_known)
+            if is_success:
+                print(f'Successfully deleted entry')
+            else:
+                print(f'Failed to delete entry')
+
         else:
             exit_with_message(f'Unknown verb ({verb}', 96)
 
@@ -102,7 +134,7 @@ class Repl:
         #infoobj = info_blob.InfoBlob(self.entry_type)
 
 
-        #verb_list = ['q', 'h', 'select', 'list']
+        #verb_list = ['q', 'h', 'select', 'list', 'add', 'delete']
         verb_list = InputParser.get_repl_verbs()
 
         #resource_list = ['media', 'wdb', 'lfs']
@@ -190,7 +222,10 @@ class Repl:
                             self.handle_media(the_verb, opt_dict)
 
                         elif the_res == 'wdb':
+                            print(f'about to handle wdb')
                             self.handle_wdb(the_verb, opt_dict)
+                            print(f'handled wdb')
+
 
                         elif the_res == 'lfs':
                             self.handle_local_file_system(the_verb)

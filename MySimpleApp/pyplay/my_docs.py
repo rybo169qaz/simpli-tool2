@@ -36,7 +36,7 @@ def help_info(clue='general'):
     def resource_help():
         msg = '''
         Resources
-        media    == the verb/action will be performed on media.        Valid verbs == select, play
+        mdb      == the verb/action will be performed on media.        Valid verbs == select, play
         wdb      == well-known database.                               Valid verbs == list
         lfs      == local file system Media folder.                    Valid verbs == list
         
@@ -47,9 +47,11 @@ def help_info(clue='general'):
         Verb-Resource combination info.
         Resource        Valid verbs          Valid arguments               Description
         --------        -----------          ---------------               -----------
-        media           select               -w <wellknown>  | -u <uri>    Selects and PLAYS the specified media
-        db              list                 -w              |             Lists all the entries in the wellknown DB 
-    
+        wdb              list                                              Lists all the entries in the wellknown DB
+        wdb              add                 -w <wellknown> -u <uri>       Adds an entry to the wellknown db
+        wdb              delete              -w <wellknown>                Deletes specified entry from the wellknown db
+         
+        media            list                                              Lists all the entries in the media folder.    
         '''
         return msg
 

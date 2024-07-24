@@ -73,8 +73,17 @@ def stopping_media(media_type):
     media_delim(False, media_type)
 
 
-def print_dict(dict_name):
-    print(f'PRINT DICT START\n')
+def print_dict(dict_name, header):
+    print(f'Dictionary of: {header}\n')
     for key, value in dict_name.items():
-        print(f"{key} == {value}")
-    print(f'PRINT DICT END\n')
+        print(f"\t{key} == {value}")
+    print(f'===\n')
+
+def create_prefixed_list(initial_text, final_text, prefix, postfix, array_entries):
+    the_list = []
+    the_list.append(str(initial_text))
+    for i in array_entries:
+        indent_entry = str(prefix) + str(i) + str(postfix)
+        the_list.append(indent_entry)
+    the_list.append(str(final_text))
+    return the_list

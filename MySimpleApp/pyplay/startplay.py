@@ -71,6 +71,23 @@ def populate_wellknown():
         # WellKnownDB.delete('apple')
         # mod_mess(pfx, WellKnownDB.list())
 
+def list_welknown():
+    print(f'not displaying\n')
+    return
+    new_array = []
+    new_array.append('Well-known == Value')
+    new_array.append('===================')
+    the_list_obj = WellKnownDB.list()
+    for i in the_list_obj:
+        my_key, my_value = i
+        combi = f"{my_key} == {my_value}"
+        new_array.append(combi)
+
+    new_msg = utils.create_prefixed_list('\nList of well-known entries', 'End of list\n', '\t', '\n', new_array)
+    for x in new_msg:
+        print(f'{x}')
+
+
 def main():
 
     Environ()
@@ -164,6 +181,7 @@ def main():
 
     populate_wellknown()
 
+    list_welknown()
 
 
     if the_action == 'help':

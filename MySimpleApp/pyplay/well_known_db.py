@@ -8,9 +8,12 @@ class WellKnownDB:
     @classmethod
     def list(cls):
         msg = f'Well-known entries\n'
+        the_list = []
         for key, value in cls.dict.items():
-            msg += f"{key} == {value}\n"
-        return msg
+            the_entry = (key, value)
+            the_list.append(the_entry)
+            #msg += f"{key} == {value}\n"
+        return the_list
 
     @classmethod
     def get(cls, wellknown_key):

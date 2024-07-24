@@ -8,6 +8,14 @@ SimpliPlay package
 
 ## Overview
 
+### Update Python interpeter to correct version
+
+See - Reference [(HowToGeek) How to Install the Latest Python Version on Ubuntu Linux](https://www.howtogeek.com/install-latest-python-version-on-ubuntu/)
+
+Install v3.12
+although 3.10 is probably the best to use
+
+
 ### SimpliPlay2 Code
 
 This is located in **MySimpleApp** folder.
