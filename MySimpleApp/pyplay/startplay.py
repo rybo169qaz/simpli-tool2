@@ -12,6 +12,10 @@ from well_known_db import WellKnownDB
 import const_data
 from environ import Environ
 
+required_version = (3,10)
+actual_version = (sys.version_info.major, sys.version_info.minor)
+if not actual_version >= required_version:
+    sys.exit(f'Version is bad (required={required_version} ; actual={actual_version}')
 
 # Global variable
 Cwd = None
@@ -91,6 +95,7 @@ def list_welknown():
 def main():
 
     Environ()
+    Environ.show_environment_key_values()
 
     mod_mess(__name__, f'Python script invoked: {sys.argv[0]}')
     mod_mess(__name__, f'Commandline arguments: {sys.argv[1:]}')

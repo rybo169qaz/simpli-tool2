@@ -95,18 +95,10 @@ class Repl:
         utils.print_dict(option_dict, 'Provided options')
 
         if verb == 'list':
-            new_array = []
-            new_array.append('Well-known == Value')
-            new_array.append('===================')
-            the_list_obj = WellKnownDB.list()
-            for i in the_list_obj:
-                my_key, my_value = i
-                combi = f"{my_key} == {my_value}"
-                new_array.append(combi)
-
-            new_msg = utils.create_prefixed_list('\nList of well-known entries', 'End of list\n', '\t', '\n', new_array)
-            for x in new_msg:
-                print(f'{x}')
+            utils.print_list_tuples(WellKnownDB.list(), 'Shortcuts (aka well-known)',
+                'Shortcut',
+                '==>',
+                'Actual location')
 
         elif verb == 'add':
             well_known = option_dict.get('wellknown', None)
@@ -115,7 +107,7 @@ class Repl:
             if is_success:
                 print(f'Sucessfully added entry')
             else:
-                print(f'Failedto add  entry')
+                print(f'Failed to add  entry')
 
 
         elif verb == 'delete':

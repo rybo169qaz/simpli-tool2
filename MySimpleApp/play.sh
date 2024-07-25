@@ -49,8 +49,9 @@ then
      TVV                   : shortcut to play some TEST VIDEO using VLC      (select -p vlc      -u testvideo )
      TVS                   : shortcut to play some TEST VIDEO using default player  (select media -w testsilentvideo )
 
-     everything else       : passed through to the play tool (use  help   to get help of syntax )
-     -h                    : shows help on the play tool
+     everything else       : passed through to the play tool
+                             (use  'help'   argument to get help of syntax )
+
 BLOCK
   exit 0
 else

@@ -72,10 +72,17 @@ def starting_media(media_type):
 def stopping_media(media_type):
     media_delim(False, media_type)
 
+def print_list_tuples(list_name, header, first_tuple_name='Key', mapping='==>', second_tuple_name='Value'):
+    print(f'\nList of: {header}')
+    print(f'\t{first_tuple_name} {mapping} {second_tuple_name}')
+    for key, value in list_name:
+        print(f"\t{key} {mapping} {value}")
+    print(f'===\n')
 
 def print_dict(dict_name, header):
-    print(f'Dictionary of: {header}\n')
-    for key, value in dict_name.items():
+    sorted_dict = dict(sorted(dict_name.items()))
+    print(f'\nDictionary of: {header}')
+    for key, value in sorted_dict.items():
         print(f"\t{key} == {value}")
     print(f'===\n')
 
