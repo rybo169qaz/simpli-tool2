@@ -1,0 +1,16 @@
+[nodes]
+zotac_d ansible_host=192.168.0.49
+zotac_f ansible_host=192.168.0.51
+zotac_g ansible_host=192.168.0.50
+zotac_h ansible_host=192.168.0.45
+
+[wanted]
+zotac_f ansible_host=192.168.0.51
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
+ansible_connection=ssh
+ansible_user=robert
+ansible_ssh_pass=p
+ansible_become_pass=p
+ansible_password=p

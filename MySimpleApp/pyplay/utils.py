@@ -1,4 +1,5 @@
 import os
+from my_enums import MediaType, MediaFormat
 from environ import Environ
 
 
@@ -19,6 +20,8 @@ def is_absolute_path(pname):
 def is_remote_path(pname):
     if pname.startswith('https:'):
         resp = True
+    elif pname.startswith('http:'):
+        resp = True
     else:
         resp = False
     return resp
@@ -27,18 +30,39 @@ def is_remote_path(pname):
 def detect_media(pname):
     ext = os.path.splitext(pname)[-1].lower()
     if ext == '.mp3':
-        media_type = 'MPEG'
+        media_type = MediaType.AUDIO
+        media_format = MediaFormat.MP3
     elif ext == '.mp4':
-        media_type = 'MPEG'
+        media_type = MediaType.VIDEO
+        media_format = MediaFormat.MP4
     elif ext == '.m4a':
-        media_type = 'MPEG'
+        media_type = MediaType.AUDIO
+        media_format = MediaFormat.M4A
+    elif ext == '.jpg':
+        media_type = MediaType.IMAGE
+        media_format = MediaFormat.JPG
     elif ext == '.txt':
-        media_type = 'TEXT'
+        media_type = MediaType.TEXT
+        media_format = MediaFormat.TXT
     elif ext == '.iden':
-        media_type = 'IDENTITY'
+        media_type = MediaType.IDENTITY
+        media_format = MediaFormat.UNKNOWN
     else:
-        media_type = 'UNKNOWN'
-    return media_type
+        media_type = MediaType.UNKNOWN
+        media_format = MediaFormat.UNKNOWN
+    return (media_type, media_format)
+
+def media_type_from_format(format):
+    if format in set(MediaFormat.TXT):
+        mtype = MediaType.TEXT
+    elif format in set(MediaFormat.JPG, MediaFormat.PNG):
+        mtype = MediaType.IMAGE
+    elif format in set(MediaFormat.M4A, MediaFormat.MP3):
+        mtype = MediaType.AUDIO
+    elif format in set(MediaFormat.MP4):
+        mtype = MediaType.VIDEO
+    else:
+        mtype = MediaType.UNKNOWN
 
 
 def get_full_uri_to_media(file):
@@ -94,3 +118,10 @@ def create_prefixed_list(initial_text, final_text, prefix, postfix, array_entrie
         the_list.append(indent_entry)
     the_list.append(str(final_text))
     return the_list
+
+def func_name():
+    import traceback
+    return traceback.extract_stack(None, 2)[0][2]
+
+#def get_methods_in_class(class_name):
+#    return [method for method in dir(class_name) if method.startswith('__') is False]

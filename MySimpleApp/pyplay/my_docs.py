@@ -1,3 +1,7 @@
+#import input_parse
+from input_parse import InputParser
+#from MySimpleApp.pyplay.input_parse import InputParser
+
 from const_data import TEST_REMOTE_AUDIO_MEAST_ABSALOM, TEST_REMOTE_AUDIO_MEAST_AMOS
 from report import *
 
@@ -14,6 +18,7 @@ def help_info(clue='general'):
         Use 'q' to quit the loop
         Use 'h' to display general help.
         '''
+
         return msg
 
     def syntax_help():
@@ -25,34 +30,18 @@ def help_info(clue='general'):
         return msg
 
     def verb_help():
-        msg = '''
-        Verbs
-        q        == quits the repl loop. No other arguments required.
-        h        == shows this help information. No other arguments required.
-        select   == selects the specified media (only applicable to resource == media)
-        
-        '''
+        msg = '\n\tVERBS'
+        msg += InputParser.get_verb_help() + '\n'
         return msg
+
     def resource_help():
-        msg = '''
-        Resources
-        mdb      == the verb/action will be performed on media.        Valid verbs == select, play
-        wdb      == well-known database.                               Valid verbs == list
-        lfs      == local file system Media folder.                    Valid verbs == list
-        
-        '''
+        msg = '\n\tRESOURCES'
+        msg += InputParser.get_resource_help() + '\n'
         return msg
+
     def verb_resource_help():
-        msg = '''
-        Verb-Resource combination info.
-        Resource        Valid verbs          Valid arguments               Description
-        --------        -----------          ---------------               -----------
-        wdb              list                                              Lists all the entries in the wellknown DB
-        wdb              add                 -w <wellknown> -u <uri>       Adds an entry to the wellknown db
-        wdb              delete              -w <wellknown>                Deletes specified entry from the wellknown db
-         
-        media            list                                              Lists all the entries in the media folder.    
-        '''
+        #msg = InputParser.get_table_of_res_verb_combinations(False)
+        msg = InputParser.get_table_of_res_verb_combinations(True)
         return msg
 
     descrip = clue

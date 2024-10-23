@@ -1,0 +1,22 @@
+---
+- name: install packages allowing improved volume control + shutdown
+  hosts: wanted
+  become: yes
+
+  tasks:
+
+    - name: multiple tools
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+      loop:
+        - pulseaudio
+        - pavucontrol
+      when: 1 > 2
+
+    - name: shutDown
+      ansible.builtin.shell:
+        cmd: shutdown --reboot
+
+
+

@@ -1,6 +1,11 @@
 import pytest
-import const_data
 import utils
+import const_data
+from my_enums import *
+from report import mod_mess
+import my_enums
+#from MySimpleApp.pyplay.my_enums import MediaType
+
 from environ import Environ
 
 
@@ -9,7 +14,8 @@ class MediaIdentity:
         self.uri = uri
         self.media_type = None
         self.media_location = None
-        self.media_streamed = None
+        self.media_form = None
+        self.media_format = None
         self.media_identity = None
         self.verbose = verbose
         self.dummy = dummy
@@ -21,40 +27,48 @@ class MediaIdentity:
         (is_found, media_tuple) = self._match_well_known_url()
 
         if self.verbose:
-            print(f'URI=={uri} : Found={is_found} , MEDIA_IS == {media_tuple[3]}')
-        if is_found:
-            (media_type, media_location, media_streamed, media_identity) = media_tuple
+            mod_mess(__name__, f'URI=={uri} : Found={is_found} , MEDIA_IS == {media_tuple[3]}')
 
+        if is_found:
+            (mtype, mlocation, mform, media_identity) = media_tuple
         else:
-            media_type = utils.detect_media(uri)
+            (mtype, mformat) = utils.detect_media(uri)
+
             if utils.is_absolute_path(uri):
-                media_location = 'usb'
-                media_streamed = False
+                mlocation = SourceLoc.LOCAL
+                mform = MediaForm.FILE
                 if self.verbose:
                     print(f'URI was deemed ABSOLUTE')
+
             elif utils.is_remote_path(uri):
-                media_location = 'remote'
-                media_streamed = True
+                mlocation = SourceLoc.NETWORK
+                mform = MediaForm.STREAMED
                 if self.verbose:
                     print(f'URI was deemed REMOTE')
+
             else:
-                media_location = 'test'
-                media_streamed = False
+                mlocation = SourceLoc.TESTLOCAL
+                mform = MediaForm.FILE
+
             media_identity = uri
 
-        self.media_type = media_type
-        self.media_location = media_location
-        self.media_streamed = media_streamed
+        self.media_type = mtype
+        self.media_location = mlocation
+        self.media_form = mform
         self.media_identity = media_identity
+        self.media_format = mformat
 
-    def med_type(self):
+    def get_media_type(self):
         return self.media_type
 
-    def med_location(self):
+    def get_media_location(self):
         return self.media_location
 
-    def med_streamed(self):
-        return self.media_streamed
+    def get_media_form(self):
+        return self.media_form
+
+    def get_media_format(self):
+        return self.media_format
 
     def med_identity(self):
         return self.media_identity
@@ -71,8 +85,10 @@ class MediaIdentity:
         found = False
         if self.verbose:
             print(f'Looking for match of {uri}\n')
+
         for entry in const_data.well_known_uris:
-            (wellknown, mtype, mloc, mstream, mid) = entry
+            (wellknown, mid) = entry
+            #(wellknown, mtype, mloc, mstream, mid) = entry
             if uri == wellknown:
                 media_type = mtype
                 media_location = mloc
@@ -103,19 +119,37 @@ class MediaIdentity:
         return (resp, media_details)
 
 
-def test_media_streamed_A():
-    mi = MediaIdentity('testsilentvideo')
-    assert mi.med_streamed() == True
 
-def test_media_streamed_B():
-    mi = MediaIdentity('testsilentvideo')
-    assert mi.med_streamed() == False
+from utils import func_name
+class TestMediaIdentity:
 
+    def test_get_media_type(self):
+        print('Testing {}.{}'.format(__name__, func_name()))
+        assert MediaType.TEXT == MediaIdentity('abc.txt').get_media_type()
+        assert MediaType.AUDIO == MediaIdentity('abc.mp3').get_media_type()
+        assert MediaType.VIDEO == MediaIdentity('/tmp/Fish123.mp4').get_media_type()
+        assert MediaType.AUDIO == MediaIdentity('cat/dog.mp3').get_media_type()
+        assert MediaType.VIDEO == MediaIdentity('abc.mp4').get_media_type()
+        assert MediaType.IMAGE == MediaIdentity('mypicture.jpg').get_media_type()
 
-def test_media_identity():
-    mi = MediaIdentity('abc.txt')
-    assert mi.med_identity() == True
+    def test_get_media_location(self):
+        print('Testing {}.{}'.format(__name__, func_name()))
+        assert SourceLoc.TESTLOCAL == MediaIdentity('abc.txt').get_media_location() # relative path is deemed to be test area
+        assert SourceLoc.LOCAL == MediaIdentity('/p/q/r.txt').get_media_location()
+        assert SourceLoc.NETWORK == MediaIdentity('http://widget.co.uk/a/b/c').get_media_location()
+        assert SourceLoc.NETWORK == MediaIdentity('https://widget.co.uk/x/y/z.mp4').get_media_location()
+        assert SourceLoc.NETWORK == MediaIdentity('http://widget.co.uk/a/b/c').get_media_location()
 
+    def test_get_media_form(self):
+        print('Testing {}.{}'.format(__name__, func_name()))
+        assert MediaForm.FILE == MediaIdentity('/p/q/r.mp3').get_media_form()
+        assert MediaForm.FILE == MediaIdentity('/abc.mp4').get_media_form()
+        assert MediaForm.STREAMED == MediaIdentity('https://mycompany.co.uk/a/b/c/d/e/f/g/h.mp3').get_media_form()
 
-
+    def test_get_media_format(self):
+        print('Testing {}.{}'.format(__name__, func_name()))
+        assert MediaFormat.TXT == MediaIdentity('/p/q/r.txt').get_media_format()
+        assert MediaFormat.JPG == MediaIdentity('/p/q/r.jpg').get_media_format()
+        assert MediaFormat.MP4 == MediaIdentity('/p/q/r.mp4').get_media_format()
+        assert MediaFormat.M4A == MediaIdentity('/p/q/r.m4a').get_media_format()
 

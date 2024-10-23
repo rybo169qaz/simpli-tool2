@@ -1,0 +1,31 @@
+---
+- name: install zoom
+  hosts: wanted
+  become: yes
+
+  tasks:
+    - name: prepare zoom2 deb folder
+      ansible.builtin.file:
+        path: /home/robert/Downloads/zoom2
+        group: robert
+        owner: robert
+        mode: '777'
+        state: directory
+
+    - name: steps 5
+      ansible.builtin.get_url:
+        dest: /home/robert/Downloads/zoom2
+        url: https://zoom.us/client/latest/zoom_amd64.deb
+        group: robert
+        owner: robert
+
+    - name: steps 6 # install the file
+      ansible.builtin.shell:
+        cmd: apt install /home/robert/Downloads/zoom2/zoom_amd64.deb
+
+    - name: finale
+      ansible.builtin.shell:
+        cmd: ls /home/robert/Downloads
+
+
+

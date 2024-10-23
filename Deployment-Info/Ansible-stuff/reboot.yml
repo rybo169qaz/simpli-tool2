@@ -1,0 +1,10 @@
+---
+- name: restart nodes
+  hosts: wanted
+  become: yes
+
+  tasks:
+    - name: restart node
+      ansible.builtin.shell:
+        cmd: shutdown now --reboot
+

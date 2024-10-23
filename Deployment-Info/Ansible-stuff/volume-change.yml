@@ -1,0 +1,13 @@
+---
+- name: change volume using pactl
+  hosts: wanted
+  become: yes
+
+  tasks:
+    - name: change volume to 200%
+      ansible.builtin.shell: |
+        pactl list | grep -oP 'Sink #\K([0-9]+)' | while read -r i ; do pactl -- get-sink-volume $i ; done
+        pactl list | grep -oP 'Sink #\K([0-9]+)' | while read -r i ; do pactl -- set-sink-volume $i 200 ; done
+        pactl list | grep -oP 'Sink #\K([0-9]+)' | while read -r i ; do pactl -- get-sink-volume $i ; done
+        
+

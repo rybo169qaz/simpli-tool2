@@ -1,8 +1,10 @@
 import os.path
 
+from report import lineno
 import utils
+
 from my_argparse import *
-from input_parse import InputParser
+
 import play_it
 from my_docs import *
 from process_qr import ProcessQR
@@ -11,7 +13,8 @@ import verb_handling
 from well_known_db import WellKnownDB
 
 class Repl:
-    def __init__(self, player_object, store_object=None, repeat=True, interval=1, verbose=True, dummy=True):
+    def __init__(self, the_wdb, player_object, store_object=None, repeat=True, interval=1, verbose=True, dummy=True):
+        self.welldb = the_wdb
         self.player_object = player_object
         self.store_object = store_object
         self.repeat = repeat
@@ -23,12 +26,16 @@ class Repl:
         self.qr_file = 'snap.qr'
         #self.qr_file = 'testsilentvideo.qr'
         self.file_path = '../Input-Images/' + self.qr_file
+        self._populate_prefix()
 
         print(f'Instantiated Repl (QR file == {self.file_path}, dummy={self.dummy}')
 
+    def _populate_prefix(self):
+        fred = ', '.join(InputParser.get_verbs())
+        self.prefix = '(' + fred + ') >>>'
 
     def _read_keyboard(self, msg):
-        prefix = msg + '(q ==quit ; f == qr file) >>>'
+        prefix = msg + self.prefix
         entered = input(prefix)
         return entered
 
@@ -75,7 +82,7 @@ class Repl:
         elif uri is not None:
             mod_mess(__name__, 'playing media via uri is not supported')
         else:
-            exit_with_message('Only well known is supported', 67)
+            exit_with_message('Missing argument(s). Only well known is supported', 67, __file__, lineno())
 
     def handle_local_file_system(self, verb):
         fn = __name__ + ':' + 'handle_local_file_system'
@@ -84,10 +91,8 @@ class Repl:
             media_info = 'Media in local file system'
             media_info += verb_handling.list_all_media()
             mod_mess(__name__, media_info)
-
         else:
             exit_with_message(f'Unknown verb ({verb}', 96)
-
 
     def handle_wdb(self, verb, option_dict):
         fn = __name__ + ':' + 'handle_wdb'
@@ -95,7 +100,7 @@ class Repl:
         utils.print_dict(option_dict, 'Provided options')
 
         if verb == 'list':
-            utils.print_list_tuples(WellKnownDB.list(), 'Shortcuts (aka well-known)',
+            utils.print_list_tuples(self.welldb.list(), 'Shortcuts (aka well-known)',
                 'Shortcut',
                 '==>',
                 'Actual location')
@@ -103,16 +108,15 @@ class Repl:
         elif verb == 'add':
             well_known = option_dict.get('wellknown', None)
             uri = option_dict.get('uri', None)
-            is_success = WellKnownDB.add(well_known, uri)
+            is_success = self.welldb.add(well_known, uri)
             if is_success:
                 print(f'Sucessfully added entry')
             else:
                 print(f'Failed to add  entry')
 
-
         elif verb == 'delete':
             well_known = option_dict.get('wellknown', None)
-            is_success = WellKnownDB.delete(well_known)
+            is_success = self.welldb.delete(well_known)
             if is_success:
                 print(f'Successfully deleted entry')
             else:
@@ -123,21 +127,16 @@ class Repl:
 
 
     def repl_loop(self):
-        #infoobj = info_blob.InfoBlob(self.entry_type)
-
-
-        #verb_list = ['q', 'h', 'select', 'list', 'add', 'delete']
-        verb_list = InputParser.get_repl_verbs()
+        verb_list = InputParser.get_verbs() # was get_repl_verbs
 
         #resource_list = ['media', 'wdb', 'lfs']
         resource_list = InputParser.get_repl_resources()
 
         verb_parse = argparse.ArgumentParser(description='Parse VERB', exit_on_error=False)
-        #verb_parse.add_argument("verb", type=str, choices=['q', 'select', 'list', 'h'], help='The verb')
-        verb_parse.add_argument("verb", type=str, choices=verb_list, help='The verb')
+        verb_parse.add_argument("verb", type=str, choices=verb_list,
+                                help='The verb')
 
         res_parse = argparse.ArgumentParser(description='Parse RESOURCE', exit_on_error=False)
-        #res_parse.add_argument("resource", type=str, choices=['media', 'db' 'system'], default='system', help='The resource')
         res_parse.add_argument("resource", type=str, choices=resource_list, default='system',
                                help='The resource')
 
@@ -156,6 +155,7 @@ class Repl:
         loop_count =1
         while cont_loop:
             msg = '(' + str(loop_count) + ')'
+            loop_count += 1
             src, data_entered = self._read_input(msg)
             if data_entered is not None:
 
@@ -197,6 +197,16 @@ class Repl:
                             continue
 
                         del my_arg_list[0]
+
+                        help_attrib = InputParser.get_attrib_of_verb_res(the_verb, the_res)
+                        if help_attrib is None:
+                            mod_mess(__name__, f'Invalid Verb-resource combination')
+                            continue
+
+                        help_args, help_desc = help_attrib
+                        mod_mess('Description: ', help_desc)
+                        mod_mess('Applicable args', help_args)
+
                         mod_mess('option checks', my_arg_list)
                         parsed = opt_parse.parse_args(my_arg_list, None)
 

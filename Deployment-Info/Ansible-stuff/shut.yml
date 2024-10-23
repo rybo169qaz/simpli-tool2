@@ -1,0 +1,9 @@
+---
+- name: shutdown nodes
+  hosts: nodes
+  become: yes
+
+  tasks:
+    - name: shutDown
+      ansible.builtin.shell:
+        shutdown

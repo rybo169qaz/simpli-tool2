@@ -38,10 +38,10 @@ def play_material(playobj, is_streamed, media_type, path_to_use):
 
 def play_wellknown(playobj, well_known, verbose=True):
     print(f'(play_wellknown): use {well_known}')
-    media_id = MediaIdentity(well_known)
-    media_type = media_id.med_type()
-    media_location = media_id.med_location()
-    media_streamed = media_id.med_streamed()
+    media_id = MediaIdentity(well_known, True)
+    media_type = media_id.get_media_type()
+    media_location = media_id.get_media_location()
+    media_streamed = media_id.get_media_form()
     media_identity = media_id.med_identity()
 
     if media_type == 'UNKNOWN':

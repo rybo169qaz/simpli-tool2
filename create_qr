@@ -1,22 +1,50 @@
 #!/bin/bash
 
+syntax_string='create_qr <filename> <datastring>'
 BASE_DIR='.'
 QR_TOOL='/usr/bin/qrencode'
 DEST_DIR="${BASE_DIR}/GenQR"
 border_size='5'
 pixel_size='8'
+set -e
 
-opname="${DEST_DIR}/$1"
+report_err() {
+  printf "ERROR ${1}: ${2}\nSyntax is:\n\t${syntax_string}\n\n"
+  exit ${1}
+}
+
+if [ $# -ne 2 ]
+then report_err 11 "Incorrect number of arguments (you provided $# )"
+fi
+
+qfilename="${1}"
+if [ -z "${qfilename}" ]
+then report_err 12 "Filename cannot be empty"
+fi
+
+opname="${DEST_DIR}/${qfilename}"
 data="$2"
+
+if [ -z "${data}" ]
+then report_err 13 "You provided an empty data string. Although allowed it is probably a mistake"
+fi
 
 the_cwd=$(pwd)
 #printf "Invoked from dir\t: ${the_cwd}\n"
 
-mkdir ${DEST_DIR}
+mkdir -p ${DEST_DIR}
 
 printf "create_qr: filename=${opname} , border=${border_size} , pixel=${pixel_size} , data '${data}'\n"
 ${QR_TOOL} -m ${border_size} -s ${pixel_size} -o ${opname} "${data}"
+
+if [ ! -f ${opname} ]
+then
+  report_err 14 "Failed to create file (${opname})"
+fi
+
+printf "\tNote 1: CWD is \t: ${the_cwd}\n"
+
 #${QR_TOOL} -m ${border_size} -s ${pixel_size} -o ${opname} "${data}"
-printf "Note: Use the   'display'  command to show the generated png image.\n"
+printf "\tNote 2: Use the 'display' command (uses imagemagik) to show the generated png image.\n\t\t\ti.e.  display ${opname}\n\n"
 
 

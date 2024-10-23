@@ -36,6 +36,7 @@ then
      PKGDIR                : shortcut to package the python project as a directory
      CREATEQR              : Creates QR code. Syntax is
                              CREATEQR <op-filename> <data-string>                    (data-string being in quotes)
+     repl                  : Reads and processes commands using a REPL
 
      ----------------------- TEST MEDIA SHORTCUTS -------------------------------------------------
      TT                    : shortcut to play some TEST TEXT                 (select             -u testproverbs )

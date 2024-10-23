@@ -25,19 +25,19 @@ TEST_REMOTE_VIDEO_CVIDEO_DEAD_SEA_SCROLLS = "https://www.youtube.com/watch?v=gj4
 
 # well-known-name, type-of-media, renderer, location, streamed?, uri
 well_known_uris = [
-    ('testtext',          'TEXT',    'test',    False, TEST_TEXT),
-    ('testproverbs',      'TEXT',    'test',    False, TEST_PROVERBS_TEXT),
-    ('testjosephus',      'TEXT',    'test',    False, TEST_JOSEPHUS_TEXT),
+    ('testtext'                  , TEST_TEXT),
+    ('testproverbs'              , TEST_PROVERBS_TEXT),
+    ('testjosephus'              , TEST_JOSEPHUS_TEXT),
 
-    ('testaudio372',         'MPEG',    'test',    False, TEST_MP3),
-    ('testcountingaudio', 'MPEG',    'test',    False, TEST_SPOKEN_NUMBERS_M4A_AUDIO),
-    ('testsilentvideo',         'MPEG',    'test',    False, TEST_VIDEO),
+    ('testaudio372'              , TEST_MP3),
+    ('testcountingaudio'         , TEST_SPOKEN_NUMBERS_M4A_AUDIO),
+    ('testsilentvideo'           , TEST_VIDEO),
 
-    ('testmoosevideo',    'MPEG',    'test',    False, TEST_NURSING_MOOSE_MP4_VIDEO),
-    ('trvscrolls',        'MPEG',    'remote',  True,  TEST_REMOTE_VIDEO_CVIDEO_DEAD_SEA_SCROLLS),
+    ('testmoosevideo'            , TEST_NURSING_MOOSE_MP4_VIDEO),
+    ('trvscrolls'                , TEST_REMOTE_VIDEO_CVIDEO_DEAD_SEA_SCROLLS),
 
-    ('remoteaudio1',        'MPEG',    'remote',  True,  TEST_REMOTE_AUDIO_MEAST_AMOS),
-    ('remoteaudio2',        'MPEG',    'remote',  True,  TEST_REMOTE_AUDIO_MEAST_ABSALOM)
+    ('remoteaudio1'              , TEST_REMOTE_AUDIO_MEAST_AMOS),
+    ('remoteaudio2'              , TEST_REMOTE_AUDIO_MEAST_ABSALOM)
 
 ]
 

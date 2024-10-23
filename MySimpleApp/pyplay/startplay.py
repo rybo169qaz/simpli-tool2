@@ -1,5 +1,9 @@
 import sys
+import inspect
 
+from sqlobject.converters import ClassType
+
+#from MySimpleApp.pyplay.pytest_unittests.test_input_parse import TestXInputParser
 from av_player import *
 from media_identity import *
 from my_argparse import *
@@ -8,9 +12,14 @@ import verb_handling
 from report import *
 from repl import Repl
 #from storage_db import StorageDB
-from well_known_db import WellKnownDB
+from well_known_db import *
 import const_data
 from environ import Environ
+#from utils import get_methods_in_class
+
+#import input_parse
+from input_parse import *
+
 
 required_version = (3,10)
 actual_version = (sys.version_info.major, sys.version_info.minor)
@@ -63,17 +72,10 @@ def show_help():
 
 global MEDIA_PLAYER_FFPLAY
 
-def populate_wellknown():
+def populate_wellknown(the_db):
     for entry in const_data.well_known_uris:
-        (wellknown, mtype, mloc, mstream, mid) = entry
-        WellKnownDB.add(wellknown, mid)
-
-        # mod_mess(pfx, WellKnownDB.list())
-        # WellKnownDB.add('apple', 'myapple.mp3')
-        # WellKnownDB.add('berry', 'myberry.mp4')
-        # mod_mess(pfx, WellKnownDB.list())
-        # WellKnownDB.delete('apple')
-        # mod_mess(pfx, WellKnownDB.list())
+        (wellknown, mid) = entry
+        the_db.add(wellknown, mid)
 
 def list_welknown():
     print(f'not displaying\n')
@@ -91,6 +93,53 @@ def list_welknown():
     for x in new_msg:
         print(f'{x}')
 
+def local_func(local_in):
+    iny = local_in
+    mylocal = 99
+    return 77
+
+tim = 'abc'
+
+def do_unit_tests():
+
+    def call_the_methods(class_instance, wanted_methods):
+        for x in wanted_methods:
+            getattr(class_instance, x)()
+
+    def perform_class_test(module_name, class_name_to_test):
+        print(f'vvv===== START TEST {module_name} {class_name_to_test}')
+
+        funcy = getattr(module_name, class_name_to_test)
+        valinfunc = getattr(funcy, 'mylocal')
+
+        tc = funcy(class_name_to_test)
+        tc_methods_list = [method for method in dir(funcy) if method.startswith('__') is False]
+        call_the_methods(tc, tc_methods_list)
+        print(f'^^^==== END TEST {class_name_to_test}\n')
+
+    if False:
+        print('{}\n{}: START UNIT TESTS'.format('v' * 80, func_name()))
+        myx = callable(getattr('startplay', 'local_func'))
+        print(f'TIM IS {myx}\n')
+
+        print(f'+++++')
+        perform_class_test('local_func', 'iny')
+
+    tc = TestInputParser()
+    tc_methods_list = [method for method in dir(TestInputParser) if method.startswith('__') is False]
+    call_the_methods(tc, tc_methods_list)
+
+    tmi = TestMediaIdentity()
+    tmi_methods_list = [method for method in dir(TestMediaIdentity) if method.startswith('__') is False]
+    call_the_methods(tmi, tmi_methods_list)
+
+    twk = TestWellKnownDB()
+    twk_methods_list = [method for method in dir(TestWellKnownDB) if method.startswith('__') is False]
+    call_the_methods(twk, twk_methods_list)
+
+    #perform_class_test('input_parse', 'simple_func')
+
+    print('{}\n{}: END UNIT TESTS'.format('^' * 80, func_name()))
 
 def main():
 
@@ -137,7 +186,7 @@ def main():
                         default=5,
                         help='Repeat interval. 0 == no repeat; positive values are delay in seconds\n')
 
-    parser.add_argument("action", type=str, choices=['listw', 'listl', 'repl', 'help'],
+    parser.add_argument("action", type=str, choices=['listw', 'listl', 'repl', 'help', 'unit'],
                         default = 'repl',
                         help='The action')
 
@@ -184,9 +233,9 @@ def main():
     the_action = args.action
     mod_mess(__name__, f'Action = {the_action}')
 
-    populate_wellknown()
 
-    list_welknown()
+    #populate_wellknown()
+    #list_welknown()
 
 
     if the_action == 'help':
@@ -207,11 +256,19 @@ def main():
         verb_handling.list_well_known()
         exit_with_message(f'LIST WELL KNOWN Command completed', 0)
 
-    dbfile = 'alpha-db.yaml'
-    stor_obj = None # StorageDB(dbfile)
-    repl_obj = Repl(player_obj, stor_obj, repeat=True, interval=3, verbose=True, dummy=False)
-    repl_obj.repl_loop()
-    exit_with_message(f'Command completed (qr)', 0)
+    elif the_action == 'unit':
+        do_unit_tests()
+        exit_with_message(f'UNIT TESTS COMPLETED', 0)
+
+    elif the_action == 'repl':
+        # assume repl
+        dbfile = 'alpha-db.yaml'
+        welldb = WellKnownDB()
+        populate_wellknown(welldb)
+        stor_obj = None # StorageDB(dbfile)
+        repl_obj = Repl(welldb, player_obj, stor_obj, repeat=True, interval=3, verbose=True, dummy=False)
+        repl_obj.repl_loop()
+        exit_with_message(f'Command completed (qr)', 0)
 
     exit(0)
 

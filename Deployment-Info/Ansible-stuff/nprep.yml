@@ -1,0 +1,37 @@
+---
+- name: update nodes
+  hosts: wanted
+  become: yes
+
+  tasks:
+    - name: update vim
+      apt:
+        name: vim
+        update_cache: yes
+      when: 1 > 0
+
+    - name: vlc
+      apt:
+        name: vlc
+        update_cache: yes
+      when: 1 > 0
+
+    - name: multiple tools
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+      loop:
+        - net-tools
+        - curl
+        - unzip
+        - tree
+        - xz-utils
+        - meld
+      when: 1 > 0
+
+    - name: finale
+      ansible.builtin.shell:
+        cmd: ls /home/robert/Downloads
+
+
+
