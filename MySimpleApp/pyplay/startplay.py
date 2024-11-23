@@ -147,7 +147,24 @@ def main():
     Environ.show_environment_key_values()
 
     mod_mess(__name__, f'Python script invoked: {sys.argv[0]}')
-    mod_mess(__name__, f'Commandline arguments: {sys.argv[1:]}')
+    cmndline_args = sys.argv[1:]
+    action_cmnd = None
+    args_to_pass = None
+    delim_char = ','
+    try:
+        delim_index = cmndline_args.index(delim_char)
+        action_cmnd = cmndline_args[0:delim_index]
+        args_to_pass = cmndline_args[delim_index+1:]
+        print(f'DELIM ({delim_char}) INDEX == {delim_index}')
+    except ValueError:
+        print(f'No delimchar ({delim_char})')
+        action_cmnd = cmndline_args
+
+
+    print(f'ACTION COMMAND == {action_cmnd}')
+    print(f'PASS COMMAND == {args_to_pass}')
+
+    mod_mess(__name__, f'Commandline arguments: {cmndline_args}')
 
     parser3 = argparse.ArgumentParser(description='A simple program to demonstrate argparse usage')
     parser = MyArgParse(description='Parses the commandline')
@@ -190,7 +207,7 @@ def main():
                         default = 'repl',
                         help='The action')
 
-    args = parser.parse_args()
+    args = parser.parse_args(args=action_cmnd)
     show_passed_args(args)
 
     # Accessing parsed arguments
@@ -261,13 +278,14 @@ def main():
         exit_with_message(f'UNIT TESTS COMPLETED', 0)
 
     elif the_action == 'repl':
+        print(f'DOING repl')
         # assume repl
         dbfile = 'alpha-db.yaml'
         welldb = WellKnownDB()
         populate_wellknown(welldb)
         stor_obj = None # StorageDB(dbfile)
         repl_obj = Repl(welldb, player_obj, stor_obj, repeat=True, interval=3, verbose=True, dummy=False)
-        repl_obj.repl_loop()
+        repl_obj.repl_loop(initial_cmd=args_to_pass)
         exit_with_message(f'Command completed (qr)', 0)
 
     exit(0)

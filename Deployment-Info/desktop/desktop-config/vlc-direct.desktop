@@ -1,0 +1,15 @@
+[Desktop Entry]
+Version=1.0
+Name=VLC directly
+GenericName=Generic VLC directly
+Comment=Uses zoom to play a video
+Name[en_GB]=Call VLC directly
+GenericName[en_GB]=Generic Call VLC directly
+Comment[en_GB]=Play Autumn video using vlc
+Exec=/usr/bin/vlc --started-from-file /home/robert/Deployment-Info/Autumn.mp4
+Icon=vlc
+Terminal=false
+Type=Application
+Categories=AudioVideo;Player;
+X-KDE-Protocols=ftp,http,https,mms,rtmp,rtsp,sftp,smb
+Keywords=Player;Capture;DVD;Audio;Video;Server;Broadcast;

@@ -1,6 +1,6 @@
 ---
 - name: shutdown nodes
-  hosts: nodes
+  hosts: wanted
   become: yes
 
   tasks:

@@ -1,0 +1,15 @@
+[Desktop Entry]
+Version=1.0
+Name=Simpli VLC Car
+GenericName=Generic Simpli VLC Car
+Comment=Commences vlc session of Car
+Name[en_GB]=VLC Car
+GenericName[en_GB]=generic VLC Car
+Comment[en_GB]=Accessing vlc
+Exec=/home/robert/.local/bin/simpli-watch car
+Icon=vlc
+Terminal=false
+Type=Application
+Categories=AudioVideo;Player
+X-KDE-Protocols=ftp,http,https,mms,rtmp,rtsp,sftp,smb
+Keywords=Player;Capture;DVD;Audio;Video;Server;Broadcast;

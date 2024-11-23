@@ -1,0 +1,57 @@
+---
+- name: update nodes
+  hosts: wanted
+  become: yes
+
+  tasks:
+
+    - name: 1. Install wanted tools
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+      loop:
+        - vim
+        - net-tools
+        - curl
+        - unzip
+        - tree
+        - xz-utils
+        - meld
+        - ncdu
+        - screenfetch
+        - lightdm
+      when: 1 > 0
+
+    - name: 2. Install vlc
+      apt:
+        name: vlc
+        update_cache: yes
+      when: 1 > 0
+
+    - name: 3. Remove unwanted tools
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+        status: "absent"
+      loop:
+        - meld
+        - ncdu
+        - thunderbird
+        - libreoffice
+      when: 1 > 2
+
+    - name: 8. set desktop settings
+      ansible.builtin.shell:
+        cmd: /home/robert/.simpli/utils/set-desk.sh
+      when: 1 > 2
+
+    - name: 9. Restart service lightdm
+      ansible.builtin.service:
+        name: lightdm
+        enabled: yes
+        state: restarted
+      when: 1 > 2
+
+
+
+

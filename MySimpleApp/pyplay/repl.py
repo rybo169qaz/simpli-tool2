@@ -78,6 +78,7 @@ class Repl:
         uri = option_dict.get('uri', None)
 
         if well_known is not None:
+            print(f'Using welknown')
             play_it.play_wellknown(self.player_object, well_known, True)
         elif uri is not None:
             mod_mess(__name__, 'playing media via uri is not supported')
@@ -126,7 +127,8 @@ class Repl:
             exit_with_message(f'Unknown verb ({verb}', 96)
 
 
-    def repl_loop(self):
+    def repl_loop(self, initial_cmd=None):
+        print(f'repl_loop with initial command {initial_cmd}')
         verb_list = InputParser.get_verbs() # was get_repl_verbs
 
         #resource_list = ['media', 'wdb', 'lfs']
@@ -149,170 +151,178 @@ class Repl:
                           default=None,
                           help='The local identity\n ')
 
-
-
         cont_loop = True
-        loop_count =1
+        loop_count = 0
         while cont_loop:
             msg = '(' + str(loop_count) + ')'
-            loop_count += 1
-            src, data_entered = self._read_input(msg)
-            if data_entered is not None:
 
-                if True:
+            if loop_count == 0 and initial_cmd is not None:
+                my_arg_list = initial_cmd
+                src = 'i' # invocation
+                print(f'Processing invoked command: {my_arg_list}')
+                invoked_string = ' '.join(my_arg_list)
+                print(f'Processing invoked command str: {invoked_string}')
+                print(f'({loop_count}) {invoked_string}')
+            else:
+                src, data_entered = self._read_input(msg)
+                if data_entered is not None:
                     my_arg_list = data_entered.split(" ")
 
-                    mod_mess('verb check', my_arg_list)
-                    the_verb = my_arg_list[0] if len(my_arg_list) > 0 else None
-                    if the_verb is None:
-                        # no data provided
-                        continue
+            loop_count += 1
+            if my_arg_list is not None and len(my_arg_list) != 0:
+                print(f'WE HAVE SOME ARGS')
+                mod_mess('verb check', my_arg_list)
+                the_verb = my_arg_list[0] if len(my_arg_list) > 0 else None
+                if the_verb is None:
+                    # no data provided
+                    continue
 
-                    if the_verb not in verb_list:
-                        info_text = f'Bad VERB >>{the_verb}<<\n' + help_info('verb')
+                if the_verb not in verb_list:
+                    info_text = f'Bad VERB >>{the_verb}<<\n' + help_info('verb')
+                    mod_mess(__name__, f'{info_text}')
+                    continue
+
+                if the_verb == 'q':
+                    print(f'QUITing')
+                    break
+
+                elif the_verb == 'h':
+                    info_text = help_info('general')
+                    mod_mess(__name__, f'{info_text}')
+                    continue
+
+                else:
+                    del my_arg_list[0]
+                    mod_mess('resource check', my_arg_list)
+                    the_res = my_arg_list[0] if len(my_arg_list) > 0 else None
+                    if the_res is None:
+                        info_text = f'Missing RESOURCE \n' + help_info('resource')
                         mod_mess(__name__, f'{info_text}')
                         continue
 
-                    if the_verb == 'q':
-                        print(f'QUITing')
-                        break
-
-                    elif the_verb == 'h':
-                        info_text = help_info('general')
+                    if the_res not in resource_list:
+                        info_text = f'Bad RESOURCE >>{the_res}<<\n' + help_info('resource')
                         mod_mess(__name__, f'{info_text}')
                         continue
+
+                    del my_arg_list[0]
+
+                    help_attrib = InputParser.get_attrib_of_verb_res(the_verb, the_res)
+                    if help_attrib is None:
+                        mod_mess(__name__, f'Invalid Verb-resource combination')
+                        continue
+
+                    help_args, help_desc = help_attrib
+                    mod_mess('Description: ', help_desc)
+                    mod_mess('Applicable args', help_args)
+
+                    mod_mess('option checks', my_arg_list)
+                    parsed = opt_parse.parse_args(my_arg_list, None)
+
+                    opt_dict = vars(parsed)
+                    #self.print_dict(opt_dict)
+
+                    my_dict = {}
+                    my_dict['wellknown'] = parsed.wellknown
+                    my_dict['uri'] = parsed.uri
+
+                    #self.print_dict(my_dict)
+
+
+                    if the_res == 'media':
+                        self.handle_media(the_verb, opt_dict)
+
+                    elif the_res == 'wdb':
+                        print(f'about to handle wdb')
+                        self.handle_wdb(the_verb, opt_dict)
+                        print(f'handled wdb')
+
+
+                    elif the_res == 'lfs':
+                        self.handle_local_file_system(the_verb)
 
                     else:
-                        del my_arg_list[0]
-                        mod_mess('resource check', my_arg_list)
-                        the_res = my_arg_list[0] if len(my_arg_list) > 0 else None
-                        if the_res is None:
-                            info_text = f'Missing RESOURCE \n' + help_info('resource')
-                            mod_mess(__name__, f'{info_text}')
-                            continue
+                        exit_with_message('INTERNAL ERROR - bad resource', 99)
 
-                        if the_res not in resource_list:
-                            info_text = f'Bad RESOURCE >>{the_res}<<\n' + help_info('resource')
-                            mod_mess(__name__, f'{info_text}')
-                            continue
-
-                        del my_arg_list[0]
-
-                        help_attrib = InputParser.get_attrib_of_verb_res(the_verb, the_res)
-                        if help_attrib is None:
-                            mod_mess(__name__, f'Invalid Verb-resource combination')
-                            continue
-
-                        help_args, help_desc = help_attrib
-                        mod_mess('Description: ', help_desc)
-                        mod_mess('Applicable args', help_args)
-
-                        mod_mess('option checks', my_arg_list)
-                        parsed = opt_parse.parse_args(my_arg_list, None)
-
-                        opt_dict = vars(parsed)
-                        #self.print_dict(opt_dict)
-
-                        my_dict = {}
-                        my_dict['wellknown'] = parsed.wellknown
-                        my_dict['uri'] = parsed.uri
-
-                        #self.print_dict(my_dict)
+                    mod_mess(__name__, 'CONTINUING')
+                    continue
 
 
-                        if the_res == 'media':
-                            self.handle_media(the_verb, opt_dict)
-
-                        elif the_res == 'wdb':
-                            print(f'about to handle wdb')
-                            self.handle_wdb(the_verb, opt_dict)
-                            print(f'handled wdb')
-
-
-                        elif the_res == 'lfs':
-                            self.handle_local_file_system(the_verb)
-
-                        else:
-                            exit_with_message('INTERNAL ERROR - bad resource', 99)
-
-                        mod_mess(__name__, 'CONTINUING')
-                        continue
-
-                else: # never
-                    exit_with_message('SHOULD NOT GET HERE', 156)
-                    input_obj = CliArgOpt(data_entered)
-
-                    verb = input_obj.get_verb()
-                    if verb is None:
-                        help_info('verb')
-                        print(f'VERB BAD : CONTINUE')
-                        continue
-
-                    (bad, arg_list) = input_obj.bad_parse()
-                    if bad:
-                        info_text = f'Bad VERB or RESOURCE argument. Arg list == >>{arg_list}<<\n'
-                        info_text += help_info('syntax')
-                        info_text += help_info('verb')
-                        info_text += help_info('resource')
-                        mod_mess(__name__, f'{info_text}')
-                        # continue
-
-                    res = input_obj.get_resource()
-                    if res is None:
-                        help_info('resource')
-                        print(f'RESOURCE BAD : CONTINUE')
-                        #continue
-
-                    mod_mess(__name__, f'VERB={verb} , RESOURCE={res}')
-                    valid_combo = input_obj.validate_verb_res()
-                    if not valid_combo:
-                        info_text = f'Bad VERB-RESOURCE combination. Arg list == >>{arg_list}<<\n'
-                        info_text += help_info('syntax')
-                        info_text += help_info('verbres')
-                        mod_mess(__name__, f'{info_text}')
-                        continue
-
-                    well_known = input_obj.get_wellknown()
-                    uri = input_obj.get_uri()
-
-                    if verb == 'q':
-                        print(f'QUITing')
-                        break
-
-                    elif verb == 'select':
-                        if well_known is not None:
-                            play_it.play_wellknown(self.player_object, well_known, True)
-                        else:
-                            exit_with_message('Only well known is supported', 67)
-
-                    elif verb == 'dbadd':
-                        the_key = input_obj.get_db_key()
-                        the_value = input_obj.get_db_value()
-                        print(f'DB ADD: key={the_key} , value >>{the_value}<<')
-                        self.store_object.add_wellknown(the_key, the_value)
-
-                    elif verb == 'dbdel':
-                        the_key = input_obj.get_db_key()
-                        print(f'DB DEL: key={the_key} ')
-                        self.store_object.del_wellknown(the_key)
-
-                    elif verb == 'dbget':
-                        the_key = input_obj.get_db_key()
-                        the_entry = self.store_object.get_wellknown(the_key)
-                        print(f'DB GET: key={the_key} , value >>{the_entry}<<')
-
-                    elif verb == 'dblist':
-                        the_list = self.store_object.list_wellknown()
-                        print(f'DB LIST: ')
-                        for entry in the_list:
-                            print(f'ENTRY: value >>{entry}<<')
-
-                    else:
-                        msg = 'unknown verb (' + verb + ')'
-                        exit_with_message(msg, 69)
+                    # exit_with_message('SHOULD NOT GET HERE', 156)
+                    # input_obj = CliArgOpt(data_entered)
+                    #
+                    # verb = input_obj.get_verb()
+                    # if verb is None:
+                    #     help_info('verb')
+                    #     print(f'VERB BAD : CONTINUE')
+                    #     continue
+                    #
+                    # (bad, arg_list) = input_obj.bad_parse()
+                    # if bad:
+                    #     info_text = f'Bad VERB or RESOURCE argument. Arg list == >>{arg_list}<<\n'
+                    #     info_text += help_info('syntax')
+                    #     info_text += help_info('verb')
+                    #     info_text += help_info('resource')
+                    #     mod_mess(__name__, f'{info_text}')
+                    #     # continue
+                    #
+                    # res = input_obj.get_resource()
+                    # if res is None:
+                    #     help_info('resource')
+                    #     print(f'RESOURCE BAD : CONTINUE')
+                    #     #continue
+                    #
+                    # mod_mess(__name__, f'VERB={verb} , RESOURCE={res}')
+                    # valid_combo = input_obj.validate_verb_res()
+                    # if not valid_combo:
+                    #     info_text = f'Bad VERB-RESOURCE combination. Arg list == >>{arg_list}<<\n'
+                    #     info_text += help_info('syntax')
+                    #     info_text += help_info('verbres')
+                    #     mod_mess(__name__, f'{info_text}')
+                    #     continue
+                    #
+                    # well_known = input_obj.get_wellknown()
+                    # uri = input_obj.get_uri()
+                    #
+                    # if verb == 'q':
+                    #     print(f'QUITing')
+                    #     break
+                    #
+                    # elif verb == 'select':
+                    #     if well_known is not None:
+                    #         play_it.play_wellknown(self.player_object, well_known, True)
+                    #     else:
+                    #         exit_with_message('Only well known is supported', 67)
+                    #
+                    # elif verb == 'dbadd':
+                    #     the_key = input_obj.get_db_key()
+                    #     the_value = input_obj.get_db_value()
+                    #     print(f'DB ADD: key={the_key} , value >>{the_value}<<')
+                    #     self.store_object.add_wellknown(the_key, the_value)
+                    #
+                    # elif verb == 'dbdel':
+                    #     the_key = input_obj.get_db_key()
+                    #     print(f'DB DEL: key={the_key} ')
+                    #     self.store_object.del_wellknown(the_key)
+                    #
+                    # elif verb == 'dbget':
+                    #     the_key = input_obj.get_db_key()
+                    #     the_entry = self.store_object.get_wellknown(the_key)
+                    #     print(f'DB GET: key={the_key} , value >>{the_entry}<<')
+                    #
+                    # elif verb == 'dblist':
+                    #     the_list = self.store_object.list_wellknown()
+                    #     print(f'DB LIST: ')
+                    #     for entry in the_list:
+                    #         print(f'ENTRY: value >>{entry}<<')
+                    #
+                    # else:
+                    #     msg = 'unknown verb (' + verb + ')'
+                    #     exit_with_message(msg, 69)
 
             else:
                 print(f'Data was None')
+
 
             if not self.repeat:
                 print(f'EXITING ONE-SHOT')

@@ -1,0 +1,15 @@
+[Desktop Entry]
+Version=1.0
+Name=Simpli Zoom
+GenericName=Meeting Joiner
+Comment=Commences a zoom session to Coventry West
+Name[en_GB]=ZOOM Coventry West
+GenericName[en_GB]=Zoom Meeting Joiner
+Comment[en_GB]=This joins zoom for a particular ecclesial URI
+Exec=/home/robert/.local/bin/simpli-zoom west
+Icon=/home/robert/.simpli/desktop-icon/zoom.png
+Terminal=false
+Type=Application
+Categories=AudioVideo;Player
+X-KDE-Protocols=ftp,http,https,mms,rtmp,rtsp,sftp,smb
+Keywords=Player;Capture;DVD;Audio;Video;Server;Broadcast;

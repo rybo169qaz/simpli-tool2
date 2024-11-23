@@ -90,9 +90,9 @@ class MediaIdentity:
             (wellknown, mid) = entry
             #(wellknown, mtype, mloc, mstream, mid) = entry
             if uri == wellknown:
-                media_type = mtype
-                media_location = mloc
-                media_streamed = mstream
+                #media_type = mtype
+                #media_location = mloc
+                #media_streamed = mstream
                 if media_location == 'remote':
                     if self.verbose:
                         print("Remote\n")
@@ -122,6 +122,9 @@ class MediaIdentity:
 
 from utils import func_name
 class TestMediaIdentity:
+
+    def __init__(self):
+        print(f'\nINITIALISING TestMediaIdentity')
 
     def test_get_media_type(self):
         print('Testing {}.{}'.format(__name__, func_name()))
