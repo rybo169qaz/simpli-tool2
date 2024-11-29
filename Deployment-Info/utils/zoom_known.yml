@@ -1,0 +1,18 @@
+---
+zoom:
+    - entry: "join_general"
+      icon: "zoom"
+      description: "Vanilla zoom 0"
+      command: "simpli-zoom general"
+
+    - entry: "join_cov_grosv"
+      icon: "zoom"
+      description: "Zoom Grosvenor Rd 1"
+      command: "simpli-zoom grosv"
+
+    - entry: "join_cov_west"
+      icon: "zoom"
+      description: "Zoom West Cov 2"
+      command: "simpli-zoom west"
+
+

@@ -1,20 +1,22 @@
 ---
-- name: install simpli tool suite
+- name: install zoom
   hosts: wanted
   become: yes
+  vars_files:
+    - vars.yml
 
   tasks:
 
     - name: 1. download zoom deb
       ansible.builtin.get_url:
-        dest: /home/robert/.simpli/packages/
-        url: https://zoom.us/client/latest/zoom_amd64.deb
+        dest: "{{ simpli_dir }}/packages/"
+        url: "{{ zoom_url }}"
         group: robert
         owner: robert
 
     - name: 2. install zoom deb # install the file
       ansible.builtin.apt:
-        deb: /home/robert/.simpli/packages/zoom_amd64.deb
+        deb: "{{ simpli_dir }}/packages/{{zoom_deb}}"
 
 
 

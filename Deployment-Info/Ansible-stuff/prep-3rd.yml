@@ -5,7 +5,22 @@
 
   tasks:
 
-    - name: 1. Install wanted tools
+    - name: 1. Install python
+      apt:
+        name: python3
+        update_cache: yes
+
+    - name: 2. Install python packages
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+      loop:
+        - python3-pip
+        - python3-yaml
+        - python3-psutil
+        - python3-jinja2
+
+    - name: 4. Install wanted tools
       apt:
         name: "{{ item }}"
         update_cache: yes
@@ -18,31 +33,25 @@
         - xz-utils
         - meld
         - ncdu
+        - dconf-editor
         - screenfetch
         - lightdm
+        - vlc
       when: 1 > 0
 
-    - name: 2. Install vlc
-      apt:
-        name: vlc
-        update_cache: yes
-      when: 1 > 0
-
-    - name: 3. Remove unwanted tools
+    - name: 5. Remove unwanted tools
       apt:
         name: "{{ item }}"
         update_cache: yes
         status: "absent"
       loop:
-        - meld
-        - ncdu
         - thunderbird
         - libreoffice
       when: 1 > 2
 
     - name: 8. set desktop settings
       ansible.builtin.shell:
-        cmd: /home/robert/.simpli/utils/set-desk.sh
+        cmd: "{{ simpli_dir }}/utils/set-desk.sh"
       when: 1 > 2
 
     - name: 9. Restart service lightdm

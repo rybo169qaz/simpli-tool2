@@ -7,13 +7,23 @@ zbox ansible_host=192.168.0.41
 wyse_2 ansible_host=192.168.0.50
 wyse_5 ansible_host=192.168.0.42
 wyse_6 ansible_host=192.168.0.46
+wyse_8 ansible_host=192.168.0.32
 
 [wanted]
-wyse_2 ansible_host=192.168.0.50
-wyse_5 ansible_host=192.168.0.42
-wyse_6 ansible_host=192.168.0.46
-zbox ansible_host=192.168.0.41
-zotac_h ansible_host=192.168.0.45
+wyse_2
+#wyse_5
+#wyse_6
+#wyse_8
+#zbox
+#zotac_h
+
+#wyse_2 ansible_host="192.168.0.50"
+#wyse_5 ansible_host="192.168.0.42"
+#wyse_6 ansible_host="192.168.0.46"
+#wyse_8 ansible_host=192.168.0.32
+
+#zbox ansible_host=192.168.0.41
+#zotac_h ansible_host=192.168.0.45
 
 [storage]
 # 16GB wyse-6
@@ -27,3 +37,6 @@ ansible_user=robert
 ansible_ssh_pass=p
 ansible_become_pass=p
 ansible_password=p
+
+[anydesk_id]
+wyse_8 anydesk="1155449973"

@@ -7,14 +7,29 @@ Installing Ansible
 
 ## Getting Ansible
 
+### Startup steps
+- Log on
+- On the welcome page tick the box not to show at future login
+- Exit the Welcome page
+- Open Update Manager and install updates (accepting dependencies)
+  - (use Start > Administration > Update Manager )
+- Bring upto date
+  - **sudo apt-get update**
+  - **sudo aptitude safe-upgrade **
+- Reboot
+  - ** sudo shutdown -r now **
 
 ### Enable SSH
 
+#### On controller
 - Enabling SSH
-    - **sudo apt-get update**
-    - **sudo apt-get upgrade**
     - **sudo apt-get install -y openssh-server **
-    - DEPRECATED **sudo apt-get install openssh-client**
+    - **sudo apt-get install -y openssh-client **
+    - **sudo systemctl enable ssh**
+
+#### On client
+- Enabling SSH
+    - **sudo apt-get install -y openssh-server **
     - **sudo systemctl enable ssh**
     - **ip -4 a**
         - Note the ip address
@@ -191,8 +206,10 @@ Do the following via an SSH session
         - **autologin-user-timeout=7**
 
 
-### OTHER B
-- Other
+## MISC
+- Starting terminal
+    -- ** export DISPLAY=:0 ;x-terminal-emulator **
+- abc
 
 somme blurb
 

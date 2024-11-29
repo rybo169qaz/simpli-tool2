@@ -1,0 +1,97 @@
+---
+tool_uname: "/usr/bin/uname"
+dest_path: "/home/robert/node-info.txt"
+local_bin: "/home/robert/.local/bin"
+linux_desktop_dir: "/home/robert/Desktop"
+home_dir: "/home/robert"
+desktop_dir: "/home/robert/Desktop"
+simpli_dir: "/home/robert/.simpli"
+src_deployment_dir: "/home/robertryan/PROJ2/SIMPLI-TOOL/GIT-REPO/simpli-tool2/Deployment-Info"
+src_media_folder: "/home/robertryan/PROJ/Ansible-Perf/media/"
+zoom_deb: "zoom_amd64.deb"
+zoom_url: "https://zoom.us/client/latest/zoom_amd64.deb"
+
+device_types:
+  wyse_small:
+    model: ""
+    ram: "?GB"
+    persistent_storage: "16GB"
+
+  wyse_large:
+    model: ""
+    ram: "?GB"
+    persistent_storage: "32GB"
+
+  zotac_arcade1:
+    model: "ZBOX-ID41-PLUS"
+    ram: "?GB"
+    persistent_storage: "32GB"
+
+  zotac_arcade_ssd:
+    model: "ZBOX-ID41-PLUS"
+    ram: "?GB"
+    persistent_storage: "32GB"
+
+  zotac_zbox1:
+    model: "ZBOX-CI320NANO-P"
+    ram: "?GB"
+    persistent_storage: "32GB"
+
+
+clients:
+    wyse_2:
+      device_type: "wyse_small"
+      mac_wired: "00:80:64:ef:73:c5"
+      ansible_host: "192.168.0.50"
+      user: "Alf"
+
+    wyse_5:
+      device_type: "wyse_small"
+      mac_wired: "00:80:64:ef:??:??"
+      ansible_host: "192.168.0.42"
+      user: "Bill Bloggs"
+      comment: "Possibly dodgy graphics"
+
+    wyse_6:
+      device_type: "wyse_small"
+      mac_wired: "00:80:64:ef:??:??"
+      ansible_host: "192.168.0.46"
+      user: "Charlie Collins"
+
+    wyse_8:
+      device_type: "wyse_small"
+      mac_wired: "00:80:64:ef:??:??"
+      ansible_host: "192.168.0.32"
+      user: "Dougal Daily"
+
+    zotac_d:
+      device_type: "zotac_arcade1"
+      mac_wired: "00:??:??:??:??:??"
+      ansible_host: "192.168.0.99"
+      user: "Mick Muddle"
+
+    zotac_f:
+      device_type: "zotac_arcade1"
+      mac_wired: "00:??:??:??:??:??"
+      ansible_host: "192.168.0.98"
+      user: "Nathan Needle"
+
+    zotac_g:
+      device_type: "zotac_arcade1"
+      mac_wired: "00:??:??:??:??:??"
+      ansible_host: "192.168.0.97"
+      user: "Peter Purvis"
+
+    zotac_h:
+      device_type: "zotac_arcade2"
+      mac_wired: "00:??:??:??:??:??"
+      ansible_host: "192.168.0.45"
+      user: "Richard Royal"
+
+    zbox:
+      device_type: "zotac_zbox1"
+      mac_wired: "00:??:??:??:??:??"
+      ansible_host: "192.168.0.41"
+      user: "Zebra Zero"
+
+

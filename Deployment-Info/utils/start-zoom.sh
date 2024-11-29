@@ -28,6 +28,10 @@ then
   then
     qual=' --url="https://us02web.zoom.us/j/9170212859?pwd=U1FNQWJ5ZEVxMlZ5U1FVek8xajFXZz09"'
     describe='Coventry West'
+  elif [ "$ip_arg" = "general" ]
+  then
+    qual=' --url="https://us02web.zoom.us/'
+    describe='Zoom general'
   elif [ "$ip_arg" = "rev" ]
   then
     #zoommtg://zoom.us/join?action=join&confno=<your_conference_number>

@@ -2,20 +2,22 @@
 - name: install simpli tool suite
   hosts: wanted
   become: yes
+  vars_files:
+    - vars.yml
 
   tasks:
 
     - name: 1. download anydesk deb
       ansible.builtin.copy:
-        src: /home/robertryan/PROJ2/SIMPLI-TOOL/GIT-REPO/simpli-tool2/Deployment-Info/local-packages/
-        dest: /home/robert/.simpli/packages/
+        src: "{{ src_deployment_dir }}/local-packages/"
+        dest: "{{ simpli_dir }}/packages/"
         owner: robert
         group: robert
         mode: '0755'
 
     - name: 2. install anydesk deb
       ansible.builtin.apt:
-        deb: /home/robert/.simpli/packages/anydesk_6.4.0-1_amd64.deb
+        deb: "{{ simpli_dir }}/packages/anydesk_6.4.0-1_amd64.deb"
 
 
 

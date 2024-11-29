@@ -2,95 +2,117 @@
 - name: install simpli tool suite
   hosts: wanted
   become: yes
+  vars_files:
+    - vars.yml
 
   tasks:
 
-    - name: 1. create folders
+    - name: 1b. create local bin folders
       ansible.builtin.file:
-        name: "{{ item }}"
+        path: "{{ local_bin }}"
+        state: directory
+        owner: robert
+        group: robert
+        mode: 0775
+
+    - name: 1c. create simpli folders
+      ansible.builtin.file:
+        path: "{{ simpli_dir }}/{{ item }}"
         state: directory
         owner: robert
         group: robert
         mode: 0775
       loop:
-        - /home/robert/.simpli
-        - /home/robert/.simpli/info
-        - /home/robert/.simpli/media
-        - /home/robert/.simpli/utils
-        - /home/robert/.simpli/packages
-        - /home/robert/.simpli/desktop-icon
-        - /home/robert/.simpli/logs
-        - /home/robert/.local
-        - /home/robert/.local/bin
+        - info
+        - media
+        - utils
+        - packages
+        - desktop-icon
+        - logs
+
+    - name: 2B. create info files
+      ansible.builtin.shell:
+        cmd: /usr/bin/touch "{{ simpli_dir }}/logs/info_{{ clients[inventory_hostname].device_type }}_{{ inventory_hostname }}.txt"
 
     - name: 2. copy scripts to utils
       ansible.builtin.copy:
-        src: ~/PROJ2/SIMPLI-TOOL/GIT-REPO/simpli-tool2/Deployment-Info/utils/
-        dest: /home/robert/.simpli/utils/
+        src: "{{ src_deployment_dir }}/utils/"
+        dest: "{{ simpli_dir }}/utils/"
         owner: robert
         group: robert
         mode: '0755'
 
     - name: 3. remove links in .local/bin
       ansible.builtin.file:
-        name: "{{ item }}"
+        name: "{{ local_bin }}/{{ item }}"
         state: absent
       loop:
-        - /home/robert/.local/bin/simpli-report
-        - /home/robert/.local/bin/simpli-zoom
-        - /home/robert/.local/bin/simpli-watch
-        - /home/robert/.local/bin/simpli-desk
+        - simpli-report
+        - simpli-zoom
+        - simpli-watch
+        - simpli-config
 
-    - name: 3. remove utils in .local/bin
+    - name: 3. remove utils in .local/bin - these are historical
       ansible.builtin.file:
-        name: "{{ item }}"
+        name: "{{ local_bin }}/{{ item }}"
         state: absent
       loop:
-        - /home/robert/.local/bin/know-device.sh
-        - /home/robert/.local/bin/startzoom.sh
-        - /home/robert/.local/bin/vlc-watch.sh
-        - /home/robert/.local/bin/report
-        - /home/robert/.local/bin/simplireport
-        - /home/robert/.local/bin/simpli-report
-        - /home/robert/.local/bin/simpli-watch
-        - /home/robert/.local/bin/simpli-zoom
+        - know-device.sh
+        - startzoom.sh
+        - vlc-watch.sh
+        - report
+        - simplireport
+        - simpli-report
+        - simpli-watch
+        - simpli-zoom
+        - simpli-desk
+
+    - name: 4. create desktop
+      ansible.builtin.shell:
+        cmd: /usr/bin/python3 /home/robert/.simpli/utils/create_desktop.py /home/robert/.simpli/utils/template_zoom.desktop /home/robert/.simpli/utils/zoom_known.yml /home/robert/.simpli/logs RobR
+      when: 1 > 2
+
+    - name: 4. create desktop
+      ansible.builtin.shell:
+        cmd: /usr/bin/python3 {{ simpli_dir }}/utils/create_desktop.py {{ simpli_dir }}/utils/template_zoom.desktop {{ simpli_dir }}/utils/zoom_known.yml {{ desktop_dir }} RobR
+
 
     - name: 4A. link util report
       ansible.builtin.shell:
-        cmd: /usr/bin/ln -s /home/robert/.simpli/utils/know-device.sh /home/robert/.local/bin/simpli-report
+        cmd: /usr/bin/ln -s {{ simpli_dir }}/utils/know-device.sh {{ local_bin }}/simpli-report
 
-    - name: 4B. link util start zoom
+    - name: 4B. link util desktop config
       ansible.builtin.shell:
-        cmd: /usr/bin/ln -s /home/robert/.simpli/utils/start-zoom.sh /home/robert/.local/bin/simpli-zoom
+        cmd: /usr/bin/ln -s {{ simpli_dir }}/utils/env_config.sh {{ local_bin }}/simpli-config
 
-    - name: 4C. link util watch vlc
+    - name: 4C. link util start zoom
       ansible.builtin.shell:
-        cmd: /usr/bin/ln -s /home/robert/.simpli/utils/vlc-watch.sh /home/robert/.local/bin/simpli-watch
+        cmd: /usr/bin/ln -s {{ simpli_dir }}/utils/start-zoom.sh {{ local_bin }}/simpli-zoom
 
-    - name: 4D. link util desktop settings
+    - name: 4D. link util watch vlc
       ansible.builtin.shell:
-        cmd: /usr/bin/ln -s /home/robert/.simpli/utils/set-desk.sh /home/robert/.local/bin/simpli-desk
+        cmd: /usr/bin/ln -s {{ simpli_dir }}/utils/vlc-watch.sh {{ local_bin }}/simpli-watch
 
     - name: 5. copy Desktop image files
       ansible.builtin.copy:
-        src: /home/robertryan/PROJ2/SIMPLI-TOOL/GIT-REPO/simpli-tool2/Deployment-Info/desktop/desktop-images/
-        dest: /home/robert/.simpli/desktop-icon
+        src: "{{ src_deployment_dir }}/desktop/desktop-images/"
+        dest: "{{ simpli_dir }}/desktop-icon"
         owner: robert
         group: robert
         mode: '0755'
 
-    - name: 6. copy Desktop files
+    - name: 6. copy Template file
       ansible.builtin.copy:
-        src: /home/robertryan/PROJ2/SIMPLI-TOOL/GIT-REPO/simpli-tool2/Deployment-Info/desktop/desktop-config/
-        dest: /home/robert/Desktop
+        src: "{{ src_deployment_dir }}/utils/template_zoom.desktop/"
+        dest: "{{ simpli_dir }}/info"
         owner: robert
         group: robert
         mode: '0755'
 
     - name: 7. copy Media file
       ansible.builtin.copy:
-        src: /home/robertryan/PROJ/Ansible-Perf/media/
-        dest: /home/robert/.simpli/media
+        src: "{{ src_media_folder }}"
+        dest: "{{ simpli_dir }}/media"
         owner: robert
         group: robert
         mode: '0644'

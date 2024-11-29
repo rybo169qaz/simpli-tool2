@@ -2,18 +2,27 @@
 - name: analyse the nodes
   hosts: wanted
   become: yes
+  vars_files:
+    - vars.yml
 
   tasks:
 
+    - name: shell command all
+      shell: "{{ tool_uname }} -a > {{ dest_path }}"
+
+
+
     - name: shell command
-      shell: "/usr/bin/uname -a"
+      shell: "/usr/bin/uname -a "
       register: myshell_output
+      when: 1 > 2
 
     - name: copy the output to a local file
       copy:
         content: "{{ myshell_output.stdout_lines }}"
-        dest: "/home/robert/node-info.txt"  #dest: "/home/robert/.simpli/logs/node-info.txt"
+        dest: "/home/robert/node-info.txt"
       delegate_to: localhost
+      when: 1 > 2
 
 
 
