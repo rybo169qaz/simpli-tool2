@@ -28,6 +28,7 @@
         - vim
         - net-tools
         - curl
+        - gedit
         - unzip
         - tree
         - xz-utils

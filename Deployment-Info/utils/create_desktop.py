@@ -1,7 +1,7 @@
 import os.path
 import platform
 import psutil
-import re
+#import re
 import sys
 import yaml
 #from pathlib import Path
@@ -9,9 +9,6 @@ import yaml
 
 from jinja2 import Environment, FileSystemLoader
 
-TOOL_CMD = 'simpli-zoom grosv'
-TEMPLATE_DIR = '/home/robert/utils'
-TEMPLATE_FILE = 'template_zoom.desktop'
 
 def show_syntax():
     print(f'Args:   <template> <config_data> <dest_dir> <displayName>\n')
@@ -51,76 +48,96 @@ def get_device_id():
     print(f'DEV_ID = {dev_id}')
     return dev_id
 
+def get_dir_and_file(the_template):
+    base_file = os.path.basename(the_template)
+    dir_path = os.path.dirname(the_template)
+    print(f'BASE={base_file}\nDIR={dir_path}\n')
+    return (dir_path, base_file)
+
+def generate_from_template(temp, var_struct, filename):
+    print(f'Generating template: {filename}')
+    content = temp.render(
+        var_struct
+    )
+    with open(filename, mode="w", encoding="utf-8") as message:
+        message.write(content)
+        print(f"... Created {filename}")
+        os.chmod(filename, 0o755)
+
+
+def derive_zoom_desktops(template_file, yaml_source_data, dest_dir, display_name):
+    device_id = get_device_id()
+
+    with open(yaml_source_data) as stream:
+        try:
+            data_struct = yaml.safe_load(stream)
+            # print(yaml.safe_load(stream))
+            # print(data_struct['zoom'])
+
+        except yaml.YAMLError as exc:
+            print(exc)
+
+    # Generate dynamic desktop icons
+    (dirpath, basefile) = get_dir_and_file(template_file)
+    environment = Environment(loader=FileSystemLoader(dirpath))
+    template = environment.get_template(basefile)
+
+    zoom_data = data_struct['zoom']
+
+    for info_struct in zoom_data:
+
+        item = info_struct
+        fname = f"{dest_dir}/{item['entry']}.desktop"
+        generate_from_template(template, info_struct, fname )
+
+
+def derive_info_desktop(info_template_file, dest_dir):
+    (dirpath2, basefile2) = get_dir_and_file(info_template_file)
+    environment = Environment(loader=FileSystemLoader(dirpath2))
+    template2 = environment.get_template(basefile2)
+    src_info_file = f"{dirpath2}/dev-info.txt"
+    info_struct = { 'description': 'Simpli Information',
+                    'icon': 'zoom',
+                    'comment': 'This contains info useful for diagnostics',
+                    'info_file': src_info_file}
+    op_desktop_filename = f"{dest_dir}/info.desktop"
+    generate_from_template(template2, info_struct, op_desktop_filename)
+
+
 
 def main():
     print('IN MAIN\n')
     cmndline_args = sys.argv[1:]
     if len(cmndline_args) != 4:
+        show_syntax()
         exit_msg(1, 'Invalid number of args')
-    # for i in cmndline_args:
-    #     print(f'X {i}\n')
-
-
 
     template_file = cmndline_args[0]
-    source_data = cmndline_args[1]
+    yaml_source_data = cmndline_args[1]
     dest_dir = cmndline_args[2]
     display_name = cmndline_args[3]
 
     os.path.isfile(template_file)
     if not os.path.isfile(template_file):
         exit_msg(2, 'Template file specified is not valid')
-    elif not os.path.isfile(source_data):
+    elif not os.path.isfile(yaml_source_data):
         exit_msg(3, 'Data file specified is not valid')
     elif not os.path.isdir(dest_dir):
         exit_msg(4, 'Destination dir does not exist')
 
     #display_is_valid = bool(re.match('[a-zA-Z\s]+$', display_name))
     display_is_valid = display_name != '' and all(chr.isalpha() or chr.isspace() for chr in display_name)
-
-    basefile = os.path.basename(template_file)
-    dirpath = os.path.dirname(template_file)
-    print(f'BASE={basefile}\nDIR={dirpath}\n')
-
     if not display_is_valid:
         exit_msg(5, 'Display name contains non valid characters')
 
-    device_id = get_device_id()
+    # derive desktop files for all zoom entries
+    derive_zoom_desktops(template_file, yaml_source_data, dest_dir, display_name)
 
-    students = [
-        {"name": "Sandrine", "score": 100},
-        {"name": "Gergeley", "score": 87},
-        {"name": "Frieda", "score": 92},
-    ]
-
-    with open(source_data) as stream:
-        try:
-            data_struct = yaml.safe_load(stream)
-            #print(yaml.safe_load(stream))
-            #print(data_struct['zoom'])
-
-        except yaml.YAMLError as exc:
-            print(exc)
-
-    environment = Environment(loader=FileSystemLoader(dirpath))
-    template = environment.get_template(basefile)
-
-    name_packer = '_' + device_id
-    for item in data_struct['zoom']:
-        #print(str(entry))
-        #my_ent = str(entry['entry'])
-        #my_desc = str(entry['description'])
-        item['devid'] = name_packer
-
-        #print(f'ENTRY={my_ent}, DESC={my_desc}\n')
-        filename = f"{dest_dir}/{item['entry']}.desktop"
-        content = template.render(
-            item
-        )
-        with open(filename, mode="w", encoding="utf-8") as message:
-            message.write(content)
-            print(f"... Created {filename}")
-            os.chmod(filename, 0o755)
+    # now derive the desktop for the info
+    (dirpath, basefile) = get_dir_and_file(template_file) # assume the info template is in the same dir as the zoom
+    INFO_TEMPLATE = 'template_info.desktop'
+    info_template_file = dirpath + '/' + INFO_TEMPLATE
+    derive_info_desktop(info_template_file, dest_dir)
 
 
 

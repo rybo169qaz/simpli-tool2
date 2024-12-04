@@ -7,7 +7,8 @@
 
   tasks:
 
-    - name: 1b. create local bin folders
+
+    - name: 1. create local bin folders
       ansible.builtin.file:
         path: "{{ local_bin }}"
         state: directory
@@ -15,7 +16,15 @@
         group: robert
         mode: 0775
 
-    - name: 1c. create simpli folders
+    - name: 2. create simpli folder
+      ansible.builtin.file:
+        path: "{{ simpli_dir }}"
+        state: directory
+        owner: robert
+        group: robert
+        mode: 0775
+
+    - name: 3. create simpli sub folders
       ansible.builtin.file:
         path: "{{ simpli_dir }}/{{ item }}"
         state: directory
@@ -24,17 +33,13 @@
         mode: 0775
       loop:
         - info
+        - config
         - media
         - utils
         - packages
-        - desktop-icon
         - logs
 
-    - name: 2B. create info files
-      ansible.builtin.shell:
-        cmd: /usr/bin/touch "{{ simpli_dir }}/logs/info_{{ clients[inventory_hostname].device_type }}_{{ inventory_hostname }}.txt"
-
-    - name: 2. copy scripts to utils
+    - name: 4. copy scripts to utils
       ansible.builtin.copy:
         src: "{{ src_deployment_dir }}/utils/"
         dest: "{{ simpli_dir }}/utils/"
@@ -42,17 +47,45 @@
         group: robert
         mode: '0755'
 
-    - name: 3. remove links in .local/bin
-      ansible.builtin.file:
-        name: "{{ local_bin }}/{{ item }}"
-        state: absent
+    - name: 5. link utils # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html
+      ansible.builtin.shell:
+        cmd: |
+          /usr/bin/rm -f "{{ local_bin }}/{{ item.link_end }}"
+          /usr/bin/ln -s "{{ simpli_dir }}/utils/{{ item.actual }}" "{{ local_bin }}/{{ item.link_end }}"
       loop:
-        - simpli-report
-        - simpli-zoom
-        - simpli-watch
-        - simpli-config
+        - { actual: 'know-device.sh', link_end: 'simpli-report' }
+        - { actual: 'start-zoom.sh', link_end: 'simpli-zoom' }
+        - { actual: 'vlc-watch.sh', link_end: 'simpli-watch' }
+        - { actual: 'env_config.sh', link_end: 'simpli-config' }
 
-    - name: 3. remove utils in .local/bin - these are historical
+    - name: 6A. update device info with node name
+      ansible.builtin.shell:
+        cmd: |
+          echo 'Simpli Device info'
+          echo '================== '
+          echo 'HOSTNAME == {{ inventory_hostname }}'
+          echo 'MAC == {{ clients[inventory_hostname].mac_wired }}'
+          echo -n 'UNAME == '
+          /usr/bin/uname -a 
+          echo 'LINUX_USER == {{ clients[inventory_hostname].os_account }}'
+          echo 'PERSON == {{ clients[inventory_hostname].person }}'
+          echo 'COMMENT == {{ clients[inventory_hostname].comment }}'
+          echo -n 'DEPLOY DATE == '
+          /usr/bin/date
+          echo 'ANSIBLE_HOSTNAME == {{ ansible_hostname }}'
+          echo ---
+          echo
+      register: command_output
+
+    - name: 6B. Print output to file # '/home/robert/.simpli/info/dev-info.txt'
+      ansible.builtin.copy:
+        content: "{{command_output.stdout}}"
+        dest: "{{ device_info_file }}"
+        owner: robert
+        group: robert
+        mode: '0644'
+
+    - name: 7. remove utils in .local/bin - these are historical
       ansible.builtin.file:
         name: "{{ local_bin }}/{{ item }}"
         state: absent
@@ -62,60 +95,66 @@
         - vlc-watch.sh
         - report
         - simplireport
-        - simpli-report
-        - simpli-watch
-        - simpli-zoom
-        - simpli-desk
+      when: 2 > 1
 
-    - name: 4. create desktop
-      ansible.builtin.shell:
-        cmd: /usr/bin/python3 /home/robert/.simpli/utils/create_desktop.py /home/robert/.simpli/utils/template_zoom.desktop /home/robert/.simpli/utils/zoom_known.yml /home/robert/.simpli/logs RobR
-      when: 1 > 2
-
-    - name: 4. create desktop
-      ansible.builtin.shell:
-        cmd: /usr/bin/python3 {{ simpli_dir }}/utils/create_desktop.py {{ simpli_dir }}/utils/template_zoom.desktop {{ simpli_dir }}/utils/zoom_known.yml {{ desktop_dir }} RobR
-
-
-    - name: 4A. link util report
-      ansible.builtin.shell:
-        cmd: /usr/bin/ln -s {{ simpli_dir }}/utils/know-device.sh {{ local_bin }}/simpli-report
-
-    - name: 4B. link util desktop config
-      ansible.builtin.shell:
-        cmd: /usr/bin/ln -s {{ simpli_dir }}/utils/env_config.sh {{ local_bin }}/simpli-config
-
-    - name: 4C. link util start zoom
-      ansible.builtin.shell:
-        cmd: /usr/bin/ln -s {{ simpli_dir }}/utils/start-zoom.sh {{ local_bin }}/simpli-zoom
-
-    - name: 4D. link util watch vlc
-      ansible.builtin.shell:
-        cmd: /usr/bin/ln -s {{ simpli_dir }}/utils/vlc-watch.sh {{ local_bin }}/simpli-watch
-
-    - name: 5. copy Desktop image files
+    - name: 10. copy Desktop image files
       ansible.builtin.copy:
-        src: "{{ src_deployment_dir }}/desktop/desktop-images/"
-        dest: "{{ simpli_dir }}/desktop-icon"
+        src: "{{ src_desktop_images }}/"
+        dest: "{{ simpli_config_dir }}/"
         owner: robert
         group: robert
         mode: '0755'
 
-    - name: 6. copy Template file
+    - name: 11. copy config files
+      ansible.builtin.copy:
+        src: "{{ src_desktop_config }}/"
+        dest: "{{ simpli_config_dir }}/"
+        owner: robert
+        group: robert
+        mode: '0755'
+
+
+    - name: 11. copy Template file
       ansible.builtin.copy:
         src: "{{ src_deployment_dir }}/utils/template_zoom.desktop/"
         dest: "{{ simpli_dir }}/info"
         owner: robert
         group: robert
         mode: '0755'
+      when: 1 > 2
 
-    - name: 7. copy Media file
+    - name: 12. copy Media file
       ansible.builtin.copy:
         src: "{{ src_media_folder }}"
         dest: "{{ simpli_dir }}/media"
         owner: robert
         group: robert
         mode: '0644'
+
+    - name: 13. create derived desktop
+      ansible.builtin.shell:
+        cmd: /usr/bin/python3 {{ simpli_utils_dir }}/create_desktop.py {{ simpli_config_dir }}/template_zoom.desktop {{ simpli_config_dir }}/zoom_known.yml {{ desktop_dir }} RobR
+      when: 1 > 0
+
+    - name: X4B. create derived desktop files # if running on controller - but has problems with python modules
+      delegate_to: 127.0.0.1
+      ansible.builtin.shell:
+        cmd: /usr/bin/python3 {{ src_utils }}/create_desktop.py {{ src_utils }}/template_zoom.desktop {{ src_utils }}/zoom_known.yml {{ src_dynamic_desktop }} RobR
+      register: create_desktop_output
+      when: 1 > 2
+
+    - name: X4C. show the output
+      debug:
+        msg:
+          - "Check Failed!"
+          - "{{ create_desktop_output.stdout_lines }}"
+      when: 1 > 2
+
+
+
+
+
+
 
 
 

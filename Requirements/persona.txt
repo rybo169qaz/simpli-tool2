@@ -1,0 +1,21 @@
+
+This records some personas of the use of the tool
+
+
+P1. Able to use keyboard and mouse and able to double clcik an icon and click to close a window but not able to investigate anything further.
+e.g. WE
+
+
+P2. Able to use computer but is not motovated because of the compilcation
+This could benefit from an automated launch of zoom meetings.
+e.g. DZ
+
+
+P3. Able to do basic computer stuff but may have difficulty in determining the solution if it hits a problem.
+e.g. IK
+
+
+P4. Unable to use touch screen. Only able to use TV remote.
+e.g. SN
+
+

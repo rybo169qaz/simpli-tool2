@@ -32,7 +32,7 @@ fi
 show_schema() {
   schema_name=$1
   schema_keys=$(/usr/bin/gsettings list-keys ${schema_name})
-  printf "\nSCHEMA - ${schema_name}\n" | tee -a $op
+  printf "\nSCHEMA - ${schema_name}\n"
   for i in ${schema_keys}; do
     desc=$(/usr/bin/gsettings describe ${schema_name} ${i})
 
@@ -40,11 +40,11 @@ show_schema() {
     the_val2=$(${DISP} ; /usr/bin/gsettings get ${schema_name} ${i})
 
     #printf "\n\t : key=${i} : val=${the_val1} : desc=${desc}\n"
-    printf "  key= %-30s : val=%-12s : desc=%s\n" "$i" "$the_val1" "$desc" | tee -a $op
+    printf "  key= %-30s : val=%-12s : desc=%s\n" "$i" "$the_val1" "$desc"
 
     if [ "$the_val1" != "$the_val2" ]
     then
-      printf "  OLD differs NEW: key= %-30s : oldval=%-12s : newval=%-12s \n" "$i" "$the_val1"  "$the_val2"  | tee -a $op
+      printf "  OLD differs NEW: key= %-30s : oldval=%-12s : newval=%-12s \n" "$i" "$the_val1"  "$the_val2"
     fi
   done
 }
@@ -73,13 +73,30 @@ main_settings() {
 
 }
 
+show_all_schema_keys() {
+  schemas=$(/usr/bin/gsettings list-schemas)
+  printf "\n\nSCHEMAS\n${schemas}\n\n"
+
+  schema_keys=$(/usr/bin/gsettings list-recursively)
+  printf "\n\nSCHEMA-KEYS\n${schema_keys}\n\n"
+}
+
 show_gsettings() {
   printf "\nDESKTOP - gsettings\n"
-  schemas=$(/usr/bin/gsettings list-schemas)
-  printf "SCHEMAS\n${schemas}\n\n"
+
   DISP='export DISPLAY=:0 '
   show_schema 'org.cinnamon.desktop.screensaver'
   show_schema 'org.cinnamon.desktop.session'
+
+  show_schema 'org.gtk.Settings.FileChooser'
+  show_schema 'org.cinnamon.org.gtk.gtk4.Settings.FileChooser'
+  show_schema 'org.nemo.preferences'
+
+}
+
+show_nemo() {
+  nemo_data=$(/usr/bin/cat ~/.config/nemo/desktop-metadata)
+  printf "\n\nNEMO - ${nemo_data}\n"
 }
 
 check_gkey() {
@@ -99,10 +116,14 @@ check_gkey() {
 }
 
 check_gsettings() {
+  # graphical control is via dconf-editor
   printf "\n\n${DIVIDER_SECTION}\nGSETTINGS\n"
   check_gkey 'org.cinnamon.desktop.session' 'idle-delay' 'uint32 0'
   check_gkey 'org.cinnamon.desktop.screensaver' 'idle-activation-enabled' 'false'
   check_gkey 'org.cinnamon.desktop.screensaver' 'lock-enabled' 'false'
+
+  check_gkey 'org.nemo.preferences' 'click-policy' "'single'"
+
 }
 
 show_lightdm_settings() {
@@ -173,9 +194,13 @@ printf "COMMAND = ${cmd}\n"
 if [ "$cmd" == 'show' ]
 then
   main_settings  | tee -a $op
+
+  show_all_schema_keys | tee -a $op
+
   show_gsettings | tee -a $op
   show_lightdm_settings | tee -a $op
   show_xset | tee -a $op
+  show_nemo | tee -a $op
 
 elif [ "$cmd" == 'check' ]
 then

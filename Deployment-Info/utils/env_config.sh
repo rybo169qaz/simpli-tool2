@@ -2,13 +2,14 @@
 
 # Sets desktop config
 TOOL_FUNC='env_conf'
+USER='robert'
 
 LIGHTDM_CONF_01='/etc/lightdm/lightdm.conf.d/01_my.conf'
 
 GSET='/usr/bin/gsettings'
 XSET='/usr/bin/xset'
 
-dest_dir='/home/robert/.simpli/logs'
+dest_dir="/home/${USER}/.simpli/logs"
 node=$(/usr/bin/uname -n)
 
 NOW=$( date '+%F_%H-%M-%S' )
@@ -97,6 +98,7 @@ then
   mod_gkey 'org.cinnamon.desktop.session' 'idle-delay' "0"
   mod_gkey 'org.cinnamon.desktop.screensaver' 'idle-activation-enabled' 'false'
   mod_gkey 'org.cinnamon.desktop.screensaver' 'lock-enabled' 'false'
+  mod_gkey 'org.nemo.preferences' 'click-policy' 'single'
   restart_lightdm
 
 elif [ "$cmd" == 'xset' ]

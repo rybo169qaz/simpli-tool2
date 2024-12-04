@@ -1,0 +1,15 @@
+
+
+QUALITIES
+
+Q101 To be able to identify the identity of
+    Hardware
+    Software
+    User
+
+Q102 The ability to be able to connect to a device remotely in order to correct something.
+
+
+
+
+Q201 The ability to single click a desktop icon to open it.

@@ -1,17 +1,57 @@
 ---
+
+# CONTROLLER CONFIG
+controller_user: 'robertryan'
+controller_user_home_dir: '/home/{{ vars["controller_user"] }}'
+controller_repo: '{{ vars["controller_user_home_dir"] }}/PROJ2/SIMPLI-TOOL/GIT-REPO/simpli-tool2'
+
+#src_deployment_dir: "/home/robertryan/PROJ2/SIMPLI-TOOL/GIT-REPO/simpli-tool2/Deployment-Info"
+#src_deployment_dir: '{{ vars["controller_user_home_dir"] }}/PROJ2/SIMPLI-TOOL/GIT-REPO/simpli-tool2/Deployment-Info'
+src_deployment_dir: '/home/{{ vars["controller_user"] }}/PROJ2/SIMPLI-TOOL/GIT-REPO/simpli-tool2/Deployment-Info'
+src_utils: '{{ src_deployment_dir }}/utils'
+src_dynamic_desktop: '{{ src_deployment_dir }}/desktop/dynamic-desktop'
+src_desktop_config: '{{ src_deployment_dir }}/desktop/desktop-config'
+src_desktop_images: '{{ src_deployment_dir }}/desktop/desktop-images'
+
+# Non-project files
+src_media_folder: "/home/{{ controller_user }}/PROJ/Ansible-Perf/media/"
+
+
+# THIRD PARTY
+zoom_amd64_deb: 'zoom_amd64.deb'
+zoom_amd64_url: 'https://zoom.us/client/latest/{{ vars["zoom_amd64_deb"] }}'
+
+
+# CLIENT CONFIG
 tool_uname: "/usr/bin/uname"
-dest_path: "/home/robert/node-info.txt"
-local_bin: "/home/robert/.local/bin"
-linux_desktop_dir: "/home/robert/Desktop"
-home_dir: "/home/robert"
-desktop_dir: "/home/robert/Desktop"
-simpli_dir: "/home/robert/.simpli"
-src_deployment_dir: "/home/robertryan/PROJ2/SIMPLI-TOOL/GIT-REPO/simpli-tool2/Deployment-Info"
-src_media_folder: "/home/robertryan/PROJ/Ansible-Perf/media/"
-zoom_deb: "zoom_amd64.deb"
-zoom_url: "https://zoom.us/client/latest/zoom_amd64.deb"
+tool_gedit: "/usr/bin/gedit"
+
+#linux_user: 'robert'
+home_dir: '/home/robert'
+
+simpiface_dirname: '.simpli'
+
+dest_path: '{{ vars["home_dir"] }}/analysis-info.txt'
+local_bin: '{{ vars["home_dir"] }}/.local/bin'
+#linux_desktop_dir: "/home/robert/Desktop"
+
+desktop_dir: '{{ vars["home_dir"] }}/Desktop'
+device_info_file: '{{ vars["home_dir"] }}/.simpli/config/dev-info.txt'
+
+# var2: '{{ vars["var1"] }}'
+zsimpli_dir: "/home/generic/.simpli"
+#simpli_dir: '{{ vars["home_dir"] }}/{{ vars["simpiface_dirname"] }}'
+simpli_dir: '/home/robert/.simpli'
+simpli_utils_dir: '/home/robert/.simpli/utils'
+simpli_config_dir: '/home/robert/.simpli/config'
+
 
 device_types:
+  rpi5:
+    model: "pi 5"
+    ram: "?GB"
+    persistent_storage: "?GB"
+
   wyse_small:
     model: ""
     ram: "?GB"
@@ -39,59 +79,84 @@ device_types:
 
 
 clients:
+    rpi5_argon:
+      device_type: "rpi5"
+      mac_wired: "dc:a6:32:79:47:bb"
+      ansible_host: "192.168.0.53"
+      os_account: "generic"
+      person: "Alf"
+      comment: "None"
+
     wyse_2:
       device_type: "wyse_small"
       mac_wired: "00:80:64:ef:73:c5"
       ansible_host: "192.168.0.50"
-      user: "Alf"
+      os_account: "robert"
+      person: "Alf"
+      comment: "None"
 
     wyse_5:
       device_type: "wyse_small"
       mac_wired: "00:80:64:ef:??:??"
       ansible_host: "192.168.0.42"
-      user: "Bill Bloggs"
+      os_account: "robert"
+      person: "Bill Bloggs"
       comment: "Possibly dodgy graphics"
 
     wyse_6:
       device_type: "wyse_small"
-      mac_wired: "00:80:64:ef:??:??"
+      mac_wired: "00:80:64:d5:d0:a2"
       ansible_host: "192.168.0.46"
-      user: "Charlie Collins"
+      os_account: "robert"
+      person: "Charlie Collins"
+      comment: "None"
 
     wyse_8:
       device_type: "wyse_small"
       mac_wired: "00:80:64:ef:??:??"
       ansible_host: "192.168.0.32"
-      user: "Dougal Daily"
+      os_account: "robert"
+      person: "Dougal Daily"
+      comment: "None"
 
     zotac_d:
       device_type: "zotac_arcade1"
       mac_wired: "00:??:??:??:??:??"
       ansible_host: "192.168.0.99"
-      user: "Mick Muddle"
+      os_account: "robert"
+      person: "Mick Muddle"
+      comment: "None"
 
     zotac_f:
       device_type: "zotac_arcade1"
       mac_wired: "00:??:??:??:??:??"
       ansible_host: "192.168.0.98"
-      user: "Nathan Needle"
+      os_account: "robert"
+      person: "Nathan Needle"
+      comment: "None"
 
     zotac_g:
       device_type: "zotac_arcade1"
       mac_wired: "00:??:??:??:??:??"
       ansible_host: "192.168.0.97"
-      user: "Peter Purvis"
+      os_account: "robert"
+      person: "Peter Purvis"
+      comment: "None"
 
     zotac_h:
       device_type: "zotac_arcade2"
       mac_wired: "00:??:??:??:??:??"
       ansible_host: "192.168.0.45"
-      user: "Richard Royal"
+      os_account: "robert"
+      person: "Richard Royal"
+      comment: "None"
 
     zbox:
       device_type: "zotac_zbox1"
       mac_wired: "00:??:??:??:??:??"
       ansible_host: "192.168.0.41"
-      user: "Zebra Zero"
+      os_account: "robert"
+      person: "Zebra Zero"
+      comment: "None"
 
 
