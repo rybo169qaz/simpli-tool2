@@ -58,7 +58,7 @@ mod_lightdm() {
 [Seat:*]
 greeter-hide-users=false
 autologin-user=robert
-autologin-user-timeout=7
+autologin-user-timeout=5
 
 EOF
 

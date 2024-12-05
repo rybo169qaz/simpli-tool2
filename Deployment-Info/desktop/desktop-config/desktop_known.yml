@@ -1,0 +1,101 @@
+---
+platform:
+  category_description: 'Info about Simpli software'
+  tool_command: '/usr/bin/gedit'
+  desktop_categories: ''
+  desktop_kde_protocols: ''
+  desktop_keywords: 'Editor;'
+
+  entries:
+    - entry: "platform_info"
+      enabled: 'true'
+      icon: "info.256x256"
+      description: "Software details"
+      command_args: "/home/robert/.simpli/config/dev-info.txt"
+
+zoom:
+    category_description: 'Zoom ecclesial meetings'
+    tool_command: '/home/robert/.local/bin/simpli-zoom'
+    desktop_categories: 'AudioVideo;Player'
+    desktop_kde_protocols: 'ftp,http,https,mms,rtmp,rtsp,sftp,smb'
+    desktop_keywords: 'Player;Capture;DVD;Audio;Video;Server;Broadcast;'
+
+    entries:
+      - entry: "zoom_general"
+        enabled: 'true'
+        icon: "zoom"
+        description: "General"
+        command_args: "general"
+
+      - entry: "zoom_cov_grosv"
+        enabled: 'true'
+        icon: "zoom"
+        description: "Grosvenor Rd (normal)"
+        command_args: "grosv"
+
+      - entry: "zoom_cov_west"
+        enabled: 'true'
+        icon: "zoom"
+        description: "Cov West (normal)"
+        command_args: "west"
+
+browser:
+    category_description: 'Browser general'
+    tool_command: '/usr/bin/firefox'
+    desktop_categories: 'AudioVideo;Player'
+    desktop_kde_protocols: 'ftp,http,https,mms,rtmp,rtsp,sftp,smb'
+    desktop_keywords: 'Player;Capture;DVD;Audio;Video;Server;Broadcast;'
+
+    entries:
+      - entry: "youtube_general"
+        enabled: 'false'
+        icon: "firefox_mozilla_browser_icon_128px"
+        description: "YouTube: General"
+        command_args: 'www.youtube.com'
+
+      - entry: "youtube_KateBush_Wuthering"
+        enabled: 'true'
+        icon: "zoom"
+        description: "YouTube: Kate Bush - Wuthering Heights"
+        command_args: 'www.youtube.com/watch?v=-1pMMIe4hb4'
+
+      - entry: "browser_CDVideo_The-Bible-God-And-Creation"
+        enabled: 'true'
+        icon: "CDVideo_R-CV-LOGO-BC-AC@2x-150x150"
+        description: "CDV(b): Bible God and Creation"
+        command_args: 'christadelphianvideo.org/studyvideo/the-bible-god-and-creation/'
+
+
+video:
+    category_description: 'Media Play'
+    tool_command: '/usr/bin/vlc'
+    desktop_categories: 'AudioVideo;Player'
+    desktop_kde_protocols: 'ftp,http,https,mms,rtmp,rtsp,sftp,smb'
+    desktop_keywords: 'Player;Capture;DVD;Audio;Video;Server;Broadcast;'
+
+    entries:
+      - entry: "vlc_general"
+        enabled: 'false'
+        icon: "VLC_icon"
+        description: "VLC: General"
+        command_args: 'www.youtube.com'
+
+      - entry: "vlc_autumn_1"
+        enabled: 'false'
+        icon: "VLC_icon"
+        description: "Autumn video"
+        command_args: '/home/robert/.simpli/media/Autumn.mp4'
+
+      - entry: "vlc_earth"
+        enabled: 'true'
+        icon: "VLC_icon"
+        description: "Earth video"
+        command_args: '/home/robert/.simpli/media/HD_Earth_Views_512kb.mp4'
+
+      - entry: "vlc_CDVideo_The-Bible-God-And-Creation"
+        enabled: 'false'
+        icon: "CDVideo_R-CV-LOGO-BC-AC@2x-150x150"
+        description: "CDV(v): Bible God and Creation"
+        command_args: 'http://www.youtube.com/watch?v=lbA5FWftfao'
+
+

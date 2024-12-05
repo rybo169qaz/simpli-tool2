@@ -9,13 +9,24 @@ import yaml
 
 from jinja2 import Environment, FileSystemLoader
 
+SIMPLI_PREFIX = 'simpli'
 
 def show_syntax():
-    print(f'Args:   <template> <config_data> <dest_dir> <displayName>\n')
+    print(f'Syntax : Args ==  <template_desktop_file> <config_data> <dest_dir> <displayName>\n')
+
+def show_help():
+    info = """    This utility takea template file (using jinja syntax), together 
+    with a yaml config file and generates a desktop file for each entry. 
+    The config of each generated desktop file is based upon the values in the config file.  
+    Note: It can be run on controller or client, however only the client is configured with 
+    the requisite python modules.
+    """
+    print(f'\nTool info:\n{info}\n')
 
 def exit_msg(code, text):
-    print(f'Error ({code}): {text}\n')
-    show_syntax()
+    if code != 0:
+        print(f'Error ({code}): {text}\n')
+        show_syntax()
     exit(code)
 
 def get_mac():
@@ -55,7 +66,7 @@ def get_dir_and_file(the_template):
     return (dir_path, base_file)
 
 def generate_from_template(temp, var_struct, filename):
-    print(f'Generating template: {filename}')
+    print(f'Generating template_desktop_file: {filename}')
     content = temp.render(
         var_struct
     )
@@ -64,8 +75,31 @@ def generate_from_template(temp, var_struct, filename):
         print(f"... Created {filename}")
         os.chmod(filename, 0o755)
 
+def derive_desktop_category(category_data, dest_dir, template_desktop_file):
+    common_data = dict()
+    common_data['tool_command'] = category_data['tool_command']
+    common_data['desktop_categories'] = category_data['desktop_categories']
+    common_data['desktop_kde_protocols'] = category_data['desktop_kde_protocols']
+    common_data['desktop_keywords'] = category_data['desktop_keywords']
 
-def derive_zoom_desktops(template_file, yaml_source_data, dest_dir, display_name):
+    zoom_entries = category_data['entries']
+    for info_struct in zoom_entries:
+        if info_struct['enabled'] == 'true':
+            new_struct = dict()
+
+            # inherit the common attributes
+            for key, value in common_data.items():
+                new_struct[key] = value
+
+            # configure the specific attributes (this allows overriding)
+            for key2, value2 in info_struct.items():
+                new_struct[key2] = value2
+
+            fname = f"{dest_dir}/{SIMPLI_PREFIX}_{new_struct['entry']}.desktop"
+            generate_from_template(template_desktop_file, new_struct, fname)
+
+
+def derive_all_desktops(template_file, yaml_source_data, dest_dir, display_name):
     device_id = get_device_id()
 
     with open(yaml_source_data) as stream:
@@ -77,18 +111,15 @@ def derive_zoom_desktops(template_file, yaml_source_data, dest_dir, display_name
         except yaml.YAMLError as exc:
             print(exc)
 
-    # Generate dynamic desktop icons
+    # Obtain the overall template
     (dirpath, basefile) = get_dir_and_file(template_file)
     environment = Environment(loader=FileSystemLoader(dirpath))
     template = environment.get_template(basefile)
 
-    zoom_data = data_struct['zoom']
-
-    for info_struct in zoom_data:
-
-        item = info_struct
-        fname = f"{dest_dir}/{item['entry']}.desktop"
-        generate_from_template(template, info_struct, fname )
+    derive_desktop_category(data_struct['zoom'], dest_dir, template)
+    derive_desktop_category(data_struct['browser'], dest_dir, template)
+    derive_desktop_category(data_struct['video'], dest_dir, template)
+    derive_desktop_category(data_struct['platform'], dest_dir, template)
 
 
 def derive_info_desktop(info_template_file, dest_dir):
@@ -106,8 +137,13 @@ def derive_info_desktop(info_template_file, dest_dir):
 
 
 def main():
-    print('IN MAIN\n')
     cmndline_args = sys.argv[1:]
+
+    if cmndline_args[0] == '-h' or cmndline_args[0] == '--help':
+        show_help()
+        show_syntax()
+        exit_msg(0, '')
+
     if len(cmndline_args) != 4:
         show_syntax()
         exit_msg(1, 'Invalid number of args')
@@ -116,6 +152,8 @@ def main():
     yaml_source_data = cmndline_args[1]
     dest_dir = cmndline_args[2]
     display_name = cmndline_args[3]
+
+    print(f'DISPLAYNAME == {display_name}\n')
 
     os.path.isfile(template_file)
     if not os.path.isfile(template_file):
@@ -130,15 +168,8 @@ def main():
     if not display_is_valid:
         exit_msg(5, 'Display name contains non valid characters')
 
-    # derive desktop files for all zoom entries
-    derive_zoom_desktops(template_file, yaml_source_data, dest_dir, display_name)
-
-    # now derive the desktop for the info
-    (dirpath, basefile) = get_dir_and_file(template_file) # assume the info template is in the same dir as the zoom
-    INFO_TEMPLATE = 'template_info.desktop'
-    info_template_file = dirpath + '/' + INFO_TEMPLATE
-    derive_info_desktop(info_template_file, dest_dir)
-
+    # derive desktop files
+    derive_all_desktops(template_file, yaml_source_data, dest_dir, display_name)
 
 
 if __name__ == "__main__":

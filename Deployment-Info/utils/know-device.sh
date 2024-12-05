@@ -17,16 +17,9 @@ NOW=$( date '+%F_%H-%M-%S' )
 
 dest_dir='/home/robert/.simpli/logs'
 node=$(/usr/bin/uname -n)
-op="${dest_dir}/${node}_${NOW}.txt"
-PERMA_NAME="${dest_dir}/${node}_report.txt"
+#op="${dest_dir}/${node}_${NOW}.txt"
+PERMA_NAME="${dest_dir}/${node}_report"
 
-if [ -L "${PERMA_NAME}" ]
-then
-  printf "Info: Removing perma link ${PERMA_NAME}\n"
-  rm "$PERMA_NAME"
-  #ln -s "${dest_dir}/${op}" "${dest_dir}/$PERMA_NAME"
-  #ln -s "${dest_dir}/${op}" "${dest_dir}/$PERMA_NAME"
-fi
 
 
 show_schema() {
@@ -189,8 +182,26 @@ fi
 
 cmd="$1"
 
+if [ $cmd == "show" -o $cmd == "check" ]; then
+  printf "COMMAND = ${cmd}\n" | tee -a $op
+  #op="${dest_dir}/${node}_${cmd}_${NOW}.txt"
+  op="${dest_dir}/${node}_${NOW}_${cmd}.txt"
+else
+  printf "Invalid command argument\n"
+  op="${dest_dir}/${node}_${NOW}.txt"
+fi
 
-printf "COMMAND = ${cmd}\n"
+this_perm="${PERMA_NAME}_${cmd}.txt"
+
+if [ -L "${this_perm}" ]
+then
+  printf "Info: Removing perma link ${this_perm}\n"
+  rm "this_perm"
+fi
+
+
+
+printf "COMMAND = ${cmd}\n" | tee -a $op
 if [ "$cmd" == 'show' ]
 then
   main_settings  | tee -a $op
@@ -213,9 +224,9 @@ else
   exit 2
 fi
 
-ln -s "${op}" "${PERMA_NAME}"
+ln -s "${op}" "${this_perm}"
 printf "\n\nOutput destination = ${op}\n"
-printf "\nUpdated perma-link  ${PERMA_NAME}  to  ${op}\n"
+printf "\nUpdated perma-link  ${this_perm}  to  ${op}\n"
 
 #printf "\nEND \t${NOW}\n\n" | tee -a $op
 printf "\nEND \n\n"

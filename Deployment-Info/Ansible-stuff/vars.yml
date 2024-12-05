@@ -160,3 +160,6 @@ clients:
       comment: "None"
 
 
+# CONFIG RULES
+config_rules:
+  perform_step: False

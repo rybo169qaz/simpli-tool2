@@ -54,6 +54,8 @@ Installing Ansible
 - Copy the file over
     - **rsync -r Deployment-Info robert@*IpAddress*:/tmp **
     - e.g. **rsync -r Deployment-Info robert@192.168.0.49:/tmp **
+    - Note that if you get an error then perfom a manual
+        - ssh robert@<ip>
 - TBD
 
 #### On client

@@ -7,7 +7,6 @@
 
   tasks:
 
-
     - name: 1. create local bin folders
       ansible.builtin.file:
         path: "{{ local_bin }}"
@@ -46,6 +45,7 @@
         owner: robert
         group: robert
         mode: '0755'
+      tags: gendesk
 
     - name: 5. link utils # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html
       ansible.builtin.shell:
@@ -83,7 +83,7 @@
         dest: "{{ device_info_file }}"
         owner: robert
         group: robert
-        mode: '0644'
+        mode: '0444'
 
     - name: 7. remove utils in .local/bin - these are historical
       ansible.builtin.file:
@@ -95,15 +95,16 @@
         - vlc-watch.sh
         - report
         - simplireport
-      when: 2 > 1
+      when: False
 
-    - name: 10. copy Desktop image files
+    - name: 10. copy Desktop related files e.g. png of icon
       ansible.builtin.copy:
         src: "{{ src_desktop_images }}/"
         dest: "{{ simpli_config_dir }}/"
         owner: robert
         group: robert
         mode: '0755'
+      tags: gendesk
 
     - name: 11. copy config files
       ansible.builtin.copy:
@@ -112,16 +113,17 @@
         owner: robert
         group: robert
         mode: '0755'
+      tags: gendesk
 
 
     - name: 11. copy Template file
       ansible.builtin.copy:
-        src: "{{ src_deployment_dir }}/utils/template_zoom.desktop/"
-        dest: "{{ simpli_dir }}/info"
+        src: "{{ src_desktop_config }}/template.desktop/"
+        dest: "{{ simpli_config_dir }}/info"
         owner: robert
         group: robert
         mode: '0755'
-      when: 1 > 2
+      tags: gendesk
 
     - name: 12. copy Media file
       ansible.builtin.copy:
@@ -133,15 +135,38 @@
 
     - name: 13. create derived desktop
       ansible.builtin.shell:
-        cmd: /usr/bin/python3 {{ simpli_utils_dir }}/create_desktop.py {{ simpli_config_dir }}/template_zoom.desktop {{ simpli_config_dir }}/zoom_known.yml {{ desktop_dir }} RobR
-      when: 1 > 0
+        cmd: /usr/bin/python3 {{ simpli_utils_dir }}/create_desktop.py {{ simpli_config_dir }}/template.desktop {{ simpli_config_dir }}/desktop_known.yml {{ desktop_dir }} RobR
+      tags: gendesk
 
-    - name: X4B. create derived desktop files # if running on controller - but has problems with python modules
-      delegate_to: 127.0.0.1
+    - name: 14A. generate report
       ansible.builtin.shell:
-        cmd: /usr/bin/python3 {{ src_utils }}/create_desktop.py {{ src_utils }}/template_zoom.desktop {{ src_utils }}/zoom_known.yml {{ src_dynamic_desktop }} RobR
-      register: create_desktop_output
-      when: 1 > 2
+        cmd: '{{ simpli_utils_dir }}/know-device.sh show'
+      tags: report
+
+    - name: 14B. perform initial check
+      ansible.builtin.shell:
+        cmd: '{{ simpli_utils_dir }}/know-device.sh check'
+      tags: report
+
+    - name: 14C. desktop setg
+      ansible.builtin.shell:
+        cmd: '{{ simpli_utils_dir }}/env_config.sh setg'
+      tags: report
+
+    - name: 14D. desktop setlight
+      ansible.builtin.shell:
+        cmd: '{{ simpli_utils_dir }}/env_config.sh setlight'
+      tags: report
+
+    - name: 14E. desktop xset
+      ansible.builtin.shell:
+        cmd: '{{ simpli_utils_dir }}/env_config.sh xset'
+      tags: report
+
+    - name: 14F. perform final check
+      ansible.builtin.shell:
+        cmd: '{{ simpli_utils_dir }}/know-device.sh check'
+      tags: report
 
     - name: X4C. show the output
       debug:
