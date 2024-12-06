@@ -46,12 +46,6 @@ def get_network_physical_address(netInterfaceName):
   return macAddress.replace('-',':')
 
 def get_device_id():
-    #full_mac = gma()
-    #mac_comp = full_mac.split(':')
-    #dev_id = mac_comp[4] + mac_comp[5] + '_' + platform.node()
-
-    #full_mac = get_mac()
-
     if_name = 'enp1s0'
     full_mac = get_network_physical_address(if_name)
 
@@ -100,7 +94,7 @@ def derive_desktop_category(category_data, dest_dir, template_desktop_file):
 
 
 def derive_all_desktops(template_file, yaml_source_data, dest_dir, display_name):
-    device_id = get_device_id()
+    #device_id = get_device_id()
 
     with open(yaml_source_data) as stream:
         try:

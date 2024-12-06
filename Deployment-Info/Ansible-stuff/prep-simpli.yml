@@ -1,7 +1,6 @@
 ---
 - name: install simpli tool suite
   hosts: wanted
-  become: yes
   vars_files:
     - vars.yml
 
@@ -14,6 +13,7 @@
         owner: robert
         group: robert
         mode: 0775
+      tags: copy
 
     - name: 2. create simpli folder
       ansible.builtin.file:
@@ -22,14 +22,14 @@
         owner: robert
         group: robert
         mode: 0775
+      become_user: robert
+      tags: copy
 
     - name: 3. create simpli sub folders
       ansible.builtin.file:
         path: "{{ simpli_dir }}/{{ item }}"
         state: directory
-        owner: robert
-        group: robert
-        mode: 0775
+      become_user: robert
       loop:
         - info
         - config
@@ -37,21 +37,22 @@
         - utils
         - packages
         - logs
+      tags: copy
 
     - name: 4. copy scripts to utils
       ansible.builtin.copy:
         src: "{{ src_deployment_dir }}/utils/"
         dest: "{{ simpli_dir }}/utils/"
-        owner: robert
-        group: robert
-        mode: '0755'
-      tags: gendesk
+        mode: 0775
+      become_user: robert
+      tags: copy
 
     - name: 5. link utils # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html
       ansible.builtin.shell:
         cmd: |
           /usr/bin/rm -f "{{ local_bin }}/{{ item.link_end }}"
           /usr/bin/ln -s "{{ simpli_dir }}/utils/{{ item.actual }}" "{{ local_bin }}/{{ item.link_end }}"
+      become_user: robert
       loop:
         - { actual: 'know-device.sh', link_end: 'simpli-report' }
         - { actual: 'start-zoom.sh', link_end: 'simpli-zoom' }
@@ -73,17 +74,19 @@
           echo -n 'DEPLOY DATE == '
           /usr/bin/date
           echo 'ANSIBLE_HOSTNAME == {{ ansible_hostname }}'
+          echo  'ANSIBLE_DATE_TIME == {{ ansible_date_time.iso8601 }}'
           echo ---
           echo
       register: command_output
+      become_user: robert
+      tags: report
 
     - name: 6B. Print output to file # '/home/robert/.simpli/info/dev-info.txt'
       ansible.builtin.copy:
         content: "{{command_output.stdout}}"
         dest: "{{ device_info_file }}"
-        owner: robert
-        group: robert
-        mode: '0444'
+      become_user: robert
+      tags: report
 
     - name: 7. remove utils in .local/bin - these are historical
       ansible.builtin.file:
@@ -96,84 +99,79 @@
         - report
         - simplireport
       when: False
+      tags: copy
 
     - name: 10. copy Desktop related files e.g. png of icon
       ansible.builtin.copy:
         src: "{{ src_desktop_images }}/"
         dest: "{{ simpli_config_dir }}/"
-        owner: robert
-        group: robert
-        mode: '0755'
-      tags: gendesk
+      become_user: robert
+      tags: copy
 
     - name: 11. copy config files
       ansible.builtin.copy:
         src: "{{ src_desktop_config }}/"
         dest: "{{ simpli_config_dir }}/"
-        owner: robert
-        group: robert
-        mode: '0755'
-      tags: gendesk
-
+      become_user: robert
+      tags: copy
 
     - name: 11. copy Template file
       ansible.builtin.copy:
         src: "{{ src_desktop_config }}/template.desktop/"
         dest: "{{ simpli_config_dir }}/info"
-        owner: robert
-        group: robert
-        mode: '0755'
-      tags: gendesk
+      become_user: robert
+      tags: copy
 
     - name: 12. copy Media file
       ansible.builtin.copy:
         src: "{{ src_media_folder }}"
         dest: "{{ simpli_dir }}/media"
-        owner: robert
-        group: robert
-        mode: '0644'
+      become_user: robert
+      tags: copy
 
     - name: 13. create derived desktop
       ansible.builtin.shell:
         cmd: /usr/bin/python3 {{ simpli_utils_dir }}/create_desktop.py {{ simpli_config_dir }}/template.desktop {{ simpli_config_dir }}/desktop_known.yml {{ desktop_dir }} RobR
+      become_user: robert
       tags: gendesk
 
-    - name: 14A. generate report
+    - name: 14. generate report
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/know-device.sh show'
+      become_user: robert
       tags: report
+      when: 1>2
 
     - name: 14B. perform initial check
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/know-device.sh check'
       tags: report
+      when: 1>2
 
     - name: 14C. desktop setg
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/env_config.sh setg'
-      tags: report
+      tags: modenv
+      when: 1>2
 
     - name: 14D. desktop setlight
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/env_config.sh setlight'
-      tags: report
+      tags: modenv
+      when: 1>2
 
     - name: 14E. desktop xset
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/env_config.sh xset'
-      tags: report
+      tags: modenv
+      when: 1>2
 
     - name: 14F. perform final check
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/know-device.sh check'
       tags: report
+      when: 1>2
 
-    - name: X4C. show the output
-      debug:
-        msg:
-          - "Check Failed!"
-          - "{{ create_desktop_output.stdout_lines }}"
-      when: 1 > 2
 
 
 

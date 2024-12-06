@@ -27,7 +27,7 @@ wyse_5
 wyse_6
 wyse_8
 #zbox
-#zotac_h
+zotac_h
 #rpi5_argon
 
 #wyse_2 ansible_host="192.168.0.50"

@@ -98,8 +98,13 @@ then
   mod_gkey 'org.cinnamon.desktop.session' 'idle-delay' "0"
   mod_gkey 'org.cinnamon.desktop.screensaver' 'idle-activation-enabled' 'false'
   mod_gkey 'org.cinnamon.desktop.screensaver' 'lock-enabled' 'false'
+
+  #mod_gkey 'org.cinnamon.desktop.background' 'picture-uri' "'file:///usr/share/backgrounds/linuxmint/default_background.jpg'"
+  mod_gkey 'org.cinnamon.desktop.background' 'picture-uri' "'file:///usr/share/backgrounds/linuxmint/sele_ring_center_green.jpg'"
+
   mod_gkey 'org.nemo.preferences' 'click-policy' 'single'
-  restart_lightdm
+  mod_gkey 'org.cinnamon.desktop.interface' 'gtk-overlay-scrollbars' 'false'
+  #restart_lightdm
 
 elif [ "$cmd" == 'xset' ]
 then

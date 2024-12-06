@@ -7,7 +7,7 @@ platform:
   desktop_keywords: 'Editor;'
 
   entries:
-    - entry: "platform_info"
+    - entry: "01_platform_info"
       enabled: 'true'
       icon: "info.256x256"
       description: "Software details"
@@ -21,22 +21,22 @@ zoom:
     desktop_keywords: 'Player;Capture;DVD;Audio;Video;Server;Broadcast;'
 
     entries:
-      - entry: "zoom_general"
+      - entry: "10_zoom_general"
         enabled: 'true'
         icon: "zoom"
         description: "General"
         command_args: "general"
 
-      - entry: "zoom_cov_grosv"
+      - entry: "11_zoom_cov_grosv"
         enabled: 'true'
         icon: "zoom"
-        description: "Grosvenor Rd (normal)"
+        description: "Grosvenor Rd (main)"
         command_args: "grosv"
 
-      - entry: "zoom_cov_west"
+      - entry: "12_zoom_cov_west"
         enabled: 'true'
         icon: "zoom"
-        description: "Cov West (normal)"
+        description: "Cov West (main)"
         command_args: "west"
 
 browser:
@@ -54,8 +54,8 @@ browser:
         command_args: 'www.youtube.com'
 
       - entry: "youtube_KateBush_Wuthering"
-        enabled: 'true'
-        icon: "zoom"
+        enabled: 'false'
+        icon: "firefox_mozilla_browser_icon_128px"
         description: "YouTube: Kate Bush - Wuthering Heights"
         command_args: 'www.youtube.com/watch?v=-1pMMIe4hb4'
 
@@ -86,7 +86,7 @@ video:
         description: "Autumn video"
         command_args: '/home/robert/.simpli/media/Autumn.mp4'
 
-      - entry: "vlc_earth"
+      - entry: "02_vlc_earth"
         enabled: 'true'
         icon: "VLC_icon"
         description: "Earth video"

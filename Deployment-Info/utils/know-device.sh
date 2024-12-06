@@ -13,7 +13,7 @@ DIVIDER_SECTION='============'
 START_SECTION='vvvvvvvvvvvv'
 END_SECTION='^^^^^^^^^^^^^'
 
-NOW=$( date '+%F_%H-%M-%S' )
+NOW=$( date '+%F_T_%H-%M-%S' )
 
 dest_dir='/home/robert/.simpli/logs'
 node=$(/usr/bin/uname -n)
@@ -83,6 +83,11 @@ show_gsettings() {
 
   show_schema 'org.gtk.Settings.FileChooser'
   show_schema 'org.cinnamon.org.gtk.gtk4.Settings.FileChooser'
+
+  show_schema 'com.linuxmint.mintmenu.plugins.places'
+  show_schema 'com.linuxmint.mintmenu.plugins.system_management'
+  show_schema 'org.cinnamon.desktop.interface'
+
   show_schema 'org.nemo.preferences'
 
 }
@@ -98,14 +103,20 @@ check_gkey() {
   req_val=$3
 
   DISP='export DISPLAY=:0 '
-  initial_get=$(${DISP} ; ${GSET} get ${schema_name} ${key_name} )
+
+  #initial_get=$(${DISP} ; ${GSET} get ${schema_name} ${key_name} )
+  initial_get=$(${GSET} get ${schema_name} ${key_name} )
+
   if [ "$initial_get" == "$req_val" ]
   then
     prefix='OK        :'
+    desc="ACTUAL=WANTED=${initial_get} "
   else
     prefix='MISMATCH  :'
+    desc="\n\t\t\tACTUAL=${initial_get} ; \n\t\t\tWANTED=${req_val} "
   fi
-  printf "${prefix} Schema:${schema_name}  key:${key_name} : ACTUAL=${initial_get} ; WANTED=${req_val} \n\n"
+  #printf "${prefix} Schema:${schema_name}  key:${key_name} : ACTUAL=${initial_get} ; WANTED=${req_val} \n\n"
+  printf "${prefix} Schema:${schema_name}  key:${key_name} : ${desc}\n\n"
 }
 
 check_gsettings() {
@@ -114,6 +125,13 @@ check_gsettings() {
   check_gkey 'org.cinnamon.desktop.session' 'idle-delay' 'uint32 0'
   check_gkey 'org.cinnamon.desktop.screensaver' 'idle-activation-enabled' 'false'
   check_gkey 'org.cinnamon.desktop.screensaver' 'lock-enabled' 'false'
+
+  #
+  check_gkey 'org.cinnamon.desktop.background' 'picture-uri' "'file:///usr/share/backgrounds/linuxmint/sele_ring_center_green.jpg'" # orig 'file:///usr/share/backgrounds/linuxmint/default_background.jpg'
+
+  check_gkey 'com.linuxmint.mintmenu.plugins.places' 'allow-scrollbar' 'false'
+  check_gkey 'com.linuxmint.mintmenu.plugins.system_management' 'allow-scrollbar' 'false'
+  check_gkey 'org.cinnamon.desktop.interface' 'gtk-overlay-scrollbars' 'false'
 
   check_gkey 'org.nemo.preferences' 'click-policy' "'single'"
 
@@ -196,12 +214,16 @@ this_perm="${PERMA_NAME}_${cmd}.txt"
 if [ -L "${this_perm}" ]
 then
   printf "Info: Removing perma link ${this_perm}\n"
-  rm "this_perm"
+  rm -f "this_perm"
 fi
 
 
 
 printf "COMMAND = ${cmd}\n" | tee -a $op
+
+running_as=$(/usr/bin/whoami)
+printf "USER = ${running_as}\n" | tee -a $op
+
 if [ "$cmd" == 'show' ]
 then
   main_settings  | tee -a $op
@@ -224,9 +246,10 @@ else
   exit 2
 fi
 
-ln -s "${op}" "${this_perm}"
 printf "\n\nOutput destination = ${op}\n"
-printf "\nUpdated perma-link  ${this_perm}  to  ${op}\n"
+
+#ln -s "${op}" "${this_perm}"
+#printf "\nUpdated perma-link  ${this_perm}  to  ${op}\n"
 
 #printf "\nEND \t${NOW}\n\n" | tee -a $op
 printf "\nEND \n\n"

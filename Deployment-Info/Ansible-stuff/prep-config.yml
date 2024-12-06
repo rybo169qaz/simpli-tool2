@@ -1,0 +1,47 @@
+---
+- name: install simpli tool suite
+  hosts: wanted
+  become: yes
+  vars_files:
+    - vars.yml
+
+  tasks:
+
+    - name: 21. perform initial check
+      ansible.builtin.shell:
+        cmd: '{{ simpli_utils_dir }}/know-device.sh check'
+      become_user: robert
+      tags: report
+
+    - name: 23. desktop setg
+      ansible.builtin.shell:
+        cmd: '{{ simpli_utils_dir }}/env_config.sh setg'
+      become_user: robert
+      tags: modenv
+
+    - name: 24. desktop setlight
+      ansible.builtin.shell:
+        cmd: '{{ simpli_utils_dir }}/env_config.sh setlight'
+      become_user: robert
+      tags: modenv
+
+    - name: 25. desktop xset
+      ansible.builtin.shell:
+        cmd: '{{ simpli_utils_dir }}/env_config.sh xset'
+      become_user: robert
+      tags: modenv
+
+    - name: 29. perform final check
+      ansible.builtin.shell:
+        cmd: '{{ simpli_utils_dir }}/know-device.sh check'
+      become_user: robert
+      tags: report
+
+
+
+
+
+
+
+
+
