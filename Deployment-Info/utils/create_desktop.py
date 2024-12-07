@@ -1,3 +1,4 @@
+import errno
 import os.path
 import platform
 import psutil
@@ -28,6 +29,15 @@ def exit_msg(code, text):
         print(f'Error ({code}): {text}\n')
         show_syntax()
     exit(code)
+
+
+def silentremove(filename):
+    try:
+        os.remove(filename)
+    except OSError as e: # this would be "except OSError, e:" before Python 2.6
+        if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
+            raise # re-raise exception if a different error occurred
+
 
 def get_mac():
     my_mac = None
@@ -69,31 +79,68 @@ def generate_from_template(temp, var_struct, filename):
         print(f"... Created {filename}")
         os.chmod(filename, 0o755)
 
-def derive_desktop_category(category_data, dest_dir, template_desktop_file):
+def derive_desktop_category(category_data, icon_base_dir, template_desktop_file, populate_specials=False):
     common_data = dict()
     common_data['tool_command'] = category_data['tool_command']
     common_data['desktop_categories'] = category_data['desktop_categories']
     common_data['desktop_kde_protocols'] = category_data['desktop_kde_protocols']
     common_data['desktop_keywords'] = category_data['desktop_keywords']
+    common_data['location_for_icon'] = category_data['location_for_icon']
 
-    zoom_entries = category_data['entries']
-    for info_struct in zoom_entries:
-        if info_struct['enabled'] == 'true':
-            new_struct = dict()
+    if populate_specials:
+        hostname = platform.node()
+        common_data['client_hostname'] = hostname
+    else:
+        common_data['client_hostname'] = ''
 
-            # inherit the common attributes
-            for key, value in common_data.items():
+    this_category_entries = category_data['entries']
+
+    for info_struct in this_category_entries:
+
+        dest_dir = icon_base_dir
+        new_struct = dict()
+
+        # inherit the common attributes
+        for key, value in common_data.items():
+            if key == 'location_for_icon':
+                if value == '.':
+                    # leave dest_dir unchanged (i.e. as teh base dir)
+                    pass
+                else:
+                    dest_dir = icon_base_dir + '/' + value
+            else:
                 new_struct[key] = value
 
-            # configure the specific attributes (this allows overriding)
-            for key2, value2 in info_struct.items():
+        # configure the specific attributes (this allows overriding)
+        for key2, value2 in info_struct.items():
+            if key2 == 'location_for_icon':
+                if value2 == '.':
+                    # leave dest_dir unchanged (as may have been overridden by base stuff)
+                    pass
+                else:
+                    dest_dir = icon_base_dir + '/' + value2
+            else:
                 new_struct[key2] = value2
 
-            fname = f"{dest_dir}/{SIMPLI_PREFIX}_{new_struct['entry']}.desktop"
+        # check if the dest dir exists
+        print(f'DEBUG: Destination dir == {dest_dir}')
+        if not os.path.exists(dest_dir):
+            os.makedirs(dest_dir)
+            print(f'Creating folder {dest_dir}\n')
+
+        fname = f"{dest_dir}/{SIMPLI_PREFIX}_{new_struct['entry']}.desktop"
+        silentremove(fname) # remove file if it exists
+
+        if info_struct['enabled'] == 'true':
             generate_from_template(template_desktop_file, new_struct, fname)
+        else:
+            # remove file if not enabled
+            try:
+                os.remove(fname)
+            except:
+                print(f'Attempting to remove non-existent file ( {fname} )')
 
-
-def derive_all_desktops(template_file, yaml_source_data, dest_dir, display_name):
+def derive_all_desktops(template_file, yaml_source_data, base_dir_for_icons, display_name):
     #device_id = get_device_id()
 
     with open(yaml_source_data) as stream:
@@ -110,10 +157,12 @@ def derive_all_desktops(template_file, yaml_source_data, dest_dir, display_name)
     environment = Environment(loader=FileSystemLoader(dirpath))
     template = environment.get_template(basefile)
 
-    derive_desktop_category(data_struct['zoom'], dest_dir, template)
-    derive_desktop_category(data_struct['browser'], dest_dir, template)
-    derive_desktop_category(data_struct['video'], dest_dir, template)
-    derive_desktop_category(data_struct['platform'], dest_dir, template)
+    derive_desktop_category(data_struct['zoom'], base_dir_for_icons, template)
+    derive_desktop_category(data_struct['browser'], base_dir_for_icons, template)
+    derive_desktop_category(data_struct['video'], base_dir_for_icons, template)
+    derive_desktop_category(data_struct['platform'], base_dir_for_icons, template, True)
+    derive_desktop_category(data_struct['genrep'], base_dir_for_icons, template, True)
+
 
 
 def derive_info_desktop(info_template_file, dest_dir):
@@ -144,7 +193,7 @@ def main():
 
     template_file = cmndline_args[0]
     yaml_source_data = cmndline_args[1]
-    dest_dir = cmndline_args[2]
+    dest_dir_root = cmndline_args[2]
     display_name = cmndline_args[3]
 
     print(f'DISPLAYNAME == {display_name}\n')
@@ -154,7 +203,7 @@ def main():
         exit_msg(2, 'Template file specified is not valid')
     elif not os.path.isfile(yaml_source_data):
         exit_msg(3, 'Data file specified is not valid')
-    elif not os.path.isdir(dest_dir):
+    elif not os.path.isdir(dest_dir_root):
         exit_msg(4, 'Destination dir does not exist')
 
     #display_is_valid = bool(re.match('[a-zA-Z\s]+$', display_name))
@@ -163,7 +212,7 @@ def main():
         exit_msg(5, 'Display name contains non valid characters')
 
     # derive desktop files
-    derive_all_desktops(template_file, yaml_source_data, dest_dir, display_name)
+    derive_all_desktops(template_file, yaml_source_data, dest_dir_root, display_name)
 
 
 if __name__ == "__main__":

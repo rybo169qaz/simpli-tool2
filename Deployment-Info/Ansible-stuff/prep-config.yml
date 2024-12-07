@@ -22,7 +22,7 @@
     - name: 24. desktop setlight
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/env_config.sh setlight'
-      become_user: robert
+      #become_user: robert
       tags: modenv
 
     - name: 25. desktop xset
@@ -36,7 +36,6 @@
         cmd: '{{ simpli_utils_dir }}/know-device.sh check'
       become_user: robert
       tags: report
-
 
 
 

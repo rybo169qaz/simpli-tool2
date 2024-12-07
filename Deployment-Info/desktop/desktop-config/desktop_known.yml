@@ -2,38 +2,79 @@
 platform:
   category_description: 'Info about Simpli software'
   tool_command: '/usr/bin/gedit'
+  location_for_icon: 'simpli-admin'
   desktop_categories: ''
   desktop_kde_protocols: ''
   desktop_keywords: 'Editor;'
 
   entries:
-    - entry: "01_platform_info"
+    - entry: "platform_info_display"
       enabled: 'true'
       icon: "info.256x256"
       description: "Software details"
       command_args: "/home/robert/.simpli/config/dev-info.txt"
 
+    - entry: "platform_info"
+      enabled: 'false'
+      icon: "info.256x256"
+      description: "Software details"
+      command_args: "/home/robert/.simpli/config/dev-info.txt"
+
+    - entry: "platform_config_show_log"
+      enabled: 'true'
+      icon: "info.256x256"
+      description: "Show full system config"
+      command_args: "/home/robert/.simpli/logs/show.txt"
+
+    - entry: "platform_config_check_log"
+      enabled: 'true'
+      icon: "info.256x256"
+      description: "Show config discrepancies"
+      command_args: "/home/robert/.simpli/logs/check.txt"
+
+genrep:
+  category_description: 'Generate info about platform'
+  tool_command: 'simpli-report'
+  location_for_icon: 'simpli-admin'
+  desktop_categories: ''
+  desktop_kde_protocols: ''
+  desktop_keywords: ''
+
+  entries:
+    - entry: "platform_config_create_check"
+      enabled: 'true'
+      icon: "info.256x256"
+      description: "Create check config report"
+      command_args: "check"
+
+    - entry: "platform_config_create_show"
+      enabled: 'true'
+      icon: "info.256x256"
+      description: "Create full config report"
+      command_args: "show"
+
 zoom:
     category_description: 'Zoom ecclesial meetings'
     tool_command: '/home/robert/.local/bin/simpli-zoom'
+    location_for_icon: '.'
     desktop_categories: 'AudioVideo;Player'
     desktop_kde_protocols: 'ftp,http,https,mms,rtmp,rtsp,sftp,smb'
     desktop_keywords: 'Player;Capture;DVD;Audio;Video;Server;Broadcast;'
 
     entries:
-      - entry: "10_zoom_general"
+      - entry: "zoom_general"
         enabled: 'true'
         icon: "zoom"
         description: "General"
         command_args: "general"
 
-      - entry: "11_zoom_cov_grosv"
+      - entry: "zoom_cov_grosv"
         enabled: 'true'
         icon: "zoom"
         description: "Grosvenor Rd (main)"
         command_args: "grosv"
 
-      - entry: "12_zoom_cov_west"
+      - entry: "zoom_cov_west"
         enabled: 'true'
         icon: "zoom"
         description: "Cov West (main)"
@@ -42,6 +83,7 @@ zoom:
 browser:
     category_description: 'Browser general'
     tool_command: '/usr/bin/firefox'
+    location_for_icon: '.'
     desktop_categories: 'AudioVideo;Player'
     desktop_kde_protocols: 'ftp,http,https,mms,rtmp,rtsp,sftp,smb'
     desktop_keywords: 'Player;Capture;DVD;Audio;Video;Server;Broadcast;'
@@ -69,6 +111,7 @@ browser:
 video:
     category_description: 'Media Play'
     tool_command: '/usr/bin/vlc'
+    location_for_icon: '.'
     desktop_categories: 'AudioVideo;Player'
     desktop_kde_protocols: 'ftp,http,https,mms,rtmp,rtsp,sftp,smb'
     desktop_keywords: 'Player;Capture;DVD;Audio;Video;Server;Broadcast;'
@@ -81,12 +124,12 @@ video:
         command_args: 'www.youtube.com'
 
       - entry: "vlc_autumn_1"
-        enabled: 'false'
+        enabled: 'true'
         icon: "VLC_icon"
         description: "Autumn video"
         command_args: '/home/robert/.simpli/media/Autumn.mp4'
 
-      - entry: "02_vlc_earth"
+      - entry: "vlc_earth"
         enabled: 'true'
         icon: "VLC_icon"
         description: "Earth video"
@@ -97,5 +140,18 @@ video:
         icon: "CDVideo_R-CV-LOGO-BC-AC@2x-150x150"
         description: "CDV(v): Bible God and Creation"
         command_args: 'http://www.youtube.com/watch?v=lbA5FWftfao'
+
+      - entry: "vlc_Good-Life_Just-My-Bill"
+        enabled: 'false'
+        icon: "VLC_icon"
+        description: "Good Life: Just my bill"
+        command_args: '/media/robert/MEDIA1/media-data/CommercialDVD/TheGoodLife/The_Good_Life_D3_S2_T2_JustMyBill_Fast1080p30.mp4'
+
+      - entry: "vlc_Good-Life_Guru-of-suburbia"
+        enabled: 'false'
+        icon: "VLC_icon"
+        description: "Good Life: Guru of Suburbia"
+        command_args: '/media/robert/MEDIA1/media-data/CommercialDVD/TheGoodLife/The_Good_Life_D3_S2_T3_TheGuruOfSurbiton_Fast1080p30-WebOpt.mp4'
+
 
 

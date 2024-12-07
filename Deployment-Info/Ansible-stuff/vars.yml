@@ -28,6 +28,8 @@ tool_gedit: "/usr/bin/gedit"
 
 #linux_user: 'robert'
 home_dir: '/home/robert'
+media_dir: '/media/robert'
+
 
 simpiface_dirname: '.simpli'
 
@@ -44,6 +46,9 @@ zsimpli_dir: "/home/generic/.simpli"
 simpli_dir: '/home/robert/.simpli'
 simpli_utils_dir: '/home/robert/.simpli/utils'
 simpli_config_dir: '/home/robert/.simpli/config'
+
+# USB Media
+usb_media: '/media/robertryan/MEDIA1'
 
 
 device_types:

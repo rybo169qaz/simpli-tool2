@@ -18,5 +18,6 @@
       ansible.builtin.shell:
         cmd: shutdown --reboot
 
+  # Note that after install teh sound settings are still (on gui) set to Speakers Built-in Audio and NOT HDMI
 
 

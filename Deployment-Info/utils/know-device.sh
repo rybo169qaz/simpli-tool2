@@ -90,6 +90,12 @@ show_gsettings() {
 
   show_schema 'org.nemo.preferences'
 
+  # Now sound related
+  show_schema 'org.cinnamon.desktop.sound'
+  show_schema 'org.cinnamon.sounds'
+  show_schema 'org.gnome.desktop.sound'
+
+
 }
 
 show_nemo() {
@@ -109,10 +115,10 @@ check_gkey() {
 
   if [ "$initial_get" == "$req_val" ]
   then
-    prefix='OK        :'
+    prefix='OK  :'
     desc="ACTUAL=WANTED=${initial_get} "
   else
-    prefix='MISMATCH  :'
+    prefix='BAD :'
     desc="\n\t\t\tACTUAL=${initial_get} ; \n\t\t\tWANTED=${req_val} "
   fi
   #printf "${prefix} Schema:${schema_name}  key:${key_name} : ACTUAL=${initial_get} ; WANTED=${req_val} \n\n"
@@ -159,7 +165,7 @@ check_lightdm_settings() {
   printf "\n\n${DIVIDER_SECTION}\nLIGHTDM SETTINGS\n"
   greeterhide='false'
   username='robert'
-  usertimeout='7'
+  usertimeout='3'
 
   checkgreeter="greeter-hide-users=${greeterhide}"
   checkname="autologin-user=${username}"
@@ -201,45 +207,48 @@ fi
 cmd="$1"
 
 if [ $cmd == "show" -o $cmd == "check" ]; then
-  printf "COMMAND = ${cmd}\n" | tee -a $op
   #op="${dest_dir}/${node}_${cmd}_${NOW}.txt"
   op="${dest_dir}/${node}_${NOW}_${cmd}.txt"
+  printf "COMMAND = ${cmd}\n${NOW}\n" 2>&1 | tee -a $op
 else
   printf "Invalid command argument\n"
   op="${dest_dir}/${node}_${NOW}.txt"
 fi
 
-this_perm="${PERMA_NAME}_${cmd}.txt"
+#this_perm="${PERMA_NAME}_${cmd}.txt"
+this_perm="${dest_dir}/${cmd}.txt"
 
 if [ -L "${this_perm}" ]
 then
   printf "Info: Removing perma link ${this_perm}\n"
-  rm -f "this_perm"
+  rm -f "${this_perm}"
 fi
 
 
-
-printf "COMMAND = ${cmd}\n" | tee -a $op
+#printf "COMMAND2 = ${cmd}\n${NOW}\n" 2>&1 | tee -a $op
 
 running_as=$(/usr/bin/whoami)
-printf "USER = ${running_as}\n" | tee -a $op
+printf "USER = ${running_as}\n" 2>&1 | tee -a $op
 
 if [ "$cmd" == 'show' ]
 then
-  main_settings  | tee -a $op
+  main_settings  2>&1 | tee -a $op
 
-  show_all_schema_keys | tee -a $op
+  show_all_schema_keys 2>&1 | tee -a $op
 
-  show_gsettings | tee -a $op
-  show_lightdm_settings | tee -a $op
-  show_xset | tee -a $op
-  show_nemo | tee -a $op
+  show_gsettings 2>&1 | tee -a $op
+  show_lightdm_settings 2>&1 | tee -a $op
+  show_xset 2>&1 | tee -a $op
+  show_nemo 2>&1 | tee -a $op
+  printf "\n\nSOUND\n" 2>&1 | tee -a $op
+  /home/robert/.simpli/utils/sound_control.sh list 2>&1 | tee -a $op
+
 
 elif [ "$cmd" == 'check' ]
 then
-  check_gsettings | tee -a $op
-  check_lightdm_settings | tee -a $op
-  check_xset | tee -a $op
+  check_gsettings 2>&1 | tee -a $op
+  check_lightdm_settings 2>&1 | tee -a $op
+  check_xset 2>&1 | tee -a $op
 
 else
   printf "Valid commands are:${COMMANDS_DESC}\n"
@@ -247,9 +256,9 @@ else
 fi
 
 printf "\n\nOutput destination = ${op}\n"
+/usr/bin/chmod 444 "${op}"
+#rm -f "${this_perm}"
+/usr/bin/ln -s "${op}" "${this_perm}"
+printf "\nUpdated perma-link  ${this_perm}  to point to ${op}\n"
 
-#ln -s "${op}" "${this_perm}"
-#printf "\nUpdated perma-link  ${this_perm}  to  ${op}\n"
-
-#printf "\nEND \t${NOW}\n\n" | tee -a $op
 printf "\nEND \n\n"
