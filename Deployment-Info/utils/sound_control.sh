@@ -21,12 +21,10 @@ show_help() {
   printf "\t details  <port_num>  Lists details info of specified port\n"
   printf "\t type <port_num>      Show Lists details info of specified port\n"
   printf "\t get      <port_num>  Get the volume of port specified.\n"
-  printf "\t set      <port_num>  <volume> Set the volume of port specified.\n"
+  printf "\t set      <port_num>  <volume> Set the volume of port specified. (units in %)\n"
   printf "\t\t\t\tThe number is a PERCENTAGE\n"
   #printf "\t\t\t\tThe number is a VALUE NOT a percentage\n"
 
-  printf "\t set                  NOT IMPL To configure the system to the required values\n"
-  printf "\t check                NOT IMPL To identify discrepancies in the config from the desired settings\n"
 }
 
 list_pactl() {
@@ -48,6 +46,52 @@ find_sinks() {
   printf "Print the sink numbers\n"
   #find_sink_cmd="/usr/bin/pactl list | grep -oP 'Sink #\K([0-9]+)' "
   /usr/bin/pactl list | grep -oP 'Sink #\K([0-9]+)'
+
+  wkg=$(mktemp -d)
+  #printf "Created temp directory ${wkg}\n"
+  the_tmp="$(dirname "${wkg}")" ; temp_dir="$(basename "${wkg}")"
+  #printf "DIR part==${the_tmp} \t LASTpart==${temp_dir}\n"
+
+  all_sinks="${wkg}/all.txt"
+  ${PACTL} list sinks > ${all_sinks}
+  printf "\nSink #999\n" >> ${all_sinks}
+
+  mod_sinks="${wkg}/mod.txt"
+  #cat ${all_sinks} | sed 's/Sink #/Sink #\nZZZSink /' > ${mod_sinks}
+
+  #awk '{gsub(/hellosunil/,"\nhellosunil");print}'
+  cat ${all_sinks} | awk '{gsub(/Sink #/,"Sink #\nPort: ");print}' > ${mod_sinks}
+
+  # Now splitting file based upon 'Sink #'
+  # (stackoverflow) How to split a file by using keyword boundaries
+  # https://unix.stackexchange.com/questions/76929/how-to-split-a-file-by-using-keyword-boundaries
+  csplit -f "${wkg}/sink_" -b %02d.txt ${mod_sinks} -z '/Sink #/+1' '{*}'
+
+  #printf "\nthe ALL file\n"
+  #cat --number ${all_sinks}
+
+  shopt -s globstar
+  find ${wkg} -name "sink*.txt"|while read file
+  do
+    #printf "Processing file ${file} \n"
+    cond="${file/sink_/condensed_}"
+    #printf "outputting to ${cond}\n"
+    grep -Ei 'Port:|State:|Description:|Volume:|hdmi-output-0:|Active Port:|alsa.card_name' ${file} > ${cond}
+    #cat ${cond}
+    fulltext=$(cat ${cond} )
+    if grep -i --quiet hdmi ${cond}; then
+      printf "MATCHED HDMI\n"
+      cat ${cond}
+    fi
+
+  done
+
+  printf "Temp dir contains \n"
+  find "${wkg}" -type f  -delete
+  printf "Printing after deletion (should be empty)\n"
+  rmdir "${wkg}"
+  ls "${wkg}"
+  printf "\nEND\n"
 }
 
 sink_details() {

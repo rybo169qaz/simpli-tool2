@@ -124,6 +124,14 @@ clients:
       person: "Dougal Daily"
       comment: "None"
 
+    wyse_9:
+      device_type: "wyse_small"
+      mac_wired: "00:80:64:f3:f6:53"
+      ansible_host: "192.168.0.54"
+      os_account: "robert"
+      person: "Eric Eagle"
+      comment: "Did not install multimedia codecs"
+
     zotac_d:
       device_type: "zotac_arcade1"
       mac_wired: "00:??:??:??:??:??"

@@ -108,10 +108,14 @@ then
 
 elif [ "$cmd" == 'xset' ]
 then
-  mod_xset " -dpms "
-  mod_xset " dpms force on "
-  mod_xset " s off "
-  mod_xset " s noblank "
+  # Arch Linux : Display Power Management Signaling
+  # https://wiki.archlinux.org/title/Display_Power_Management_Signaling
+  #mod_xset " -display :0 s off -dpms "
+  mod_xset " -display :0 dpms 0 0 0 "
+  #mod_xset " -display :0 -dpms "
+  #mod_xset " dpms force on "
+  #mod_xset " s off "
+  #mod_xset " s noblank "
 
 elif [ "$cmd" == 'setlight' ]
 then

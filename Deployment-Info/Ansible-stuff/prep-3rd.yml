@@ -40,6 +40,14 @@
         - vlc
       when: 1 > 0
 
+    - name: 4. Install sound related packages # require reboot
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+      loop:
+        - pulseaudio
+        - pavucontrol
+
     - name: 5. Remove unwanted tools
       apt:
         name: "{{ item }}"
