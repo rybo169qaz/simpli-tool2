@@ -31,7 +31,13 @@
       become_user: robert
       tags: modenv
 
-    - name: 29. perform final check
+    - name: 29A. perform final check
+      ansible.builtin.shell:
+        cmd: '{{ simpli_utils_dir }}/know-device.sh check'
+      become_user: robert
+      tags: report
+
+    - name: 29B. perform final show
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/know-device.sh check'
       become_user: robert

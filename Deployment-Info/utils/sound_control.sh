@@ -16,12 +16,16 @@ op="${dest_dir}/${node}_${TOOL_FUNC}.txt"
 
 show_help() {
   printf "Use  sound_control \n"
-  printf "\t list                 To report/show all the existing sound settings/config\n"
-  printf "\t findsinks            Find the numbers of the sinks. \n"
-  printf "\t details  <port_num>  Lists details info of specified port\n"
-  printf "\t type <port_num>      Show Lists details info of specified port\n"
-  printf "\t get      <port_num>  Get the volume of port specified.\n"
-  printf "\t set      <port_num>  <volume> Set the volume of port specified. (units in %)\n"
+  printf "\t list                              To report/show all the existing sound settings/config\n"
+  printf "\t findsinks                         Find the numbers of the sinks. \n"
+  printf "\t details      <port_num>           Lists details info of specified port\n"
+  printf "\t hdmi                              Lists details of hdmi sinks\n"
+  printf "\t get          <port_num>           Get the volume of port specified.\n"
+  printf "\t set          <port_num>  <volume> Set the volume of port specified. (units in %%)\n"
+  printf "\t getdefault                        Gets the default sink\n"
+  printf "\t hdminame                          Get the name of the hdmi port\n"
+  printf "\t sethdmi                           Set the default to be the hdmi port\n"
+
   printf "\t\t\t\tThe number is a PERCENTAGE\n"
   #printf "\t\t\t\tThe number is a VALUE NOT a percentage\n"
 
@@ -42,78 +46,140 @@ list_pactl() {
   #pactl list | grep -oP 'Sink #\K([0-9]+)' | while read -r i ; do pactl -- get-sink-volume $i ; done
 }
 
-find_sinks() {
-  printf "Print the sink numbers\n"
-  #find_sink_cmd="/usr/bin/pactl list | grep -oP 'Sink #\K([0-9]+)' "
-  /usr/bin/pactl list | grep -oP 'Sink #\K([0-9]+)'
+remove_temp_dir() {
+  dir_to_remove="$1"
+  if [[ "$dir_to_remove" != /tmp/* ]]
+  then
+    printf "ERROR: Being asked to delete dir not under /tmp >>${dir_to_remove}<<\n"
+    exit 1
+  fi
 
-  wkg=$(mktemp -d)
+  find "${dir_to_remove}" -type f  -exec rm {} \;
+  rmdir "${dir_to_remove}"
+
+  # check that directory has been removed
+  if [ -d "$dir_to_remove" ]; then
+    printf "ERROR: directory '${dir_to_remove}' still exists\n"
+    exit 2
+  fi
+}
+
+get_sink_numbers() {
+  #printf "Print the sink numbers\n"
+  #find_sink_cmd="/usr/bin/pactl list | grep -oP 'Sink #\K([0-9]+)' "
+  all_sink_num=$( ${PACTL} list sinks | grep -oP 'Sink #\K([0-9]+)' )
+  printf "${all_sink_num}"
+}
+
+process_sinks_info() {
+  work_dir="$1"
   #printf "Created temp directory ${wkg}\n"
-  the_tmp="$(dirname "${wkg}")" ; temp_dir="$(basename "${wkg}")"
+  the_tmp="$(dirname "${work_dir}")" ; temp_dir="$(basename "${work_dir}")"
   #printf "DIR part==${the_tmp} \t LASTpart==${temp_dir}\n"
 
-  all_sinks="${wkg}/all.txt"
+  all_sinks="${work_dir}/all.txt"
   ${PACTL} list sinks > ${all_sinks}
   printf "\nSink #999\n" >> ${all_sinks}
 
-  mod_sinks="${wkg}/mod.txt"
-  #cat ${all_sinks} | sed 's/Sink #/Sink #\nZZZSink /' > ${mod_sinks}
-
-  #awk '{gsub(/hellosunil/,"\nhellosunil");print}'
+  mod_sinks="${work_dir}/mod.txt"
   cat ${all_sinks} | awk '{gsub(/Sink #/,"Sink #\nPort: ");print}' > ${mod_sinks}
 
   # Now splitting file based upon 'Sink #'
   # (stackoverflow) How to split a file by using keyword boundaries
   # https://unix.stackexchange.com/questions/76929/how-to-split-a-file-by-using-keyword-boundaries
-  csplit -f "${wkg}/sink_" -b %02d.txt ${mod_sinks} -z '/Sink #/+1' '{*}'
+  csplit -f "${work_dir}/sink_" -b %02d.txt ${mod_sinks} -z '/Sink #/+1' '{*}' > /dev/null
+}
 
-  #printf "\nthe ALL file\n"
-  #cat --number ${all_sinks}
+find_hdmi_details() {
+  wkg=$(mktemp -d)
+  process_sinks_info "${wkg}"
 
   shopt -s globstar
   find ${wkg} -name "sink*.txt"|while read file
   do
-    #printf "Processing file ${file} \n"
     cond="${file/sink_/condensed_}"
-    #printf "outputting to ${cond}\n"
-    grep -Ei 'Port:|State:|Description:|Volume:|hdmi-output-0:|Active Port:|alsa.card_name' ${file} > ${cond}
-    #cat ${cond}
-    fulltext=$(cat ${cond} )
+    grep -Ei 'Port:|State:|Name:|Description:|Volume:|Monitor Source:|hdmi-output-0:|Active Port:|alsa.card_name' ${file} > ${cond}
+
+    # alsa_output.pci-0000_00_14.2.3.analog-stereo
+    #fulltext=$(cat ${cond} )
+
     if grep -i --quiet hdmi ${cond}; then
-      printf "MATCHED HDMI\n"
+      #printf "XXX\n${fulltext}\n"
+      printf "\nMATCHED HDMI\n"
       cat ${cond}
     fi
-
   done
 
-  printf "Temp dir contains \n"
-  find "${wkg}" -type f  -delete
-  printf "Printing after deletion (should be empty)\n"
-  rmdir "${wkg}"
-  ls "${wkg}"
-  printf "\nEND\n"
+  remove_temp_dir "${wkg}"
 }
+
+get_name_of_hdmi_port() {
+  wkg=$(mktemp -d)
+  process_sinks_info "${wkg}"
+
+  shopt -s globstar
+  find ${wkg} -name "sink*.txt"|while read file
+  do
+    cond="${file/sink_/condensed_}"
+    grep -Ei 'Monitor Source:' ${file} | sed "s@\s*Monitor Source: @@" > ${cond}
+
+    # alsa_output.pci-0000_00_14.2.3.analog-stereo
+    fulltext=$(cat ${cond} )
+
+    if grep -i --quiet hdmi ${cond}; then
+      printf "${fulltext}"
+    fi
+  done
+
+  remove_temp_dir "${wkg}"
+}
+
+show_hdmi_name() {
+  port_name=$(get_name_of_hdmi_port)
+  printf "Name of HDMI port: ${port_name}\n"
+
+}
+
+get_default() {
+  current_default=$( /usr/bin/pactl get-default-sink)
+  printf "Current default port is: ${current_default}\n"
+}
+
+set_hdmi_as_default() {
+  get_default
+
+  port_name=$(get_name_of_hdmi_port)
+  printf "Will set default sink as >>${port_name}<<\n"
+  /usr/bin/pactl set-default-sink "${port_name}"
+  #printf "Sett comand resp= >>${resp}<<"
+
+  get_default
+}
+
+find_sinks() {
+  sink_num_list=$( get_sink_numbers )
+  printf "Sink numbers: ( $sink_num_list )\n"
+}
+
 
 sink_details() {
   arg1="$1"
   printf "Showing details of port ${arg1}\n"
-  /usr/bin/pactl info "${arg1}"
-}
+  info=$( ${PACTL} info "${arg1}" )
+  printf "Port ${arg1} details:\n${info}\n\n"
 
-show_port_type() {
-  arg1="$1"
-  printf "Showing the type of port of port ${arg1}. (Return True if it contains teh word HDMI)\n"
-  type_op=$( /usr/bin/pactl info ${arg1} | grep 'Default Sink' )
-  #printf "SINK LINE >>${type_op}<<\n"
+  # Try to determine if its an HDMI port
+  #type_op=$( echo "$info}" | grep 'Default Sink' )
+  type_op=$( echo "$info}" | grep 'Active Port:' )
   found=$( echo "${type_op}" | grep -i hdmi )
-  #printf "FOUND=  >>${found}<<\n"
   if [ "${found}" == '' ]
   then
     desc='NOT HDMI'
   else
     desc='HDMI'
   fi
-  printf "Port ${arg1} is ${desc} \n"
+  printf "Assessment: Port Type is ${desc} \n"
+
 }
 
 get_port_volume() {
@@ -165,9 +231,9 @@ elif [ "$cmd" == 'details' ]
 then
   sink_details "${param1}"
 
-elif [ "$cmd" == 'type' ]
+elif [ "$cmd" == 'hdmi' ]
 then
-  show_port_type "${param1}"
+  find_hdmi_details
 
 elif [ "$cmd" == 'get' ]
 then
@@ -176,6 +242,18 @@ then
 elif [ "$cmd" == 'set' ]
 then
   set_port_volume "${param1}" "${param2}"
+
+elif [ "$cmd" == 'getdefault' ]
+then
+  get_default
+
+elif [ "$cmd" == 'hdminame' ]
+then
+  show_hdmi_name
+
+elif [ "$cmd" == 'sethdmi' ]
+then
+  set_hdmi_as_default
 
 else
   show_help

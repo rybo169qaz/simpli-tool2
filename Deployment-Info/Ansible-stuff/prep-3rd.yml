@@ -36,9 +36,16 @@
         - ncdu
         - dconf-editor
         - screenfetch
-        - lightdm
         - vlc
       when: 1 > 0
+
+    - name: 4. Install desktop related packages
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+      loop:
+        - lightdm
+      when: 1 > 2
 
     - name: 4. Install sound related packages # require reboot
       apt:

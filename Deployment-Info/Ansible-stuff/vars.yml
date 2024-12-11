@@ -94,6 +94,7 @@ clients:
 
     wyse_2:
       device_type: "wyse_small"
+      desktop: "cinnamon"
       mac_wired: "00:80:64:ef:73:c5"
       ansible_host: "192.168.0.50"
       os_account: "robert"
@@ -102,6 +103,7 @@ clients:
 
     wyse_5:
       device_type: "wyse_small"
+      desktop: "xfce"
       mac_wired: "00:80:64:ef:??:??"
       ansible_host: "192.168.0.42"
       os_account: "robert"
@@ -110,6 +112,7 @@ clients:
 
     wyse_6:
       device_type: "wyse_small"
+      desktop: "cinnamon"
       mac_wired: "00:80:64:d5:d0:a2"
       ansible_host: "192.168.0.46"
       os_account: "robert"
@@ -118,6 +121,7 @@ clients:
 
     wyse_8:
       device_type: "wyse_small"
+      desktop: "cinnamon"
       mac_wired: "00:80:64:ef:??:??"
       ansible_host: "192.168.0.32"
       os_account: "robert"
@@ -126,6 +130,8 @@ clients:
 
     wyse_9:
       device_type: "wyse_small"
+      desktop: "cinnamon"
+      mediacodecs: True
       mac_wired: "00:80:64:f3:f6:53"
       ansible_host: "192.168.0.54"
       os_account: "robert"
@@ -134,6 +140,8 @@ clients:
 
     zotac_d:
       device_type: "zotac_arcade1"
+      desktop: "cinnamon"
+      mediacodecs: True
       mac_wired: "00:??:??:??:??:??"
       ansible_host: "192.168.0.99"
       os_account: "robert"
@@ -141,7 +149,9 @@ clients:
       comment: "None"
 
     zotac_f:
+      desktop: "cinnamon"
       device_type: "zotac_arcade1"
+      mediacodecs: True
       mac_wired: "00:??:??:??:??:??"
       ansible_host: "192.168.0.98"
       os_account: "robert"
@@ -150,6 +160,8 @@ clients:
 
     zotac_g:
       device_type: "zotac_arcade1"
+      desktop: "cinnamon"
+      mediacodecs: True
       mac_wired: "00:??:??:??:??:??"
       ansible_host: "192.168.0.97"
       os_account: "robert"
@@ -158,6 +170,8 @@ clients:
 
     zotac_h:
       device_type: "zotac_arcade2"
+      desktop: "cinnamon"
+      mediacodecs: True
       mac_wired: "00:??:??:??:??:??"
       ansible_host: "192.168.0.45"
       os_account: "robert"
@@ -166,6 +180,8 @@ clients:
 
     zbox:
       device_type: "zotac_zbox1"
+      desktop: "cinnamon"
+      mediacodecs: True
       mac_wired: "00:??:??:??:??:??"
       ansible_host: "192.168.0.41"
       os_account: "robert"

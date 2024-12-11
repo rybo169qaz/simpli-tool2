@@ -131,15 +131,17 @@ check_gsettings() {
   check_gkey 'org.cinnamon.desktop.session' 'idle-delay' 'uint32 0'
   check_gkey 'org.cinnamon.desktop.screensaver' 'idle-activation-enabled' 'false'
   check_gkey 'org.cinnamon.desktop.screensaver' 'lock-enabled' 'false'
-
-  #
-  check_gkey 'org.cinnamon.desktop.background' 'picture-uri' "'file:///usr/share/backgrounds/linuxmint/sele_ring_center_green.jpg'" # orig 'file:///usr/share/backgrounds/linuxmint/default_background.jpg'
-
-  check_gkey 'com.linuxmint.mintmenu.plugins.places' 'allow-scrollbar' 'false'
-  check_gkey 'com.linuxmint.mintmenu.plugins.system_management' 'allow-scrollbar' 'false'
   check_gkey 'org.cinnamon.desktop.interface' 'gtk-overlay-scrollbars' 'false'
 
+  # valid - but ineffective
+  check_gkey 'org.cinnamon.desktop.background' 'picture-uri' "'file:///usr/share/backgrounds/linuxmint/sele_ring_center_green.jpg'" # orig 'file:///usr/share/backgrounds/linuxmint/default_background.jpg'
+
+  # The following has wrong value
+  check_gkey 'com.linuxmint.mintmenu.plugins.system_management' 'allow-scrollbar' 'false'
   check_gkey 'org.nemo.preferences' 'click-policy' "'single'"
+
+  # The following fail on xfce
+  check_gkey 'com.linuxmint.mintmenu.plugins.places' 'allow-scrollbar' 'false'
 
 }
 
