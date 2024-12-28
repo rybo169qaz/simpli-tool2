@@ -6,17 +6,30 @@
     - vars.yml
 
   tasks:
+    - name: Get DEB architecture FROM DPKG
+      shell: dpkg --print-architecture
+      register: deb_architecture
 
-    - name: 1. download zoom deb
+    - name: Print DEB architecture FROM DPKG
+      debug:
+        msg: "deb_architecture.stdout: {{ deb_architecture.stdout }}"
+
+    - name: Print ANSIBLE architecture
+      debug:
+        msg: "ansible_machine: {{ ansible_machine }}"
+
+    - name: 2. download zoom deb (x86 only)
       ansible.builtin.get_url:
         dest: "{{ simpli_dir }}/packages/"
         url: "{{ zoom_amd64_url }}"
         group: robert
         owner: robert
+      when: ansible_machine == 'x86_64'
 
-    - name: 2. install zoom deb # install the file
+    - name: 2. install zoom deb x86 # install the file (x86 only)
       ansible.builtin.apt:
         deb: "{{ simpli_dir }}/packages/{{zoom_amd64_deb}}"
+      when: ansible_machine == 'x86_64'
 
 
 

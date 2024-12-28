@@ -18,8 +18,15 @@ src_media_folder: "/home/{{ controller_user }}/PROJ/Ansible-Perf/media/"
 
 
 # THIRD PARTY
+
+anydesk_amd64: 'anydesk_6.4.0-1_amd64.deb'
+anydesk_arm64: 'anydesk_6.4.0-1_arm64.deb'
+
 zoom_amd64_deb: 'zoom_amd64.deb'
 zoom_amd64_url: 'https://zoom.us/client/latest/{{ vars["zoom_amd64_deb"] }}'
+
+lightdm_conf01_mint: '/etc/lightdm/lightdm.conf.d/01_my.conf'
+lightdm_conf01_rpi: '/usr/share/lightdm/lightdm.conf.d/01_debian.conf'
 
 
 # CLIENT CONFIG
@@ -52,8 +59,8 @@ usb_media: '/media/robertryan/MEDIA1'
 
 
 device_types:
-  rpi5:
-    model: "pi 5"
+  rpi4:
+    model: "pi 4"
     ram: "?GB"
     persistent_storage: "?GB"
 
@@ -84,8 +91,9 @@ device_types:
 
 
 clients:
-    rpi5_argon:
-      device_type: "rpi5"
+    rpi4_a:
+      device_type: "rpi4"
+      desktop: "xfce"
       mac_wired: "dc:a6:32:79:47:bb"
       ansible_host: "192.168.0.53"
       os_account: "generic"
@@ -107,12 +115,12 @@ clients:
       mac_wired: "00:80:64:ef:??:??"
       ansible_host: "192.168.0.42"
       os_account: "robert"
-      person: "Bill Bloggs"
+      person: "Billy Butlin"
       comment: "Possibly dodgy graphics"
 
     wyse_6:
       device_type: "wyse_small"
-      desktop: "cinnamon"
+      desktop: "xfce"
       mac_wired: "00:80:64:d5:d0:a2"
       ansible_host: "192.168.0.46"
       os_account: "robert"
@@ -125,13 +133,13 @@ clients:
       mac_wired: "00:80:64:ef:??:??"
       ansible_host: "192.168.0.32"
       os_account: "robert"
-      person: "Dougal Daily"
+      person: "Derek Vyse"
       comment: "None"
 
     wyse_9:
       device_type: "wyse_small"
-      desktop: "cinnamon"
-      mediacodecs: True
+      desktop: "xfce"
+      mediacodecs: False
       mac_wired: "00:80:64:f3:f6:53"
       ansible_host: "192.168.0.54"
       os_account: "robert"

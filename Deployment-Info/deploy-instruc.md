@@ -11,13 +11,14 @@ Installing Ansible
 - Log on
 - On the welcome page tick the box not to show at future login
 - Exit the Welcome page
-- Open Update Manager and install updates (accepting dependencies)
-  - (use Start > Administration > Update Manager )
+- This probably not needed as can use commandline
+    - Open Update Manager and install updates (accepting dependencies)
+      - (use Start > Administration > Update Manager )
 - Bring upto date
-  - **sudo apt-get update**
-  - **sudo aptitude safe-upgrade **
+      - DEPR **sudo apt-get update**
+      - DEPR **sudo aptitude safe-upgrade **
 - Reboot
-  - ** sudo shutdown -r now **
+      - DEPR **sudo shutdown -r now **
 
 ### Enable SSH
 
@@ -60,7 +61,7 @@ Installing Ansible
 
 #### On client
 
-Do the following via an SSH session 
+The following can be done via an SSH session:
 
 - Install primary controller tools
     - **sudo apt install -y rsync retext less **
@@ -81,7 +82,7 @@ Do the following via an SSH session
 
 
 - Steps
-    - **sudo apt install -y python3.12 **
+    - DEPR **sudo apt install -y python3.12 **
 
 - Check
     - **python3 --version **
@@ -91,11 +92,9 @@ Do the following via an SSH session
 ### Installing PIP stuff
 - Follow these instructions (using the pipx variant) 
     - [(ansible) Installing Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-and-upgrading-ansible-with-pip)
-    - Install python3-pip
-        - Installing pip (python3-pip) did not work on the Wyse devices with Mint)
-    - NEW
-        - **DEPR sudo apt install -y python3-pip **
-        - **sudo apt install -y pipx **
+    - **sudo apt install -y pipx **
+    - Note: Installing pip (python3-pip) did not work on the Wyse devices with Mint)
+
 
 ### ANSIBLE
 
@@ -112,7 +111,9 @@ Do the following via an SSH session
   - It was necessary to use pipx on debian mint on zotac
   - **pipx ensurepath **
   - **pipx install --include-deps ansible **
-  - **pipx inject ansible argcomplete **
+     - Note A: This can take a bit of time.
+     - Note B: You will need to log out and in again
+  - DEPR **pipx inject ansible argcomplete **
   - FOR UPGRADE LATER **sudo pipx upgrade --include-injected ansible **
 
 #### Checking version of ansible
@@ -122,10 +123,17 @@ Do the following via an SSH session
 ### Using Ansible
 
 - Useful [spacelift - Ansible Tutorial for Beginners: Ultimate Playbook & Examples](https://spacelift.io/blog/ansible-tutorial)
+
+#### Host fingerprint issues
+
+- See [kakk.dev: Ansible - Please add this host's fingerprint to your known_hosts file to manage this host](https://hakk.dev/blog/posts/ansible-fingerprint-known-hosts-file/)
+- Note: Naughty, naughty - i have disabled fingerprint checking
+
+#### Ad-hoc ansible
+
 - General syntax
     - ansible [host-pattern] -m [module] -a “[module options]”
 
-#### Ad-hoc ansible
 
 - `ansible -i <inventory-file> --ask-pass <node-set-identity> <command>`
 - e.g. 
@@ -134,11 +142,8 @@ Do the following via an SSH session
 
 ### Playbook ansible
 
-- `ansible -i <inventory-file> <playbook>`
-- ansible [host-pattern] -m [module] -a “[module options]”
-- e.g. 
-    - `cd ~/PROJ2/SIMPLI-TOOL/GIT-REPO/simpli-tool2/Deployment-Info/Ansible-stuff`
-    - `ansible -i inv --ask-pass zbox -m ping`
+- `ansible-playbook -i <inventory-file> <playbook> --limit <node_name>`
+
 
 ## Software needed on the client
 

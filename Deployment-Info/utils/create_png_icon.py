@@ -2,6 +2,13 @@ import os
 import sys
 from PIL import Image, ImageDraw, ImageFont
 
+# How to Generate Images with Text Using Python
+# https://codemon.medium.com/how-to-generate-images-with-text-using-python-15c73fb96bf8
+
+# (stackoverflow) How I can load a font file with PIL.ImageFont.truetype without specifying the absolute path?
+# https://stackoverflow.com/questions/24085996/how-i-can-load-a-font-file-with-pil-imagefont-truetype-without-specifying-the-ab
+
+
 
 def show_syntax():
     print(f'Args:   <destination_file> <text> <x-size> <y-size>\n')

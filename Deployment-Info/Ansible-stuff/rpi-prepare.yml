@@ -1,0 +1,53 @@
+---
+- name: prepare rpi for xfce. starts with lite version
+  # https://www.pragmaticlinux.com/2020/11/install-the-xfce-desktop-on-your-raspberry-pi/?utm_content=cmp-true
+  hosts: wanted
+  become: yes
+
+  tasks:
+
+    - name: 1. Install desktop components
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+      loop:
+        - xserver-xorg
+        - xfce4
+        - xfce4-goodies
+
+    - name: Get current systemd default # noqa
+      ansible.builtin.command: "systemctl get-default"
+      changed_when: false
+      register: systemdefault
+
+    - name: Print return information from the previous task
+      ansible.builtin.debug:
+        msg: The default is  {{ systemdefault.stdout_lines }}
+
+    - name: "Set default to graphical target"
+      ansible.builtin.command: "systemctl set-default graphical.target"
+      when: "'graphical' not in systemdefault.stdout"
+      changed_when: true
+
+    - name: Ensure we reconfigure lightdm
+      shell: dpkg-reconfigure lightdm
+
+    # Ensure that session manager is xfce4
+    # sudo update-alternatives --config x-session-manager
+    # is set to - but this is interactive
+    #
+    # cli version
+    # to see what the options are
+    #   sudo update-alternatives --list x-session-manager
+    # to configure
+    #   sudo update-alternatives --set x-session-manager /usr/bin/startxfce4
+    #         the other is    /usr/bin/xfce4-session
+    - name: Correct the session manager
+      community.general.alternatives:
+        name: x-session-manager
+        path: /usr/bin/startxfce4 # /usr/bin/startxfce4 /usr/bin/xfce4-session
+
+
+
+
+

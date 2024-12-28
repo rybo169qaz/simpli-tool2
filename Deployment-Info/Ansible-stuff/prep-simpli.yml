@@ -1,5 +1,5 @@
 ---
-- name: install simpli tool suite
+- name: Copy over the simpli tools and files. This does NOT configure the system. # Does not depend on anything
   hosts: wanted
   vars_files:
     - vars.yml
@@ -129,48 +129,19 @@
       become_user: robert
       tags: copy
 
-    - name: 13. create derived desktop
+    - name: 13A. generate report
       ansible.builtin.shell:
-        cmd: /usr/bin/python3 {{ simpli_utils_dir }}/create_desktop.py {{ simpli_config_dir }}/template.desktop {{ simpli_config_dir }}/desktop_known.yml {{ desktop_dir }} RobR
-      become_user: robert
-      tags: gendesk
-
-    - name: 14. generate report
-      ansible.builtin.shell:
-        cmd: '{{ simpli_utils_dir }}/know-device.sh show'
+        cmd: '{{ simpli_utils_dir }}/know-device.sh show {{ clients[inventory_hostname].desktop }} '
       become_user: robert
       tags: report
       when: 1>2
 
-    - name: 14B. perform initial check
+    - name: 13B. perform initial check
       ansible.builtin.shell:
-        cmd: '{{ simpli_utils_dir }}/know-device.sh check'
+        cmd: '{{ simpli_utils_dir }}/know-device.sh check {{ clients[inventory_hostname].desktop }} '
       tags: report
       when: 1>2
 
-    - name: 14C. desktop setg
-      ansible.builtin.shell:
-        cmd: '{{ simpli_utils_dir }}/env_config.sh setg'
-      tags: modenv
-      when: 1>2
-
-    - name: 14D. desktop setlight
-      ansible.builtin.shell:
-        cmd: '{{ simpli_utils_dir }}/env_config.sh setlight'
-      tags: modenv
-      when: 1>2
-
-    - name: 14E. desktop xset
-      ansible.builtin.shell:
-        cmd: '{{ simpli_utils_dir }}/env_config.sh xset'
-      tags: modenv
-      when: 1>2
-
-    - name: 14F. perform final check
-      ansible.builtin.shell:
-        cmd: '{{ simpli_utils_dir }}/know-device.sh check'
-      tags: report
-      when: 1>2
 
 
 

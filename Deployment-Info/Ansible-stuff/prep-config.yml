@@ -7,41 +7,60 @@
 
   tasks:
 
-    - name: 21. perform initial check
+    - name: 21. desktop setg
       ansible.builtin.shell:
-        cmd: '{{ simpli_utils_dir }}/know-device.sh check'
-      become_user: robert
-      tags: report
-
-    - name: 23. desktop setg
-      ansible.builtin.shell:
-        cmd: '{{ simpli_utils_dir }}/env_config.sh setg'
+        cmd: '{{ simpli_utils_dir }}/env_config.sh set1 {{ clients[inventory_hostname].desktop }}'
       become_user: robert
       tags: modenv
+      when: 1>2
 
-    - name: 24. desktop setlight
+    - name: 24. perform initial check
       ansible.builtin.shell:
-        cmd: '{{ simpli_utils_dir }}/env_config.sh setlight'
+        cmd: '{{ simpli_utils_dir }}/know-device.sh check {{ clients[inventory_hostname].desktop }}'
+      become_user: robert
+      tags: report
+      when: 1>2
+
+    - name: 25a. desktop setg
+      ansible.builtin.shell:
+        cmd: '{{ simpli_utils_dir }}/env_config.sh setg {{ clients[inventory_hostname].desktop }}'
+      become_user: robert
+      tags: modenv
+      when: 1>2
+
+    - name: 25b. desktop setlight
+      ansible.builtin.shell:
+        cmd: '{{ simpli_utils_dir }}/env_config.sh setlight {{ clients[inventory_hostname].desktop }}'
       #become_user: robert
       tags: modenv
+      when: 1>2
 
-    - name: 25. desktop xset
+    - name: 25c. desktop xset
       ansible.builtin.shell:
-        cmd: '{{ simpli_utils_dir }}/env_config.sh xset'
+        cmd: '{{ simpli_utils_dir }}/env_config.sh xset {{ clients[inventory_hostname].desktop }}'
       become_user: robert
       tags: modenv
+      when: 1>2
 
-    - name: 29A. perform final check
+    - name: 28. set required config
       ansible.builtin.shell:
-        cmd: '{{ simpli_utils_dir }}/know-device.sh check'
+        cmd: '{{ simpli_utils_dir }}/know-device.sh set '
+      become_user: robert
+      tags: modenv
+      when: 1>0
+
+    - name: 29A. perform final CHECK
+      ansible.builtin.shell:
+        cmd: '{{ simpli_utils_dir }}/know-device.sh check {{ clients[inventory_hostname].desktop }}'
       become_user: robert
       tags: report
 
-    - name: 29B. perform final show
+    - name: 29B. create final state report
       ansible.builtin.shell:
-        cmd: '{{ simpli_utils_dir }}/know-device.sh check'
+        cmd: '{{ simpli_utils_dir }}/know-device.sh check {{ clients[inventory_hostname].desktop }}'
       become_user: robert
       tags: report
+
 
 
 

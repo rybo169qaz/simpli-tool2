@@ -7,7 +7,11 @@
 
   tasks:
 
-    - name: 1. download anydesk deb
+    - name: Print ANSIBLE architecture
+      debug:
+        msg: "ansible_machine: {{ ansible_machine }}"
+
+    - name: 1. download anydesk deb (for ALL architectures)
       ansible.builtin.copy:
         src: "{{ src_deployment_dir }}/local-packages/"
         dest: "{{ simpli_dir }}/packages/"
@@ -15,9 +19,14 @@
         group: robert
         mode: '0755'
 
-    - name: 2. install anydesk deb
+    - name: 2. install anydesk deb for amd64
       ansible.builtin.apt:
-        deb: "{{ simpli_dir }}/packages/anydesk_6.4.0-1_amd64.deb"
+        deb: "{{ simpli_dir }}/packages/{{ anydesk_amd64 }}"
+      when: ansible_machine == 'x86_64'
 
+    - name: 2. install anydesk deb for arm64
+      ansible.builtin.apt:
+        deb: "{{ simpli_dir }}/packages/{{ anydesk_arm64 }}"
+      when: ansible_machine == 'aarch64'
 
 

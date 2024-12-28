@@ -67,18 +67,28 @@ zoom:
         icon: "zoom"
         description: "General"
         command_args: "general"
+        comment: "Zoom - general"
 
       - entry: "zoom_cov_grosv"
         enabled: 'true'
         icon: "zoom"
-        description: "Grosvenor Rd (main)"
+        description: "Grosv Rd (main)"
         command_args: "grosv"
+        comment: "Zoom - grosv main"
 
       - entry: "zoom_cov_west"
         enabled: 'true'
         icon: "zoom"
         description: "Cov West (main)"
         command_args: "west"
+        comment: "Zoom - West main"
+
+      - entry: "zoom_cov_east_sunday"
+        enabled: 'true'
+        icon: "zoom"
+        description: "Cov East (Sunday2)"
+        command_args: "https://cilmeet-me.zoom.us/j/97134544582?pwd=MEJvZlkxbGdWaHhGUmhFS0J5WThxZz09"
+        comment: "Zoom - East main"
 
 browser:
     category_description: 'Browser general'
@@ -94,18 +104,28 @@ browser:
         icon: "firefox_mozilla_browser_icon_128px"
         description: "YouTube: General"
         command_args: 'www.youtube.com'
+        comment: "Youtube - General"
 
       - entry: "youtube_KateBush_Wuthering"
         enabled: 'false'
         icon: "firefox_mozilla_browser_icon_128px"
         description: "YouTube: Kate Bush - Wuthering Heights"
         command_args: 'www.youtube.com/watch?v=-1pMMIe4hb4'
+        comment: "Youtube - Kate Bush - Wuthering Heights"
 
       - entry: "browser_CDVideo_The-Bible-God-And-Creation"
         enabled: 'true'
         icon: "CDVideo_R-CV-LOGO-BC-AC@2x-150x150"
-        description: "CDV(b): Bible God and Creation"
+        description: "CDV: Bible God and Creation"
         command_args: 'christadelphianvideo.org/studyvideo/the-bible-god-and-creation/'
+        comment: "Youtube - CDVideo - Bible God and Creation"
+
+      - entry: "coventry_east_sunday_cil-zoom"
+        enabled: 'true'
+        icon: "firefox_mozilla_browser_icon_128px"
+        description: "Cov East Sunday Zoom - browser"
+        command_args: 'cilmeet-me.zoom.us/j/97134544582?pwd=MEJvZlkxbGdWaHhGUmhFS0J5WThxZz09'
+        comment: "Youtube - Cov East main"
 
 
 video:
@@ -121,37 +141,51 @@ video:
         enabled: 'false'
         icon: "VLC_icon"
         description: "VLC: General"
-        command_args: 'www.youtube.com'
+        command_args: ''
+        comment: "VLC - General"
 
       - entry: "vlc_autumn_1"
         enabled: 'true'
         icon: "VLC_icon"
         description: "Autumn video"
-        command_args: '/home/robert/.simpli/media/Autumn.mp4'
+        command_args: '--loop /home/robert/.simpli/media/Autumn.mp4'
+        comment: "VLC - Autumn video - local"
 
       - entry: "vlc_earth"
-        enabled: 'true'
+        enabled: 'false'
         icon: "VLC_icon"
         description: "Earth video"
         command_args: '/home/robert/.simpli/media/HD_Earth_Views_512kb.mp4'
+        comment: "VLC - Earth video - local"
+
+      - entry: "vlc_car"
+        enabled: 'false'
+        icon: "VLC_icon"
+        description: "Car video"
+        command_args: '--loop /home/robert/.simpli/media/RDDESjd_6M.mp4'
+        comment: "VLC - Car video - local"
 
       - entry: "vlc_CDVideo_The-Bible-God-And-Creation"
         enabled: 'false'
         icon: "CDVideo_R-CV-LOGO-BC-AC@2x-150x150"
         description: "CDV(v): Bible God and Creation"
         command_args: 'http://www.youtube.com/watch?v=lbA5FWftfao'
+        comment: "VLC - CDVideo - Bible God and Creation"
 
       - entry: "vlc_Good-Life_Just-My-Bill"
         enabled: 'false'
         icon: "VLC_icon"
         description: "Good Life: Just my bill"
         command_args: '/media/robert/MEDIA1/media-data/CommercialDVD/TheGoodLife/The_Good_Life_D3_S2_T2_JustMyBill_Fast1080p30.mp4'
+        comment: "VLC - Good Life - Just my bill - local"
 
       - entry: "vlc_Good-Life_Guru-of-suburbia"
         enabled: 'false'
         icon: "VLC_icon"
         description: "Good Life: Guru of Suburbia"
         command_args: '/media/robert/MEDIA1/media-data/CommercialDVD/TheGoodLife/The_Good_Life_D3_S2_T3_TheGuruOfSurbiton_Fast1080p30-WebOpt.mp4'
+        comment: "VLC - Good Life - Guru of suburbia - local"
+
 
 
 

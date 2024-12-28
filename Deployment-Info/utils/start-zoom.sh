@@ -5,6 +5,7 @@ This script starts a zoom meeting to the specified meeting.
 Known meetings are:
   grosv          Coventry Grosvenor Rd
   west           Coventry West
+  eastsunday     Coventry East Sunday
   rev            Coventry Grosv Revelation class
 '
 tool_name='ZOOM'
@@ -24,14 +25,22 @@ then
     #qual=' --url="https://zoom.us/j/92399821735?pwd=SXBJb0VsMGF3K09PRS9zUGp6YmM4Zz09"'
     qual='https://zoom.us/j/92399821735?pwd=SXBJb0VsMGF3K09PRS9zUGp6YmM4Zz09'
     describe='Coventry Grosvenor Rd'
+
   elif [ "$ip_arg" = "west" ]
   then
     qual=' --url="https://us02web.zoom.us/j/9170212859?pwd=U1FNQWJ5ZEVxMlZ5U1FVek8xajFXZz09"'
     describe='Coventry West'
+
+  elif [ "$ip_arg" = "eastsunday" ]
+  then
+    qual=' --url="https://cilmeet-me.zoom.us/j/97134544582?pwd=MEJvZlkxbGdWaHhGUmhFS0J5WThxZz09"'
+    describe='Coventry East (Sunday)'
+
   elif [ "$ip_arg" = "general" ]
   then
     qual=' --url="https://us02web.zoom.us/'
     describe='Zoom general'
+
   elif [ "$ip_arg" = "rev" ]
   then
     #zoommtg://zoom.us/join?action=join&confno=<your_conference_number>
@@ -40,9 +49,10 @@ then
     fulluri="'${base}confno=${rev_mtng}'"
     qual=" --url=${fulluri}"
     describe='Coventry Grosv Revelation'
+
   else
     describe="Invalid ${artifact_name}"
-    printf "${describe}"
+    printf "${describe}\n\n"
     exit 2
   fi
 else

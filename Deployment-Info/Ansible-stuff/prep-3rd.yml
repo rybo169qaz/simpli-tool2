@@ -1,16 +1,26 @@
 ---
-- name: update nodes
+- name: Installs 3rd party components # Does not depend on simpli components
   hosts: wanted
   become: yes
 
   tasks:
 
-    - name: 1. Install python
+    - name: 1. Remove unwanted tools
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+        status: "absent"
+      loop:
+        - thunderbird
+        - libreoffice
+      when: 1 > 2
+
+    - name: 2. Install python # Is this necessary??
       apt:
         name: python3
         update_cache: yes
 
-    - name: 2. Install python packages
+    - name: 3. Install python packages
       apt:
         name: "{{ item }}"
         update_cache: yes
@@ -28,7 +38,10 @@
         - vim
         - net-tools
         - curl
+        - eog
+        - firefox
         - gedit
+        - kphotoalbum
         - unzip
         - tree
         - xz-utils
@@ -36,18 +49,11 @@
         - ncdu
         - dconf-editor
         - screenfetch
+        - neofetch
         - vlc
       when: 1 > 0
 
-    - name: 4. Install desktop related packages
-      apt:
-        name: "{{ item }}"
-        update_cache: yes
-      loop:
-        - lightdm
-      when: 1 > 2
-
-    - name: 4. Install sound related packages # require reboot
+    - name: 5. Install sound related packages # require reboot
       apt:
         name: "{{ item }}"
         update_cache: yes
@@ -55,27 +61,16 @@
         - pulseaudio
         - pavucontrol
 
-    - name: 5. Remove unwanted tools
+    - name: 6. Install desktop related packages # Not sure this is needed
       apt:
         name: "{{ item }}"
         update_cache: yes
-        status: "absent"
       loop:
-        - thunderbird
-        - libreoffice
+        - lightdm
       when: 1 > 2
 
-    - name: 8. set desktop settings
-      ansible.builtin.shell:
-        cmd: "{{ simpli_dir }}/utils/set-desk.sh"
-      when: 1 > 2
 
-    - name: 9. Restart service lightdm
-      ansible.builtin.service:
-        name: lightdm
-        enabled: yes
-        state: restarted
-      when: 1 > 2
+
 
 
 

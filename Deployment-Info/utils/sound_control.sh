@@ -13,6 +13,8 @@ NOW=$( date '+%F_%H-%M-%S' )
 
 op="${dest_dir}/${node}_${TOOL_FUNC}.txt"
 
+# Changing audio output from terminal
+# https://unix.stackexchange.com/questions/459240/changing-audio-output-from-terminal
 
 show_help() {
   printf "Use  sound_control \n"
@@ -121,7 +123,8 @@ get_name_of_hdmi_port() {
   find ${wkg} -name "sink*.txt"|while read file
   do
     cond="${file/sink_/condensed_}"
-    grep -Ei 'Monitor Source:' ${file} | sed "s@\s*Monitor Source: @@" > ${cond}
+    #grep -Ei 'Monitor Source:' ${file} | sed "s@\s*Monitor Source: @@" > ${cond} # wrong field
+    grep -Ei 'Name:' ${file} | sed "s@\s*Name: @@" > ${cond}
 
     # alsa_output.pci-0000_00_14.2.3.analog-stereo
     fulltext=$(cat ${cond} )
@@ -136,7 +139,7 @@ get_name_of_hdmi_port() {
 
 show_hdmi_name() {
   port_name=$(get_name_of_hdmi_port)
-  printf "Name of HDMI port: ${port_name}\n"
+  printf "Name of HDMI port: >>${port_name}<<\n"
 
 }
 
