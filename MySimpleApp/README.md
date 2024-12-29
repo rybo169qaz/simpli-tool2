@@ -248,3 +248,24 @@ Also see [(Medium) Streaming Docker Containers to your Browser](https://medium.c
 somme blurb
 
 more blurb
+
+## Other
+
+### Useful links
+
+- Running shell script as root 
+    - [(Unix and linux) Is there a way to make a shell script always run as root](https://unix.stackexchange.com/questions/618358/is-there-a-way-to-make-a-shell-script-always-run-as-root)
+
+- Ansible syntax
+    - [(ansible) Loops](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html)
+
+- screen lock and sleep
+    - [(superuser) Lock screen from command line in Xfce](https://superuser.com/questions/1696415/lock-screen-from-command-line-in-xfce)
+    - [(superuser) Debian 10 blank screen after suspend (using lightdm xfce)](https://superuser.com/questions/1558817/debian-10-blank-screen-after-suspend-using-lightdm-xfce)
+
+- identifying desktop
+    - [(unix and linux) How to determine which desktop environment is installed from the shell?](https://unix.stackexchange.com/questions/366052/how-to-determine-which-desktop-environment-is-installed-from-the-shell)
+    - abc
+
+- xfce scrollbar
+    - Google serach the above [

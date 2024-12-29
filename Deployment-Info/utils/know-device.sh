@@ -6,7 +6,7 @@ LIGHTDM_CONF='etc/lightdm/lightdm.conf'
 LIGHTDM_DIR='/etc/lightdm/lightdm.conf.d'
 LIGHTDM_CONF_01='/etc/lightdm/lightdm.conf.d/01_my.conf'
 
-COMMANDS_SYNTAX='<command> <desktop>\n\where\n\t<command> == show | check \n\t<desktop> == cinnamon | xfce\n'
+COMMANDS_SYNTAX="<command> <desktop>\n\where\n\t<command> == show | check \n\t<desktop> == cinnamon | xfce\n"
 COMMANDS_LIST='show | check '
 COMMANDS_DESC="show == Show all variables\n\tcheck == check the important settings and report discrepencies\n"
 
@@ -59,7 +59,7 @@ screen_info() {
   screenfetch -N -n
 
   printf "\n=== neofetch ===\n"
-  neofetch --off --color_blocks off
+  neofetch --off --color_blocks off --bold off --ascii_bold off --stdout
 }
 
 
@@ -236,6 +236,24 @@ main_settings() {
   printf "\n=== screenfetch + neofetch ===\n"
   screen_info
 
+
+  printf "\n=== DESKTOP ===\n"
+
+  all_sessions=$(ls /usr/bin/*-session)
+
+  desk_description='Desktop == UNKNOWN'
+  is_xfce_session=$(echo "${all_sessions}" | grep xfce)
+  if [ $? == 0 ]; then
+    desk_description='Desktop == XFCE'
+  fi
+
+  is_cinnamon_session=$(echo "${all_sessions}" | grep cinnamon)
+  if [ $? == 0 ]; then
+    desk_description='Desktop == CINNAMON'
+  fi
+  printf "Analysis of /usr/bin/*-session  indicates : ${desk_description}\n"
+
+  printf "/usr/bin session info: \nvvv\n${all_sessions}\n^^^\n"
 
   printf "\nDesktop: $XDG_CURRENT_DESKTOP"
   if [[ "$XDG_CURRENT_DESKTOP" == 'X-Cinnamon' ]]
@@ -478,8 +496,8 @@ do_set() {
   # change the screen backdrop
 
 
-  set_xfconf_property   "$xfcedesk" "$BACKDROP_IMAGE_KEY" "$BACKDROP_MOUNTAIN_IMAGE"
-  check_xfconf_property   "$xfcedesk" "$BACKDROP_IMAGE_KEY" "$BACKDROP_MOUNTAIN_IMAGE"
+  set_xfconf_property   "$xfcedesk" "$BACKDROP_IMAGE_KEY" "$BACKDROP_PALM_IMAGE"
+  check_xfconf_property   "$xfcedesk" "$BACKDROP_IMAGE_KEY" "$BACKDROP_PALM_IMAGE"
 
   #set_xfconf_property   "$xfcedesk" "$MON_DP0" "$new_back"
   #check_xfconf_property "$xfcedesk" "$MON_DP0" "$new_back"
@@ -511,7 +529,7 @@ do_reset() {
 
 if [ "$#" = "0" ]
 then
-  printf "Syntax is \n\tenv_config   ${COMMANDS_SYNTAX} \nwhere\t${COMMANDS_DESC}\n"
+  printf "Syntax is \n\tknow_device.sh   ${COMMANDS_SYNTAX} \nwhere\t${COMMANDS_DESC}\n"
   exit 1
 fi
 

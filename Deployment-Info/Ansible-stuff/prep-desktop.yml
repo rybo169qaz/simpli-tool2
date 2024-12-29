@@ -11,6 +11,7 @@
         cmd: /usr/bin/python3 {{ simpli_utils_dir }}/create_desktop.py {{ simpli_config_dir }}/template.desktop {{ simpli_config_dir }}/desktop_known.yml {{ desktop_dir }} {{ clients[inventory_hostname].desktop }}
       become_user: robert
       tags: gendesk
+      when: "clients[inventory_hostname].desktop == 'xfce' "
 
 
     - name: 14A. generate report

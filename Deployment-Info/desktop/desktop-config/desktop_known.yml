@@ -152,7 +152,7 @@ video:
         comment: "VLC - Autumn video - local"
 
       - entry: "vlc_earth"
-        enabled: 'false'
+        enabled: 'true'
         icon: "VLC_icon"
         description: "Earth video"
         command_args: '/home/robert/.simpli/media/HD_Earth_Views_512kb.mp4'

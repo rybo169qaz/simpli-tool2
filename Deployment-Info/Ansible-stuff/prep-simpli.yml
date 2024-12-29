@@ -134,7 +134,7 @@
         cmd: '{{ simpli_utils_dir }}/know-device.sh show {{ clients[inventory_hostname].desktop }} '
       become_user: robert
       tags: report
-      when: 1>2
+      when: 1>0
 
     - name: 13B. perform initial check
       ansible.builtin.shell:

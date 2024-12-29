@@ -102,7 +102,7 @@ clients:
 
     wyse_2:
       device_type: "wyse_small"
-      desktop: "cinnamon"
+      desktop: "xfce"
       mac_wired: "00:80:64:ef:73:c5"
       ansible_host: "192.168.0.50"
       os_account: "robert"

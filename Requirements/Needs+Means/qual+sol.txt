@@ -13,3 +13,11 @@ Q102 The ability to be able to connect to a device remotely in order to correct 
 
 
 Q201 The ability to single click a desktop icon to open it.
+
+
+Q202 The hdmi signal is always given to the display device.
+
+Q5xx ZOOM
+
+Q501 That it is possible to close and restart a new zoom session even if there is an existing session in progress.
+    MEANS: Interim: provide means to
