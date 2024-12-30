@@ -116,7 +116,7 @@ set_xfconf_property() {
 
   printf "\nSET SCHEMA PROPERTY: schema= ${the_sch} , property= ${the_prop} , value=>>${the_value}<<\n"
   /usr/bin/xfconf-query -c ${the_sch} -p ${the_prop} -s "$the_value"  | paste /dev/null -
-  printf "==\n"
+  #printf "==\n"
 }
 
 check_xfconf_property() {
@@ -124,28 +124,16 @@ check_xfconf_property() {
   the_prop="$2"
   the_value="$3"
 
-  /usr/bin/xfconf-query -c "${the_sch}" -p "${the_prop}"
-  printf "ZYZ\n"
   resp=$(/usr/bin/xfconf-query -c "${the_sch}" -p "${the_prop}"  )
-  printf "RAW ANALYSIS : >>${resp}<<\n"
+  #printf "RAW ANALYSIS : >>${resp}<<\n"
 
-  resparray=($resp)
-  prop=$( echo ${resparray[0]} )
-  val=$( echo ${resparray[1]} )
-  other=$( echo ${resparray[2]} )
-
-
-  printf "ARRAY ANALYSIS : PROPERTY=${prop} , VALUE=${val} , OTHER=${other}\n"
-
-  if [ "$the_value" != "$val" ]
+  if [ "$the_value" != "$resp" ]
   then
-    desc='BAD'
-    printf "\tValues differ\n"
+    desc='BAD'    #printf "\tValues differ\n"
   else
-    desc='OK '
-  #  printf "\tThey match\n"
+    desc='OK '     #printf "\tThey match\n"
   fi
-  printf "\n${desc} : CHECK schema=${the_sch} , property=${the_prop} , req=${the_value}, actual=${val}\n"
+  printf "${desc} : CHECK schema=${the_sch} , property=${the_prop} , \n\t\trequired=${the_value} \n\t\tactual  =${resp}\n\n"
 }
 
 list_xfconf_schemas() {
@@ -493,32 +481,33 @@ do_check() {
 }
 
 do_set() {
-  # change the screen backdrop
 
-
+  # change backdrop backdrop image
   set_xfconf_property   "$xfcedesk" "$BACKDROP_IMAGE_KEY" "$BACKDROP_PALM_IMAGE"
   check_xfconf_property   "$xfcedesk" "$BACKDROP_IMAGE_KEY" "$BACKDROP_PALM_IMAGE"
 
-  #set_xfconf_property   "$xfcedesk" "$MON_DP0" "$new_back"
-  #check_xfconf_property "$xfcedesk" "$MON_DP0" "$new_back"
-
+  # single click to execute icons
   set_xfconf_property   "$xfcedesk" "$SINGLE_CLICK" "true"
   check_xfconf_property "$xfcedesk" "$SINGLE_CLICK" "true"
 
+  # change font size of text on icons
   set_xfconf_property   "$xfcedesk" "$ICON_FONT_SIZE_KEY" "$ICON_FONT_SIZE_BIG"
   check_xfconf_property   "$xfcedesk" "$ICON_FONT_SIZE_KEY" "$ICON_FONT_SIZE_BIG"
 
+  # change size of desktop icons
   set_xfconf_property   "$xfcedesk" "$ICON_SIZE_KEY" "$ICON_SIZE_VALUE_BIG"
   check_xfconf_property "$xfcedesk" "$ICON_SIZE_KEY" "$ICON_SIZE_VALUE_BIG"
 
+
+
+  #set_xfconf_property   "$xfcedesk" "$MON_DP0" "$new_back"
+  #check_xfconf_property "$xfcedesk" "$MON_DP0" "$new_back"
 
   # make scroll bar permanently visible
   # see Disable scrollbar overlay in XFCE? (past posted solutions do not work)
   # https://forum.xfce.org/viewtopic.php?id=16062
   #get_gkey 'org.gnome.desktop.interface' 'overlay-scrolling'
   #mod_gkey 'org.gnome.desktop.interface' 'overlay-scrolling' false # only impacts terminal
-
-
 
 }
 

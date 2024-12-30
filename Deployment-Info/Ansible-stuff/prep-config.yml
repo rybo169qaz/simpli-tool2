@@ -7,12 +7,12 @@
 
   tasks:
 
-    - name: 21. desktop setg
+    - name: 21. desktop env set1
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/env_config.sh set1 {{ clients[inventory_hostname].desktop }}'
       become_user: robert
       tags: modenv
-      when: 1>2
+      when: 1>0
 
     - name: 24. perform initial check
       ansible.builtin.shell:
