@@ -84,7 +84,7 @@ zoom:
         comment: "Zoom - West main"
 
       - entry: "zoom_cov_east_sunday"
-        enabled: 'true'
+        enabled: 'false'
         icon: "zoom"
         description: "Cov East (Sunday2)"
         command_args: "https://cilmeet-me.zoom.us/j/97134544582?pwd=MEJvZlkxbGdWaHhGUmhFS0J5WThxZz09"
@@ -152,7 +152,7 @@ video:
         comment: "VLC - Autumn video - local"
 
       - entry: "vlc_earth"
-        enabled: 'true'
+        enabled: 'false'
         icon: "VLC_icon"
         description: "Earth video"
         command_args: '/home/robert/.simpli/media/HD_Earth_Views_512kb.mp4'

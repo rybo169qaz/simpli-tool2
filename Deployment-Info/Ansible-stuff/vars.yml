@@ -106,7 +106,7 @@ clients:
       mac_wired: "00:80:64:ef:73:c5"
       ansible_host: "192.168.0.50"
       os_account: "robert"
-      person: "Alf"
+      person: "Derek V"
       comment: "None"
 
     wyse_5:
@@ -124,7 +124,7 @@ clients:
       mac_wired: "00:80:64:d5:d0:a2"
       ansible_host: "192.168.0.46"
       os_account: "robert"
-      person: "Charlie Collins"
+      person: "Martin B"
       comment: "None"
 
     wyse_8:

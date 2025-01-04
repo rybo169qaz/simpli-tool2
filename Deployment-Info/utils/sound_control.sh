@@ -22,6 +22,11 @@ show_help() {
   printf "\t findsinks                         Find the numbers of the sinks. \n"
   printf "\t details      <port_num>           Lists details info of specified port\n"
   printf "\t hdmi                              Lists details of hdmi sinks\n"
+  printf "\t gethdmiport                       Lists hdmi port no \n"
+  printf "\t setvolume                         Set volume of hdmi at 80 percent \n"
+
+  printf "\t gethdminame                       Lists hdmi port name\n"
+
   printf "\t get          <port_num>           Get the volume of port specified.\n"
   printf "\t set          <port_num>  <volume> Set the volume of port specified. (units in %%)\n"
   printf "\t getdefault                        Gets the default sink\n"
@@ -90,7 +95,11 @@ process_sinks_info() {
   # (stackoverflow) How to split a file by using keyword boundaries
   # https://unix.stackexchange.com/questions/76929/how-to-split-a-file-by-using-keyword-boundaries
   csplit -f "${work_dir}/sink_" -b %02d.txt ${mod_sinks} -z '/Sink #/+1' '{*}' > /dev/null
+  list_of_files=$(ls ${work_dir} )
+  #printf "\nList of sinks: ${list_of_files}\n++\n"
 }
+
+
 
 find_hdmi_details() {
   wkg=$(mktemp -d)
@@ -122,6 +131,7 @@ get_name_of_hdmi_port() {
   shopt -s globstar
   find ${wkg} -name "sink*.txt"|while read file
   do
+    #printf "Processing sink file: ${file}\n"
     cond="${file/sink_/condensed_}"
     #grep -Ei 'Monitor Source:' ${file} | sed "s@\s*Monitor Source: @@" > ${cond} # wrong field
     grep -Ei 'Name:' ${file} | sed "s@\s*Name: @@" > ${cond}
@@ -142,6 +152,46 @@ show_hdmi_name() {
   printf "Name of HDMI port: >>${port_name}<<\n"
 
 }
+
+get_hdmi_portno() {
+  port_info=$(find_hdmi_details)
+  portno=$(echo "${port_info}" | grep -oP 'Port: \K([0-9]+)' )
+  printf "${portno}"
+}
+
+get_hdmi_name() {
+  port_info=$(find_hdmi_details)
+  portname=$(echo "${port_info}" | grep -oP 'Name: \K([.]+)' )
+  #portname=$(echo "${port_info}" | sed -n 's/(.*)(Name:\s...)(.*Desc)/\2/' )
+  printf "${portname}"
+}
+
+find_hdmi_port() {
+  #port_info=$(find_hdmi_details)
+  #portno=$(echo "${port_info}" | grep -oP 'Port: \K([0-9]+)' )
+  portnum=$(get_hdmi_portno)
+  printf "HDMI port is ${portnum}\n\n"
+}
+
+set_hdmi_vol() {
+  # set the default to the name
+  set_hdmi_as_default
+
+  # now set the volume of this port to hdmi
+  portnum=$(get_hdmi_portno)
+
+  wanted_vol='80'
+  printf "Setting (HDMI) port ${portnum} to ${wanted_vol}\n"
+  set_port_volume "${portnum}" "${wanted_vol}"
+
+}
+
+
+find_hdmi_name() {
+  portnum=$(get_hdmi_name)
+  printf "HDMI name is ${portnum}\n\n"
+}
+
 
 get_default() {
   current_default=$( /usr/bin/pactl get-default-sink)
@@ -237,6 +287,21 @@ then
 elif [ "$cmd" == 'hdmi' ]
 then
   find_hdmi_details
+
+elif [ "$cmd" == 'gethdmiport' ]
+then
+  find_hdmi_port
+
+elif [ "$cmd" == 'setvolume' ]
+then
+  set_hdmi_vol
+
+elif [ "$cmd" == 'gethdminame' ]
+then
+  # this does not work
+  find_hdmi_name
+
+
 
 elif [ "$cmd" == 'get' ]
 then

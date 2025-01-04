@@ -60,6 +60,11 @@ else
   exit 1
 fi
 
+# overide and set the sound
+sound_tool='/home/robert/.simpli/utils/sound_control.sh setvolume'
+${sound_tool}
+printf "finished setting sound\n"
+
 printf "${tool_name} : connect to ${describe}\n\tQUAL: ${qual}\n\n"
 
 tool_cmd="${tool_path} ${qual}"

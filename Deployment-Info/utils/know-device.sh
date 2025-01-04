@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 
 GSET='/usr/bin/gsettings'
+XSET='/usr/bin/xset'
 
 LIGHTDM_CONF='etc/lightdm/lightdm.conf'
 LIGHTDM_DIR='/etc/lightdm/lightdm.conf.d'
@@ -53,6 +54,13 @@ dest_dir='/home/robert/.simpli/logs'
 node=$(/usr/bin/uname -n)
 #op="${dest_dir}/${node}_${NOW}.txt"
 PERMA_NAME="${dest_dir}/${node}_report"
+
+mod_xset() {
+  the_command=$1
+  fullcmd="${XSET} ${the_command}"
+  printf "Setting XSET   ${fullcmd}\n"
+  resp=$(${fullcmd} )
+}
 
 screen_info() {
   printf "\n=== screenfetch ===\n"
@@ -481,6 +489,9 @@ do_check() {
 }
 
 do_set() {
+
+  # ensure that HDMI signal is always sent by disabling display power management cutting in
+  mod_xset " -display :0 dpms 0 0 0 "
 
   # change backdrop backdrop image
   set_xfconf_property   "$xfcedesk" "$BACKDROP_IMAGE_KEY" "$BACKDROP_PALM_IMAGE"
