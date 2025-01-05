@@ -12,7 +12,7 @@
         cmd: '{{ simpli_utils_dir }}/env_config.sh set1 {{ clients[inventory_hostname].desktop }}'
       become_user: robert
       tags: modenv
-      when: 1>0
+      when: 1>2
 
     - name: 24. perform initial check
       ansible.builtin.shell:
@@ -42,16 +42,23 @@
       tags: modenv
       when: 1>2
 
-    - name: 28. set required config
+    - name: 28A. set required config
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/know-device.sh set '
       become_user: robert
       tags: modenv
       when: 1>0
 
+    - name: 28B. set required config
+      ansible.builtin.shell:
+        cmd: '{{ simpli_utils_dir }}/know-device.sh setlight '
+      tags: modenv
+      when: 1>0
+
+
     - name: 29A. perform final CHECK
       ansible.builtin.shell:
-        cmd: '{{ simpli_utils_dir }}/know-device.sh check {{ clients[inventory_hostname].desktop }}'
+        cmd: '{{ simpli_utils_dir }}/know-device.sh show {{ clients[inventory_hostname].desktop }}'
       become_user: robert
       tags: report
 

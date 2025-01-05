@@ -12,6 +12,10 @@ src_utils: '{{ src_deployment_dir }}/utils'
 src_dynamic_desktop: '{{ src_deployment_dir }}/desktop/dynamic-desktop'
 src_desktop_config: '{{ src_deployment_dir }}/desktop/desktop-config'
 src_desktop_images: '{{ src_deployment_dir }}/desktop/desktop-images'
+src_wkg_misc: '{{ src_deployment_dir }}/wkg-misc'
+src_wkg_misc2: '/home/robertryan/PROJ2/SIMPLI-TOOL/GIT-REPO/simpli-tool2/Deployment-Info/wkg-misc'
+
+
 
 # Non-project files
 src_media_folder: "/home/{{ controller_user }}/PROJ/Ansible-Perf/media/"
@@ -53,6 +57,7 @@ zsimpli_dir: "/home/generic/.simpli"
 simpli_dir: '/home/robert/.simpli'
 simpli_utils_dir: '/home/robert/.simpli/utils'
 simpli_config_dir: '/home/robert/.simpli/config'
+simpli_logs_dir: '/home/robert/.simpli/logs'
 
 # USB Media
 usb_media: '/media/robertryan/MEDIA1'
@@ -129,11 +134,12 @@ clients:
 
     wyse_8:
       device_type: "wyse_small"
-      desktop: "cinnamon"
+      desktop: "xfce" # was cinnamon
+      mediacodecs: False
       mac_wired: "00:80:64:ef:??:??"
       ansible_host: "192.168.0.32"
       os_account: "robert"
-      person: "Derek Vyse"
+      person: "was DV"
       comment: "None"
 
     wyse_9:
@@ -187,9 +193,9 @@ clients:
       comment: "None"
 
     zbox:
-      device_type: "zotac_zbox1"
-      desktop: "cinnamon"
-      mediacodecs: True
+      device_type: "zbox"
+      desktop: "xfce"
+      mediacodecs: False
       mac_wired: "00:??:??:??:??:??"
       ansible_host: "192.168.0.41"
       os_account: "robert"

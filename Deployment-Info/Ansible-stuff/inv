@@ -13,10 +13,10 @@ rpi4_a ansible_host=192.168.0.53
 
 
 [wanted]
-wyse_2
+#wyse_2
 wyse_5
-wyse_6
-#wyse_8
+#wyse_6
+wyse_8
 wyse_9
 zbox
 #zotac_h

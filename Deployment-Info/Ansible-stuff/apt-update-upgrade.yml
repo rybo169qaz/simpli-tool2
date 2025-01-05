@@ -11,3 +11,8 @@
         update_cache: yes
         cache_valid_time: 86400 #One day
 
+    - name: Reboot machine and send a message
+      ansible.builtin.reboot:
+        msg: "Rebooting machine in 240 seconds"
+        reboot_timeout: 240
+

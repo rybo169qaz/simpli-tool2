@@ -15,22 +15,7 @@
         - libreoffice
       when: 1 > 2
 
-    - name: 2. Install python # Is this necessary??
-      apt:
-        name: python3
-        update_cache: yes
-
-    - name: 3. Install python packages
-      apt:
-        name: "{{ item }}"
-        update_cache: yes
-      loop:
-        - python3-pip
-        - python3-yaml
-        - python3-psutil
-        - python3-jinja2
-
-    - name: 4. Install wanted tools
+    - name: 2. Install wanted tools
       apt:
         name: "{{ item }}"
         update_cache: yes
@@ -42,6 +27,7 @@
         - firefox
         - gedit
         - kphotoalbum
+        - lightdm
         - unzip
         - tree
         - xz-utils
@@ -51,7 +37,23 @@
         - screenfetch
         - neofetch
         - vlc
+        - pipx
       when: 1 > 0
+
+    - name: 3. Install python # Is this necessary??
+      apt:
+        name: python3
+        update_cache: yes
+
+    - name: 4. Install python packages
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+      loop:
+        - python3-pip
+        - python3-yaml
+        - python3-psutil
+        - python3-jinja2
 
     - name: 5. Install sound related packages # require reboot
       apt:
@@ -61,13 +63,6 @@
         - pulseaudio
         - pavucontrol
 
-    - name: 6. Install desktop related packages # Not sure this is needed
-      apt:
-        name: "{{ item }}"
-        update_cache: yes
-      loop:
-        - lightdm
-      when: 1 > 2
 
 
 

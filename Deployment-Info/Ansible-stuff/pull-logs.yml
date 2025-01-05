@@ -1,0 +1,53 @@
+---
+- name: Retrieves the logs from the clients
+  hosts: wanted
+  vars_files:
+    - vars.yml
+
+  tasks:
+
+    - name: 1. obtain local copy of show file from client - at top level
+      ansible.builtin.fetch:
+        src: "{{ simpli_logs_dir }}/show.txt"
+        dest: "{{ src_wkg_misc }}/"
+        flat: true
+        validate_checksum: true
+      when: 1>2
+
+    - name: 2. obtain local copy of show file from client - to specified file
+      ansible.builtin.fetch:
+        src: "{{ simpli_logs_dir }}/show.txt"
+        dest: "{{ src_wkg_misc }}/{{ ansible_hostname }}/"
+        flat: true
+        validate_checksum: true
+      when: 1>0
+
+    - name: 3. obtain local copy of node specific show file from client - at top level
+      ansible.builtin.fetch:
+        src: "{{ simpli_logs_dir }}/{{ ansible_hostname }}_show.txt"
+        dest: "{{ src_wkg_misc }}/"
+        flat: true
+        validate_checksum: true
+      when: 1>2
+
+    - name: 3. obtain local copy of show file from client - nested under dir
+      ansible.builtin.fetch:
+        src: "{{ simpli_logs_dir }}/REF.txt"
+        dest: "{{ src_wkg_misc }}/"
+        flat: false
+        validate_checksum: true
+      when: 1>2
+
+
+
+
+
+
+
+
+
+
+
+
+
+

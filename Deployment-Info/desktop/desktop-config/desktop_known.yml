@@ -53,6 +53,22 @@ genrep:
       description: "Create full config report"
       command_args: "show"
 
+terminal:
+  category_description: 'Terminals for control'
+  tool_command: '/usr/bin/xfce4-terminal'
+  location_for_icon: 'simpli-admin'
+  desktop_categories: ''
+  desktop_kde_protocols: ''
+  desktop_keywords: 'Editor;'
+
+  entries:
+    - entry: "bash_terminal"
+      enabled: 'true'
+      icon: "info.256x256"
+      description: "Open a terminal"
+      tool_command: "/usr/bin/xfce4-terminal"
+      command_args: " --display=:0 "
+
 zoom:
     category_description: 'Zoom ecclesial meetings'
     tool_command: '/home/robert/.local/bin/simpli-zoom'

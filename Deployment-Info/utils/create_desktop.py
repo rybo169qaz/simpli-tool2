@@ -269,6 +269,7 @@ def derive_all_desktops(template_file, yaml_source_data, base_dir_for_icons, typ
     derive_desktop_category(data_struct['video'], base_dir_for_icons, template, False, type_of_desktop)
     derive_desktop_category(data_struct['platform'], base_dir_for_icons, template, True, type_of_desktop)
     derive_desktop_category(data_struct['genrep'], base_dir_for_icons, template, True, type_of_desktop)
+    derive_desktop_category(data_struct['terminal'], base_dir_for_icons, template, True, type_of_desktop)
 
 
 def main():

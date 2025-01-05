@@ -109,12 +109,13 @@ The following can be done via an SSH session:
 
 #### Configuring Client Node
   - It was necessary to use pipx on debian mint on zotac
-  - **pipx ensurepath **
-  - **pipx install --include-deps ansible **
+  - Not sure these are now needed
+  - DEPR **pipx ensurepath **
+  - DEPR **pipx install --include-deps ansible **
      - Note A: This can take a bit of time.
      - Note B: You will need to log out and in again
   - DEPR **pipx inject ansible argcomplete **
-  - FOR UPGRADE LATER **sudo pipx upgrade --include-injected ansible **
+
 
 #### Checking version of ansible
 - **ansible --version **
@@ -147,7 +148,34 @@ The following can be done via an SSH session:
 
 ## Software needed on the client
 
-- This should be included in the ansible config, but is currently done manually
+- This is performed using playbooks currently
+
+### Update and upgrade
+  - **ansible-playbook -i inv apt-update-upgrade.yml **   
+  - Requires a reboot after (part of playbook)
+
+### THIRD PARTY
+  - **ansible-playbook -i inv prep-3rd.yml **   
+  - Requires a reboot after
+
+### ANYDESK
+  - **ansible-playbook -i inv anydesk.yml **   
+
+### ZOOM
+  - **ansible-playbook -i inv zoom.yml **  
+
+### SIMPLI software
+  - **ansible-playbook -i inv prep-simpli.yml **  
+
+### DESKTOP SHORTCUTS
+  - **ansible-playbook -i inv prep-desktop.yml **  
+
+### CONFIGURE DESKTOP
+  - **ansible-playbook -i inv prep-config.yml **  
+  - This includes restarting the lightdm
+
+
+## OTHER 2 
 
 ### VOLUME CONTROL
 - Increasing the volume on the device

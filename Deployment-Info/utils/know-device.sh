@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+AVAIL_VERBS=("show" "check" "set" "reset" "setlight" "monxfcedesk")
+
 GSET='/usr/bin/gsettings'
 XSET='/usr/bin/xset'
 
@@ -7,7 +9,7 @@ LIGHTDM_CONF='etc/lightdm/lightdm.conf'
 LIGHTDM_DIR='/etc/lightdm/lightdm.conf.d'
 LIGHTDM_CONF_01='/etc/lightdm/lightdm.conf.d/01_my.conf'
 
-COMMANDS_SYNTAX="<command> <desktop>\n\where\n\t<command> == show | check \n\t<desktop> == cinnamon | xfce\n"
+COMMANDS_SYNTAX="<command> <desktop>"
 COMMANDS_LIST='show | check '
 COMMANDS_DESC="show == Show all variables\n\tcheck == check the important settings and report discrepencies\n"
 
@@ -18,7 +20,8 @@ END_SECTION='^^^^^^^^^^^^^'
 
 xfcedesk='xfce4-desktop'
 
-BACKDROP_IMAGE_KEY='/backdrop/screen0/monitorDisplayPort-0/workspace0/last-image'
+BACKDROP_IMAGE_DP0_KEY='/backdrop/screen0/monitorDisplayPort-0/workspace0/last-image'
+BACKDROP_IMAGE_HDMI1_KEY='/backdrop/screen0/monitorHDMI-1/workspace0/last-image'
 BACKDROP_PALM_IMAGE='/usr/share/xfce4/backdrops/wilma_mpiwnicki_palm.jpg'
 BACKDROP_MOUNTAIN_IMAGE='/usr/share/xfce4/backdrops/wilma_mpiwnicki_torres_del_paine.jpg'
 
@@ -44,6 +47,8 @@ sc0mon1_lastimg="/backdrop/screen0/monitor1/last-image"
 sc0mon1_lastsingimg="/backdrop/screen0/monitor1/last-single-image"
 
 MON_DP0='/backdrop/screen0/monitorDisplayPort-0/workspace0/last-image'
+
+
 
 
 
@@ -96,8 +101,16 @@ show_xfconf_schema() {
   XCONFQ="/usr/bin/xfconf-query"
   printf "\n\n+++ START LIST SCHEMA KEYS: schema==${the_schema}\n"
   /usr/bin/xfconf-query -c ${the_schema} -l -v | paste /dev/null -
-  printf "\n++ END LIST OF SCHEMA KEYS\n"
+  printf "++ END LIST OF SCHEMA KEYS: schema==${the_schema}\n"
 }
+
+monitor_xfconf_schema() {
+  the_schema="$1"
+  # https://forum.xfce.org/viewtopic.php?id=10836
+  printf "\n\n+++ MONITORING CHANGES TO SCHEMA: schema==${the_schema}\n"
+  /usr/bin/xfconf-query -c ${the_schema} -m
+}
+
 
 get_xfconf_property() {
   the_sch="$1"
@@ -127,6 +140,16 @@ set_xfconf_property() {
   #printf "==\n"
 }
 
+create_xfconf_property() {
+  the_sch="$1"
+  the_prop="$2"
+  the_value="$3"
+
+  printf "\nCREATE SCHEMA PROPERTY: schema= ${the_sch} , property= ${the_prop} , value=>>${the_value}<<\n"
+  /usr/bin/xfconf-query -n -c ${the_sch} -p ${the_prop} -s "$the_value"  | paste /dev/null -
+  #printf "==\n"
+}
+
 check_xfconf_property() {
   the_sch="$1"
   the_prop="$2"
@@ -143,6 +166,17 @@ check_xfconf_property() {
   fi
   printf "${desc} : CHECK schema=${the_sch} , property=${the_prop} , \n\t\trequired=${the_value} \n\t\tactual  =${resp}\n\n"
 }
+
+create_and_check_xfconf_property() {
+  create_xfconf_property "$1" "$2" "$3"
+  check_xfconf_property "$1" "$2" "$3"
+}
+
+set_and_check_xfconf_property() {
+  set_xfconf_property "$1" "$2" "$3"
+  check_xfconf_property "$1" "$2" "$3"
+}
+
 
 list_xfconf_schemas() {
   # Xfce Commands and Other Useful Stuff
@@ -224,6 +258,11 @@ mod_backdrop() {
   the_args="$3"
 
 }
+
+mon_xfce4_desktop() {
+  monitor_xfconf_schema "$xfcedesk"
+}
+
 
 main_settings() {
   printf "=== HOST NAME CTL ===\n"
@@ -409,6 +448,7 @@ check_gsettings() {
   # The following fail on xfce
   check_gkey "com.linuxmint.mintmenu.plugins.places" 'allow-scrollbar' 'false'
 
+  # ensure icon exists to start terminal
 }
 
 show_lightdm_settings() {
@@ -427,6 +467,33 @@ show_lightdm_settings() {
 
     printf "\n${START_SECTION}\n${desc}\n${END_SECTION}"
   done
+}
+
+
+restart_lightdm() {
+  printf "Restarting lightdm\n"
+  sleep 1
+  service lightdm restart
+}
+
+mod_lightdm() {
+  # add auto logon
+  if [ "$SHOW_COMMAND" == "SHOW" ]; then
+    printf "File to be written to: ${LIGHTDM_CONF_01}\n"
+  fi
+
+  if [ "$DUMMY_ACTION" == "DUMMY" ]; then
+    printf "DUMMY ACTION\n"
+  else
+    sudo cat << EOF > ${LIGHTDM_CONF_01}
+[Seat:*]
+greeter-hide-users=false
+autologin-user=robert
+autologin-user-timeout=3
+
+EOF
+  fi
+
 }
 
 check_lightdm_settings() {
@@ -494,22 +561,24 @@ do_set() {
   mod_xset " -display :0 dpms 0 0 0 "
 
   # change backdrop backdrop image
-  set_xfconf_property   "$xfcedesk" "$BACKDROP_IMAGE_KEY" "$BACKDROP_PALM_IMAGE"
-  check_xfconf_property   "$xfcedesk" "$BACKDROP_IMAGE_KEY" "$BACKDROP_PALM_IMAGE"
+  # for wyse
+  #create_and_check_xfconf_property   "$xfcedesk" "$BACKDROP_IMAGE_DP0_KEY" "$BACKDROP_PALM_IMAGE"
 
-  # single click to execute icons
-  set_xfconf_property   "$xfcedesk" "$SINGLE_CLICK" "true"
-  check_xfconf_property "$xfcedesk" "$SINGLE_CLICK" "true"
+  # for zbox
+  create_and_check_xfconf_property   "$xfcedesk" "$BACKDROP_IMAGE_HDMI1_KEY" "$BACKDROP_PALM_IMAGE"
+
+  # single click to execute icons (needs creating)
+  create_and_check_xfconf_property   "$xfcedesk" "$SINGLE_CLICK" "true"
 
   # change font size of text on icons
-  set_xfconf_property   "$xfcedesk" "$ICON_FONT_SIZE_KEY" "$ICON_FONT_SIZE_BIG"
-  check_xfconf_property   "$xfcedesk" "$ICON_FONT_SIZE_KEY" "$ICON_FONT_SIZE_BIG"
+  set_and_check_xfconf_property   "$xfcedesk" "$ICON_FONT_SIZE_KEY" "$ICON_FONT_SIZE_BIG"
+  #set_xfconf_property   "$xfcedesk" "$ICON_FONT_SIZE_KEY" "$ICON_FONT_SIZE_BIG"
+  #check_xfconf_property   "$xfcedesk" "$ICON_FONT_SIZE_KEY" "$ICON_FONT_SIZE_BIG"
 
   # change size of desktop icons
-  set_xfconf_property   "$xfcedesk" "$ICON_SIZE_KEY" "$ICON_SIZE_VALUE_BIG"
-  check_xfconf_property "$xfcedesk" "$ICON_SIZE_KEY" "$ICON_SIZE_VALUE_BIG"
-
-
+  set_and_check_xfconf_property   "$xfcedesk" "$ICON_SIZE_KEY" "$ICON_SIZE_VALUE_BIG"
+  #set_xfconf_property   "$xfcedesk" "$ICON_SIZE_KEY" "$ICON_SIZE_VALUE_BIG"
+  #check_xfconf_property   "$xfcedesk" "$ICON_SIZE_KEY" "$ICON_SIZE_VALUE_BIG"
 
   #set_xfconf_property   "$xfcedesk" "$MON_DP0" "$new_back"
   #check_xfconf_property "$xfcedesk" "$MON_DP0" "$new_back"
@@ -522,45 +591,67 @@ do_set() {
 
 }
 
+do_set_lightdm() {
+  # auto login
+  mod_lightdm
+  restart_lightdm
+}
+
 do_reset() {
   reset_xfconf_property "$xfcedesk" "$MON_DP0"
   get_xfconf_property "$xfcedesk" "$MON_DP0"
 }
 
-if [ "$#" = "0" ]
-then
-  printf "Syntax is \n\tknow_device.sh   ${COMMANDS_SYNTAX} \nwhere\t${COMMANDS_DESC}\n"
-  exit 1
-fi
+show_syntax() {
+  qual="$1"
+  printf "${qual}\n"
+  printf "Syntax is \n\tknow_device.sh   ${COMMANDS_SYNTAX} \nwhere <command> == "
+  for i in "${AVAIL_VERBS[@]}"
+  do
+   printf "$i | "
+  done
+  printf "\n\n"
+}
 
+# ==== main ====
 cmd="$1"
 desktop="xfce"
 
-avail_verbs=("show" "check" "set" "reset")
-
-#if [ $cmd == "show" -o $cmd == "check" -o $cmd == "set" ]
-if [[ ${avail_verbs[@]} =~ $cmd ]]
+if [ "$#" = "0" ]
 then
-  op="${dest_dir}/${node}_${NOW}_${cmd}.txt"
-  printf "COMMAND = ${cmd}\n${NOW}\n" 2>&1 | tee -a $op
-else
-  printf "Invalid command argument\n"
-  #op="${dest_dir}/${node}_${NOW}.txt"
-  exit 88
+  show_syntax 'Missing args'
+  exit 1
 fi
 
-#if [ "$desktop" == "xfce" ]; then
-#  printf "DESKTOP = ${desktop}\n" 2>&1 | tee -a $op
-#else
-#  printf "Invalid (non-existant or unknown) desktop argument\n"
-#fi
+if [ "$cmd" = "-h" ]
+then
+  show_syntax 'Help info:'
+  exit 0
+fi
+
+if [[ ${AVAIL_VERBS[@]} =~ $cmd ]]
+then
+  op="${dest_dir}/${node}_${NOW}_${cmd}.txt"
+  printf "COMMAND = ${cmd}\n" 2>&1 | tee -a $op
+  printf "DATETIME = ${NOW}\n" 2>&1 | tee -a $op
+else
+  #printf "Invalid command argument\n"
+  show_syntax 'Invalid command argument'
+  exit 2
+fi
 
 this_perm="${dest_dir}/${cmd}.txt"
-
 if [ -L "${this_perm}" ]
 then
   printf "Info: Removing perma link ${this_perm}\n"
   rm -f "${this_perm}"
+fi
+
+unique_perm="${dest_dir}/${node}_${cmd}.txt"
+if [ -L "${unique_perm}" ]
+then
+  printf "Info: Removing the node-unique perma link ${unique_perm}\n"
+  rm -f "${unique_perm}"
 fi
 
 running_as=$(/usr/bin/whoami)
@@ -583,6 +674,15 @@ elif [ "$cmd" == 'reset' ]
 then
   do_reset
 
+elif [ "$cmd" == 'setlight' ]
+then
+  do_set_lightdm
+
+elif [ "$cmd" == 'monxfcedesk' ]
+then
+  # this monitores changes to the xfce4-desktop schema
+  mon_xfce4_desktop
+
 else
   printf "Invalid command argument\n"
   printf "Valid commands are:${COMMANDS_DESC}\n"
@@ -591,8 +691,12 @@ fi
 
 printf "\n\nOutput destination = ${op}\n"
 /usr/bin/chmod 444 "${op}"
-#rm -f "${this_perm}"
+
 /usr/bin/ln -s "${op}" "${this_perm}"
+#/usr/bin/ln -s "${op}" "${unique_perm}"
+
+op="${dest_dir}/${node}_${NOW}_${cmd}.txt"
 printf "\nUpdated perma-link  ${this_perm}  to point to ${op}\n"
 
 printf "\nEND \n\n"
+#}
