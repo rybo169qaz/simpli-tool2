@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-AVAIL_VERBS=("show" "check" "set" "reset" "setlight" "monxfcedesk")
+AVAIL_VERBS=("show" "check" "set" "reset" "setlight" "monitor" "monxfcedesk")
 
 GSET='/usr/bin/gsettings'
 XSET='/usr/bin/xset'
@@ -18,7 +18,8 @@ START_SECTION='vvvvvvvvvvvv'
 END_SECTION='^^^^^^^^^^^^^'
 
 
-xfcedesk='xfce4-desktop'
+XFCE_DESK='xfce4-desktop'
+SCHEMA_THUNAR='thunar'
 
 BACKDROP_IMAGE_DP0_KEY='/backdrop/screen0/monitorDisplayPort-0/workspace0/last-image'
 BACKDROP_IMAGE_HDMI1_KEY='/backdrop/screen0/monitorHDMI-1/workspace0/last-image'
@@ -33,6 +34,7 @@ ICON_SIZE_KEY='/desktop-icons/icon-size'
 ICON_SIZE_VALUE_BIG='82'
 
 SINGLE_CLICK='/desktop-icons/single-click'
+THUNAR_SINGLE_CLICK="/misc-single-click"
 
 old_back='/usr/share/xfce4/backdrops/linuxmint.jpg'
 new_back='/usr/share/xfce4/backdrops/sele_ring_green.jpg'
@@ -106,6 +108,10 @@ show_xfconf_schema() {
 
 monitor_xfconf_schema() {
   the_schema="$1"
+  if [ "$the_schema" == "" ]
+  then
+    printf "Missing a schema\n"
+  fi
   # https://forum.xfce.org/viewtopic.php?id=10836
   printf "\n\n+++ MONITORING CHANGES TO SCHEMA: schema==${the_schema}\n"
   /usr/bin/xfconf-query -c ${the_schema} -m
@@ -259,8 +265,9 @@ mod_backdrop() {
 
 }
 
+
 mon_xfce4_desktop() {
-  monitor_xfconf_schema "$xfcedesk"
+  monitor_xfconf_schema "$XFCE_DESK"
 }
 
 
@@ -312,18 +319,18 @@ main_settings() {
 
   get_xfconf_property "xfce4-desktop" "/backdrop/screen0/monitor0/brightness" # was 0
 
-  get_xfconf_property "$xfcedesk" "$MON_DP0"
-  #set_xfconf_property "$xfcedesk" "$MON_DP0" "$new_back"
-  #get_xfconf_property "$xfcedesk" "$MON_DP0"
+  get_xfconf_property "$XFCE_DESK" "$MON_DP0"
+  #set_xfconf_property "$XFCE_DESK" "$MON_DP0" "$new_back"
+  #get_xfconf_property "$XFCE_DESK" "$MON_DP0"
 
 
-  #reset_xfconf_property "$xfcedesk" "$sc0mon0_imgpath"
-  #reset_xfconf_property "$xfcedesk" "$sc0mon0_lastimg"
-  #reset_xfconf_property "$xfcedesk" "$sc0mon0_lastsingimg"
+  #reset_xfconf_property "$XFCE_DESK" "$sc0mon0_imgpath"
+  #reset_xfconf_property "$XFCE_DESK" "$sc0mon0_lastimg"
+  #reset_xfconf_property "$XFCE_DESK" "$sc0mon0_lastsingimg"
 
-  #reset_xfconf_property "$xfcedesk" "$sc0mon1_imgpath"
-  #reset_xfconf_property "$xfcedesk" "$sc0mon1_lastimg"
-  #reset_xfconf_property "$xfcedesk" "$sc0mon1_lastsingimg"
+  #reset_xfconf_property "$XFCE_DESK" "$sc0mon1_imgpath"
+  #reset_xfconf_property "$XFCE_DESK" "$sc0mon1_lastimg"
+  #reset_xfconf_property "$XFCE_DESK" "$sc0mon1_lastsingimg"
 
 
 
@@ -543,7 +550,7 @@ do_show() {
   show_nemo 2>&1 | tee -a $op
   printf "\n\nSOUND\n" 2>&1 | tee -a $op
   /home/robert/.simpli/utils/sound_control.sh list 2>&1 | tee -a $op
-  get_xfconf_property "$xfcedesk" "$MON_DP0"  2>&1 | tee -a $op
+  get_xfconf_property "$XFCE_DESK" "$MON_DP0"  2>&1 | tee -a $op
 }
 
 do_check() {
@@ -552,7 +559,8 @@ do_check() {
   check_lightdm_settings 2>&1 | tee -a $op
   check_xset 2>&1 | tee -a $op
 
-  check_xfconf_property "$xfcedesk" "$MON_DP0" "$new_back" 2>&1 | tee -a $op
+  check_xfconf_property "$XFCE_DESK" "$MON_DP0" "$new_back" 2>&1 | tee -a $op
+  check_xfconf_property "$SCHEMA_THUNAR" "$THUNAR_SINGLE_CLICK" "true" 2>&1 | tee -a $op
 }
 
 do_set() {
@@ -560,28 +568,33 @@ do_set() {
   # ensure that HDMI signal is always sent by disabling display power management cutting in
   mod_xset " -display :0 dpms 0 0 0 "
 
+
+  # THUNAR single click
+  set_and_check_xfconf_property "$SCHEMA_THUNAR" "$THUNAR_SINGLE_CLICK" "true"
+
+
   # change backdrop backdrop image
   # for wyse
-  #create_and_check_xfconf_property   "$xfcedesk" "$BACKDROP_IMAGE_DP0_KEY" "$BACKDROP_PALM_IMAGE"
+  create_and_check_xfconf_property   "$XFCE_DESK" "$BACKDROP_IMAGE_DP0_KEY" "$BACKDROP_PALM_IMAGE"
 
   # for zbox
-  create_and_check_xfconf_property   "$xfcedesk" "$BACKDROP_IMAGE_HDMI1_KEY" "$BACKDROP_PALM_IMAGE"
+  create_and_check_xfconf_property   "$XFCE_DESK" "$BACKDROP_IMAGE_HDMI1_KEY" "$BACKDROP_PALM_IMAGE"
 
   # single click to execute icons (needs creating)
-  create_and_check_xfconf_property   "$xfcedesk" "$SINGLE_CLICK" "true"
+  create_and_check_xfconf_property   "$XFCE_DESK" "$SINGLE_CLICK" "true"
 
   # change font size of text on icons
-  set_and_check_xfconf_property   "$xfcedesk" "$ICON_FONT_SIZE_KEY" "$ICON_FONT_SIZE_BIG"
-  #set_xfconf_property   "$xfcedesk" "$ICON_FONT_SIZE_KEY" "$ICON_FONT_SIZE_BIG"
-  #check_xfconf_property   "$xfcedesk" "$ICON_FONT_SIZE_KEY" "$ICON_FONT_SIZE_BIG"
+  set_and_check_xfconf_property   "$XFCE_DESK" "$ICON_FONT_SIZE_KEY" "$ICON_FONT_SIZE_BIG"
+  #set_xfconf_property   "$XFCE_DESK" "$ICON_FONT_SIZE_KEY" "$ICON_FONT_SIZE_BIG"
+  #check_xfconf_property   "$XFCE_DESK" "$ICON_FONT_SIZE_KEY" "$ICON_FONT_SIZE_BIG"
 
   # change size of desktop icons
-  set_and_check_xfconf_property   "$xfcedesk" "$ICON_SIZE_KEY" "$ICON_SIZE_VALUE_BIG"
-  #set_xfconf_property   "$xfcedesk" "$ICON_SIZE_KEY" "$ICON_SIZE_VALUE_BIG"
-  #check_xfconf_property   "$xfcedesk" "$ICON_SIZE_KEY" "$ICON_SIZE_VALUE_BIG"
+  set_and_check_xfconf_property   "$XFCE_DESK" "$ICON_SIZE_KEY" "$ICON_SIZE_VALUE_BIG"
+  #set_xfconf_property   "$XFCE_DESK" "$ICON_SIZE_KEY" "$ICON_SIZE_VALUE_BIG"
+  #check_xfconf_property   "$XFCE_DESK" "$ICON_SIZE_KEY" "$ICON_SIZE_VALUE_BIG"
 
-  #set_xfconf_property   "$xfcedesk" "$MON_DP0" "$new_back"
-  #check_xfconf_property "$xfcedesk" "$MON_DP0" "$new_back"
+  #set_xfconf_property   "$XFCE_DESK" "$MON_DP0" "$new_back"
+  #check_xfconf_property "$XFCE_DESK" "$MON_DP0" "$new_back"
 
   # make scroll bar permanently visible
   # see Disable scrollbar overlay in XFCE? (past posted solutions do not work)
@@ -598,8 +611,8 @@ do_set_lightdm() {
 }
 
 do_reset() {
-  reset_xfconf_property "$xfcedesk" "$MON_DP0"
-  get_xfconf_property "$xfcedesk" "$MON_DP0"
+  reset_xfconf_property "$XFCE_DESK" "$MON_DP0"
+  get_xfconf_property "$XFCE_DESK" "$MON_DP0"
 }
 
 show_syntax() {
@@ -610,12 +623,19 @@ show_syntax() {
   do
    printf "$i | "
   done
+  printf "\n"
+  printf "the 'monitor' command requires an arg which is the schema\n"
   printf "\n\n"
 }
 
 # ==== main ====
 cmd="$1"
+myarg1="$2"
+myarg2="$3"
+
+printf "ARGS:\nCMD==${cmd}<<\nARG1=${myarg1}<<\nARG2=${myarg2}<<\n\n"
 desktop="xfce"
+
 
 if [ "$#" = "0" ]
 then
@@ -678,9 +698,20 @@ elif [ "$cmd" == 'setlight' ]
 then
   do_set_lightdm
 
+elif [ "$cmd" == 'monitor' ]
+then
+  # this monitors changes to the specified schema
+  if [ "$myarg1" == "" ]
+  then
+    printf "the monitor option needs an arg\n"
+    exit 8
+  fi
+
+  monitor_xfconf_schema "$myarg1"
+
 elif [ "$cmd" == 'monxfcedesk' ]
 then
-  # this monitores changes to the xfce4-desktop schema
+  # this monitors changes to the xfce4-desktop schema
   mon_xfce4_desktop
 
 else
