@@ -150,9 +150,17 @@ create_xfconf_property() {
   the_sch="$1"
   the_prop="$2"
   the_value="$3"
+  the_type="$4"
+  # note that this needs a type
+  # https://docs.xfce.org/xfce/xfconf/4.12/xfconf-query
+  # https://unix.stackexchange.com/questions/696121/xfconf-query-create-property-for-a-plugin-property-x-does-not-exist-on-channel
+  # the following https://unix.stackexchange.com/questions/711122/edit-xubuntu-preferences-via-command-line
+  # gives
+  #    [ 'string', 'int', 'bool', 'double' ]
+  # -t int string
 
-  printf "\nCREATE SCHEMA PROPERTY: schema= ${the_sch} , property= ${the_prop} , value=>>${the_value}<<\n"
-  /usr/bin/xfconf-query -n -c ${the_sch} -p ${the_prop} -s "$the_value"  | paste /dev/null -
+  printf "\nCREATE SCHEMA PROPERTY: schema= ${the_sch} , property= ${the_prop} , type=${the_type}, value=>>${the_value}<<\n"
+  /usr/bin/xfconf-query -n -c ${the_sch} -p ${the_prop} -t "$the_type" -s "$the_value"  | paste /dev/null -
   #printf "==\n"
 }
 
@@ -174,8 +182,12 @@ check_xfconf_property() {
 }
 
 create_and_check_xfconf_property() {
-  create_xfconf_property "$1" "$2" "$3"
-  check_xfconf_property "$1" "$2" "$3"
+  schema="$1"
+  prop="$2"
+  theval="$3"
+  thetype="$4"
+  create_xfconf_property "$schema" "$prop" "$theval" "$thetype"
+  check_xfconf_property "$schema" "$prop" "$theval"
 }
 
 set_and_check_xfconf_property() {
@@ -570,18 +582,18 @@ do_set() {
 
 
   # THUNAR single click
-  set_and_check_xfconf_property "$SCHEMA_THUNAR" "$THUNAR_SINGLE_CLICK" "true"
+  create_and_check_xfconf_property "$SCHEMA_THUNAR" "$THUNAR_SINGLE_CLICK" "true" "bool"
 
 
   # change backdrop backdrop image
   # for wyse
-  create_and_check_xfconf_property   "$XFCE_DESK" "$BACKDROP_IMAGE_DP0_KEY" "$BACKDROP_PALM_IMAGE"
+  create_and_check_xfconf_property   "$XFCE_DESK" "$BACKDROP_IMAGE_DP0_KEY" "$BACKDROP_PALM_IMAGE" "string"
 
   # for zbox
-  create_and_check_xfconf_property   "$XFCE_DESK" "$BACKDROP_IMAGE_HDMI1_KEY" "$BACKDROP_PALM_IMAGE"
+  create_and_check_xfconf_property   "$XFCE_DESK" "$BACKDROP_IMAGE_HDMI1_KEY" "$BACKDROP_PALM_IMAGE" "string"
 
   # single click to execute icons (needs creating)
-  create_and_check_xfconf_property   "$XFCE_DESK" "$SINGLE_CLICK" "true"
+  create_and_check_xfconf_property   "$XFCE_DESK" "$SINGLE_CLICK" "true" "bool"
 
   # change font size of text on icons
   set_and_check_xfconf_property   "$XFCE_DESK" "$ICON_FONT_SIZE_KEY" "$ICON_FONT_SIZE_BIG"
