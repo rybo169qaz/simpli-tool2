@@ -57,15 +57,16 @@ given_md5_line=$(grep md5 ${sumfname} )
 given_md5=$(echo ${given_md5_line} | cut -d " " -f 3 )
 #printf "GIVEN MD5 == ${given_md5}\n"
 
+rm "${sumfname}"
 the_size=$(ls -lh ${fname} | cut -d " " -f 5 )
 if [ "${the_sum}" != "${given_md5}" ]
 then
 	printf "Incorrect checksum on downloaded of  '${archy}'  binary as file    ${fname} of size ${the_size}\n"
 	printf "MD5 CHECKSUM: CALCULATED == ${the_sum}  , GIVEN == ${given_md5}\n"
-	printf "\n\n"
+	printf "\n"
 	return 22
 else
-	printf "Successfully downloaded the  '${archy}'  binary as file    ${fname} of size ${the_size}\n\n\n"
+	printf "Successfully downloaded the  '${archy}'  binary as file    ${fname} of size ${the_size}\n\n"
 	return 0
 fi
 }
@@ -76,7 +77,7 @@ get_binary "$VERSION" "$OS_ARM" "$ARCH_ARM" "$FORMAT"
 # https://anydesk.com/en-gb/downloads/thank-you?dv=raspberrypi
 
 
-printf "\nEND\n"
+printf "END\n"
 exit 0
 
 

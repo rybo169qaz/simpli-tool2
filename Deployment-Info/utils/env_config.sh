@@ -19,7 +19,7 @@ XSET='/usr/bin/xset'
 SHOW_COMMAND='SHOW'
 DUMMY_ACTION='FALSE'
 
-dest_dir="/home/${USER}/.simpli/logs"
+dest_dir="/home/${USER}/.simpli/logs"/
 node=$(/usr/bin/uname -n)
 
 NOW=$( date '+%F_%H-%M-%S' )

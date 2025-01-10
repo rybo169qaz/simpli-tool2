@@ -23,8 +23,11 @@ src_media_folder: "/home/{{ controller_user }}/PROJ/Ansible-Perf/media/"
 
 # THIRD PARTY
 
+anydesk_base_url: 'https://download.anydesk.com'
 anydesk_amd64: 'anydesk_6.4.0-1_amd64.deb'
 anydesk_arm64: 'anydesk_6.4.0-1_arm64.deb'
+anydesk_amd64_url: '{{ anydesk_base_url }}/linux/{{ anydesk_amd64 }}'
+anydesk_arm64_url: '{{ anydesk_base_url }}/rpi/{{ anydesk_arm64 }}'
 
 zoom_amd64_deb: 'zoom_amd64.deb'
 zoom_amd64_url: 'https://zoom.us/client/latest/{{ vars["zoom_amd64_deb"] }}'

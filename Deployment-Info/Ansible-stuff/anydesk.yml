@@ -6,27 +6,44 @@
     - vars.yml
 
   tasks:
-
     - name: Print ANSIBLE architecture
       debug:
         msg: "ansible_machine: {{ ansible_machine }}"
 
-    - name: 1. download anydesk deb (for ALL architectures)
+    - name: 1. download anydesk binaries FROM controller
       ansible.builtin.copy:
         src: "{{ src_deployment_dir }}/local-packages/"
         dest: "{{ simpli_dir }}/packages/"
         owner: robert
         group: robert
         mode: '0755'
+      when: 1 > 2
 
-    - name: 2. install anydesk deb for amd64
-      ansible.builtin.apt:
-        deb: "{{ simpli_dir }}/packages/{{ anydesk_amd64 }}"
+    - name: 2A. download anydesk deb (x86 only) FROM ANYDESK
+      ansible.builtin.get_url:
+        dest: "{{ simpli_dir }}/packages/{{ anydesk_amd64 }}"
+        url: "{{ anydesk_amd64_url }}"
+        group: robert
+        owner: robert
       when: ansible_machine == 'x86_64'
 
-    - name: 2. install anydesk deb for arm64
+    - name: 2B. download anydesk deb (arm rpi only) FROM ANYDESK
+      ansible.builtin.get_url:
+        dest: "{{ simpli_dir }}/packages/{{ anydesk_arm64 }}"
+        url: "{{ anydesk_arm64_url }}"
+        group: robert
+        owner: robert
+      when: ansible_machine == 'aarch64'
+
+    - name: 3A. install anydesk deb for amd64
+      ansible.builtin.apt:
+        deb: "{{ simpli_dir }}/packages/{{ anydesk_amd64 }}"
+      when: ( ansible_machine == 'x86_64' ) and ( 1 > 0 )
+
+    - name: 3B. install anydesk deb for arm64
       ansible.builtin.apt:
         deb: "{{ simpli_dir }}/packages/{{ anydesk_arm64 }}"
-      when: ansible_machine == 'aarch64'
+      when: ( ansible_machine == 'aarch64' ) and ( 1 > 0 )
+
 
 
