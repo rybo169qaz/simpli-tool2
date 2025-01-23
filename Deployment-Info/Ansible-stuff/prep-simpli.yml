@@ -3,6 +3,8 @@
   hosts: wanted
   vars_files:
     - vars.yml
+  become: true
+  become_user: "{{ host_user }}"
 
   tasks:
 
@@ -10,8 +12,8 @@
       ansible.builtin.file:
         path: "{{ local_bin }}"
         state: directory
-        owner: robert
-        group: robert
+        owner: "{{ host_user }}"
+        group: "{{ host_user }}"
         mode: 0775
       tags: copy
 
@@ -19,17 +21,17 @@
       ansible.builtin.file:
         path: "{{ simpli_dir }}"
         state: directory
-        owner: robert
-        group: robert
+        owner: "{{ host_user }}"
+        group: "{{ host_user }}"
         mode: 0775
-      become_user: robert
+      become_user: "{{ host_user }}"
       tags: copy
 
     - name: 3. create simpli sub folders
       ansible.builtin.file:
         path: "{{ simpli_dir }}/{{ item }}"
         state: directory
-      become_user: robert
+      become_user: "{{ host_user }}"
       loop:
         - info
         - config
@@ -42,9 +44,9 @@
     - name: 4. copy scripts to utils
       ansible.builtin.copy:
         src: "{{ src_deployment_dir }}/utils/"
-        dest: "{{ simpli_dir }}/utils/"
+        dest: "{{ simpli_utils_dir }}/"
         mode: 0775
-      become_user: robert
+      become_user: "{{ host_user }}"
       tags: copy
 
     - name: 5. link utils # https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_loops.html
@@ -52,7 +54,7 @@
         cmd: |
           /usr/bin/rm -f "{{ local_bin }}/{{ item.link_end }}"
           /usr/bin/ln -s "{{ simpli_dir }}/utils/{{ item.actual }}" "{{ local_bin }}/{{ item.link_end }}"
-      become_user: robert
+      become_user: "{{ host_user }}"
       loop:
         - { actual: 'know-device.sh', link_end: 'simpli-report' }
         - { actual: 'start-zoom.sh', link_end: 'simpli-zoom' }
@@ -78,14 +80,14 @@
           echo ---
           echo
       register: command_output
-      become_user: robert
+      become_user: "{{ host_user }}"
       tags: report
 
     - name: 6B. Print output to file # '/home/robert/.simpli/info/dev-info.txt'
       ansible.builtin.copy:
-        content: "{{command_output.stdout}}"
+        content: "{{ command_output.stdout }}"
         dest: "{{ device_info_file }}"
-      become_user: robert
+      become_user: "{{ host_user }}"
       tags: report
 
     - name: 7. remove utils in .local/bin - these are historical
@@ -105,34 +107,34 @@
       ansible.builtin.copy:
         src: "{{ src_desktop_images }}/"
         dest: "{{ simpli_config_dir }}/"
-      become_user: robert
+      become_user: "{{ host_user }}"
       tags: copy
 
     - name: 11. copy config files
       ansible.builtin.copy:
         src: "{{ src_desktop_config }}/"
         dest: "{{ simpli_config_dir }}/"
-      become_user: robert
+      become_user: "{{ host_user }}"
       tags: copy
 
-    - name: 11. copy Template file
+    - name: 11. copy Template file  It is questionable if this is needed
       ansible.builtin.copy:
         src: "{{ src_desktop_config }}/template.desktop/"
         dest: "{{ simpli_config_dir }}/info"
-      become_user: robert
+      become_user: "{{ host_user }}"
       tags: copy
 
     - name: 12. copy Media file
       ansible.builtin.copy:
         src: "{{ src_media_folder }}"
-        dest: "{{ simpli_dir }}/media"
-      become_user: robert
+        dest: "{{ simpli_media_dir }}"
+      become_user: "{{ host_user }}"
       tags: copy
 
     - name: 13A. generate report
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/know-device.sh show {{ clients[inventory_hostname].desktop }} '
-      become_user: robert
+      become_user: "{{ host_user }}"
       tags: report
       when: 1>0
 

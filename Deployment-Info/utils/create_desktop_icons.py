@@ -104,13 +104,17 @@ def get_device_id():
 def get_dir_and_file(the_template):
     base_file = os.path.basename(the_template)
     dir_path = os.path.dirname(the_template)
-    renderop(f'BASE={base_file}\nDIR={dir_path}\n', Optype.DEBUG)
+    renderop(f'BASE={base_file}\t\tDIR={dir_path}\n', Optype.DEBUG)
     return (dir_path, base_file)
 
 def remove_all_in_dir_with_prefix(base_dir, the_prefix, remove_normal_files, remove_directories):
     #print(f'CALLED remove_all_in_dir_with_prefix\n')
-    if not base_dir.startswith('/home/robert'): # this is protection against being called with a bad base_dir
-        exit_msg(99, 'Call to internal function with prefix NOT  /home >>{the_dir}<<')
+
+    # this is protection against being called with a bad base_dir
+    usr1 = '/home/robert' # this is the historical user used
+    usr2 = '/home/simp'   # this is the planned prefix for users
+    if (not base_dir.startswith(usr1)) and (not base_dir.startswith(usr2)):
+        exit_msg(99, f'Call to internal function with invalid username >>{usr1}<< , >>{usr2}<<')
 
     for (root, dirs, files) in os.walk(base_dir, topdown=False):
         for the_file in files:
@@ -141,9 +145,9 @@ def remove_all_simpli_files_in_desktop_dir(my_dir):
     time.sleep(3)
 
 
-def generate_from_template(temp, var_struct, filename):
+def generate_from_template(template, var_struct, filename):
     renderop(f'Generating template_desktop_file: {filename}', Optype.DEBUG)
-    content = temp.render(var_struct)
+    content = template.render(var_struct)
     with open(filename, mode="w", encoding="utf-8") as message:
         message.write(content)
         renderop(f"... Created {filename}", Optype.DEBUG)
@@ -163,6 +167,7 @@ def make_desktop_file_trusted_by_xfce(desktop_file):
     # perform the gio action
     # How to mass-trust .desktop files via shell?  https://forum.xfce.org/viewtopic.php?pid=70683
     the_cmd = f'gio set -t string {desktop_file} metadata::xfce-exe-checksum {sha256_of_desktop_file}'
+    #renderop(f'Performing action>>{the_cmd}<<', Optype.DEBUG)
     returned_value = os.system(the_cmd)  # returns the exit code in unix
 
     ret_val = f'Command: {the_cmd}\nReturned value: {returned_value}\n'
@@ -177,10 +182,27 @@ def make_desktop_file_trusted_by_xfce(desktop_file):
         f1.write(ret_val)
         f1.close()
 
+def add_user_home_if_relative(the_user, the_path):
+    if  (the_path.startswith('/')) :
+        full_path = the_path
+    else:
+        full_path = '/home/' + the_user + '/' + the_path
+    return full_path
 
-def derive_desktop_category(category_data, icon_base_dir, template_desktop_file, populate_specials, desktop_env):
+def derive_desktop_category(global_data, category_data, icon_base_dir, template_desktop_file, populate_specials,
+                            desktop_env):
     common_data = dict()
-    common_data['tool_command'] = category_data['tool_command']
+    common_data['user'] = global_data['user']
+    home_dir = '/home/' + global_data['user']
+
+    # tool command is either absolute or relative to home directory
+    common_data['tool_command'] = add_user_home_if_relative(global_data['user'], category_data['tool_command'])
+    # tool_cmd = category_data['tool_command']
+    # if  (tool_cmd.startswith('/')) :
+    #     common_data['tool_command'] = tool_cmd
+    # else:
+    #     common_data['tool_command'] = home_dir + '/' + tool_cmd
+
     common_data['desktop_categories'] = category_data['desktop_categories']
     common_data['desktop_kde_protocols'] = category_data['desktop_kde_protocols']
     common_data['desktop_keywords'] = category_data['desktop_keywords']
@@ -206,16 +228,21 @@ def derive_desktop_category(category_data, icon_base_dir, template_desktop_file,
         # in teh case of attribute relating to the desktop file location we use this to determine where we create the file
         for key, value in common_data.items():
             new_struct[key] = value
+
             if key == 'location_for_icon':
                 if value == '.':
-                    # leave dest_dir unchanged (i.e. as teh base dir)
-                    pass
+                    # leave dest_dir unchanged (i.e. as the base dir)
+                    #pass
+                    dest_dir = icon_base_dir
                 else:
                     dest_dir = icon_base_dir + '/' + value
 
         # configure the specific attributes (this allows overriding)
         for key2, value2 in info_struct.items():
-            if key2 == 'location_for_icon':
+            if key2 == 'icon':
+                #new_struct[key2] = add_user_home_if_relative(common_data['user'], value2)
+                new_struct[key2] = value2
+            elif key2 == 'location_for_icon':
                 if value2 == '.':
                     # leave dest_dir unchanged (as may have been overridden by base stuff)
                     pass
@@ -247,6 +274,118 @@ def derive_desktop_category(category_data, icon_base_dir, template_desktop_file,
             except:
                 renderop(f'Attempting to remove non-existent file ( {fname} )')
 
+class DeskIcon:
+    def __init__(self, dest_dir, template_file, provided_args):
+        self.dest_dir = dest_dir
+        self.template_file = template_file
+        self.provided_args = provided_args # dictionary
+        self.FILE_PREFIX = SIMPLI_PREFIX
+        self.is_valid = False
+        self._validate_args()
+
+    def _validate_args(self):
+        if not os.path.isdir(self.dest_dir):
+            return False
+        if not os.path.isfile(self.template_file):
+            return False
+        if not isinstance(self.provided_args, dict):
+            return False
+        if not 'entry' in self.provided_args:
+            return False
+        self.is_valid = True
+
+    def valid(self):
+        return self.is_valid
+
+    def get_filename(self):
+        fname = f"{self.dest_dir}/{self.FILE_PREFIX}_{self.provided_args['entry']}.desktop"
+        return fname
+
+    def write_content_of_desktop_file(self, content_text):
+        fname = self.get_filename()
+        with open(fname, "w") as f:
+            f.write(content_text)
+        f.close()
+
+    def generate_desktop_file(self):
+        self.icon_file_to_be_non_existant()
+        dict_of_vars_to_replace = self.provided_args # dict({})
+
+        # Obtain the overall template
+        (dirpath, basefile) = get_dir_and_file(self.template_file)
+        environment = Environment(loader=FileSystemLoader(dirpath))
+        template = environment.get_template(basefile)
+
+        generate_from_template(template, dict_of_vars_to_replace, self.get_filename())
+
+    def icon_file_to_be_non_existant(self):
+        full_path = self.get_filename()
+        if not os.path.isfile(full_path):
+            return True
+        the_file = os.path.basename(full_path)
+
+        # just do a sanity check to ensure that we have a desktop file (in case we wipe an important file)
+        the_postfix = '.desktop'
+        if not the_file.endswith(the_postfix):
+            return False # should throw exception
+
+        the_prefix = 'simpli'
+        if not the_file.startswith(the_prefix):
+            return False  # should throw exception
+
+        print(f'REMOVE NORMAL FILE: {full_path}\n')
+        os.remove(full_path)
+        if os.path.isfile(full_path):
+            return False
+        else:
+            return True
+
+
+class IconSuite:
+    def __init__(self, icon_spec_file):
+        self.icon_spec_file = icon_spec_file
+        self.the_dict = None
+        self.is_valid = False
+        self._validate_icon_args()
+
+    def _validate_icon_args(self):
+        if not os.path.isfile(self.icon_spec_file):
+            return False
+        with open(self.icon_spec_file) as stream:
+            try:
+                self.the_dict = yaml.safe_load(stream)
+                # print(yaml.safe_load(stream))
+            except yaml.YAMLError as exc:
+                print(f'Bad YAML\n')
+                exit(99)
+        self.is_valid = True
+
+    def validsuite(self):
+        return self.is_valid
+
+    def get_categories(self):
+        category_dict = self.the_dict.get('categories')
+        if not category_dict:
+            return None
+        category_set = set(())
+        for entry in category_dict:
+            category_set.add(entry)
+            print(f'Category: {entry}\n')
+        return category_set
+
+    def get_entries_in_category(self, cat):
+        the_cat_info = self.the_dict.get('categories').get(cat)
+        if not the_cat_info:
+            return None
+        entries_dict = the_cat_info['entries']
+        entry_set = set(())
+        for entry in entries_dict:
+            entry_name = entry['entry']
+            entry_set.add(entry_name)
+            print(f'Entry: {entry_name}\n')
+        return entry_set
+
+
 
 def derive_all_desktops(template_file, yaml_source_data, base_dir_for_icons, type_of_desktop):
 
@@ -264,15 +403,19 @@ def derive_all_desktops(template_file, yaml_source_data, base_dir_for_icons, typ
     environment = Environment(loader=FileSystemLoader(dirpath))
     template = environment.get_template(basefile)
 
-    derive_desktop_category(data_struct['zoom'], base_dir_for_icons, template, False, type_of_desktop)
-    derive_desktop_category(data_struct['browser'], base_dir_for_icons, template, False, type_of_desktop)
-    derive_desktop_category(data_struct['video'], base_dir_for_icons, template, False, type_of_desktop)
-    derive_desktop_category(data_struct['platform'], base_dir_for_icons, template, True, type_of_desktop)
-    derive_desktop_category(data_struct['genrep'], base_dir_for_icons, template, True, type_of_desktop)
-    derive_desktop_category(data_struct['terminal'], base_dir_for_icons, template, True, type_of_desktop)
+    common_dict = dict()
+    common_dict.update({"user": "robert"})
+
+    category_data = data_struct['categories']
+    derive_desktop_category(common_dict, category_data['zoom'], base_dir_for_icons, template, False, type_of_desktop)
+    derive_desktop_category(common_dict, category_data['browser'], base_dir_for_icons, template, False, type_of_desktop)
+    derive_desktop_category(common_dict, category_data['video'], base_dir_for_icons, template, False, type_of_desktop)
+    derive_desktop_category(common_dict, category_data['platform'], base_dir_for_icons, template, True, type_of_desktop)
+    derive_desktop_category(common_dict, category_data['genrep'], base_dir_for_icons, template, True, type_of_desktop)
+    derive_desktop_category(common_dict, category_data['terminal'], base_dir_for_icons, template, True, type_of_desktop)
 
 
-def main():
+def create_desktop_icon_main():
     tool_name == os.path.basename(sys.argv[0])
     renderop(f'TOOL_NAME == {tool_name}\n', Optype.DEBUG)
 
@@ -283,6 +426,12 @@ def main():
 
     cmndline_args = sys.argv[1:]
     args_string = 'Invocation args== ' + '   '.join(cmndline_args)
+
+    if cmndline_args[0] == 'x':
+        print(f'Enhanced mode\n')
+        exit_msg(0, 'COMPLETED OK')
+    else:
+        print(f'Standard mode\n')
 
     if cmndline_args[0] == '-h' or cmndline_args[0] == '--help':
         show_help()
@@ -326,4 +475,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    create_desktop_icon_main()

@@ -3,21 +3,22 @@
   hosts: wanted
   vars_files:
     - vars.yml
+  become: true
+  become_user: "{{ host_user }}"
 
   tasks:
 
     - name: 13. create derived desktop
       ansible.builtin.shell:
-        cmd: /usr/bin/python3 {{ simpli_utils_dir }}/create_desktop.py {{ simpli_config_dir }}/template.desktop {{ simpli_config_dir }}/desktop_known.yml {{ desktop_dir }} {{ clients[inventory_hostname].desktop }}
-      become_user: robert
+        cmd: /usr/bin/python3 {{ simpli_utils_dir }}/create_desktop_icons.py {{ simpli_config_dir }}/template.desktop {{ simpli_config_dir }}/desktop_known.yml {{ desktop_dir }} {{ clients[inventory_hostname].desktop }}
+      #become_user: "{{ host_user }}"
       tags: gendesk
       when: "clients[inventory_hostname].desktop == 'xfce' "
-
 
     - name: 14A. generate report
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/know-device.sh show {{ clients[inventory_hostname].desktop }} '
-      become_user: robert
+      #become_user: "{{ host_user }}"
       tags: report
       when: 1>0
 

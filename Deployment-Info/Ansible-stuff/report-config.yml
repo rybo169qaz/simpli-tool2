@@ -10,13 +10,13 @@
     - name: 71. perform check
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/know-device.sh check'
-      become_user: robert
+      become_user: {{ host_user }}
       tags: report
 
     - name: 72. create a general state report
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/know-device.sh show'
-      become_user: robert
+      become_user: {{ host_user }}
       tags: report
 
 

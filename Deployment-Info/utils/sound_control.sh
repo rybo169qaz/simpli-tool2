@@ -80,7 +80,7 @@ get_sink_numbers() {
 
 process_sinks_info() {
   work_dir="$1"
-  #printf "Created temp directory ${wkg}\n"
+  #printf "Created templatefile directory ${wkg}\n"
   the_tmp="$(dirname "${work_dir}")" ; temp_dir="$(basename "${work_dir}")"
   #printf "DIR part==${the_tmp} \t LASTpart==${temp_dir}\n"
 

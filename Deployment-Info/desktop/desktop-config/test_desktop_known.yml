@@ -1,0 +1,43 @@
+---
+common:
+  com1: '111'
+  com2: '222'
+
+categories:
+  countries:
+    category_description: 'Lots of countries'
+    tool_command: 'country_tools'
+    location_for_icon: 'simpli-admin'
+
+    entries:
+      - entry: "france"
+        enabled: 'true'
+        flag: "france_flag"
+        description: "France"
+        command_args: "/home/robert/.simpli/config/dev-info.txt"
+
+      - entry: "the_netherlands"
+        enabled: 'false'
+        icon: "dutch_flag"
+        description: "Holland"
+        command_args: "/home/robert/.simpli/config/dev-info.txt"
+
+  mountains:
+    category_description: 'Well known mountains'
+    tool_command: 'mountain_tool'
+
+    entries:
+      - entry: "everest"
+        enabled: 'true'
+        icon: "nepal_photo"
+        description: "Everest"
+
+      - entry: "mount blanc"
+        enabled: 'true'
+        icon: "photo_of_mt_blanc"
+        description: "Mt Blanc"
+        tool_command: 'special_mountain_tool'
+
+
+
+

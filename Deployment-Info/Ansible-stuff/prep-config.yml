@@ -45,7 +45,7 @@
     - name: 28A. set required config
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/know-device.sh set '
-      become_user: robert
+      become_user: {{ host_user }}
       tags: modenv
       when: 1>0
 
@@ -59,13 +59,13 @@
     - name: 29A. perform final CHECK
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/know-device.sh show {{ clients[inventory_hostname].desktop }}'
-      become_user: robert
+      become_user: {{ host_user }}
       tags: report
 
     - name: 29B. create final state report
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/know-device.sh check {{ clients[inventory_hostname].desktop }}'
-      become_user: robert
+      become_user: {{ host_user }}
       tags: report
 
 

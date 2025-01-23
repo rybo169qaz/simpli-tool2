@@ -40,30 +40,34 @@ lightdm_conf01_rpi: '/usr/share/lightdm/lightdm.conf.d/01_debian.conf'
 tool_uname: "/usr/bin/uname"
 tool_gedit: "/usr/bin/gedit"
 
-#linux_user: 'robert'
-home_dir: '/home/robert'
-media_dir: '/media/robert'
-
+host_groups: 'simpliface'
+host_user: 'robert'  # simp  robert
+home_dir: '/home/{{ host_user }}'
+#media_dir: '/media/robert'
 
 simpiface_dirname: '.simpli'
 
-dest_path: '{{ vars["home_dir"] }}/analysis-info.txt'
-local_bin: '{{ vars["home_dir"] }}/.local/bin'
+local_bin: '{{ home_dir }}/.local/bin'
+#local_bin: '{{ vars["home_dir"] }}/.local/bin'
+#dest_path: '{{ vars["home_dir"] }}/analysis-info.txt'
 #linux_desktop_dir: "/home/robert/Desktop"
 
-desktop_dir: '{{ vars["home_dir"] }}/Desktop'
-device_info_file: '{{ vars["home_dir"] }}/.simpli/config/dev-info.txt'
+desktop_dir: '{{ home_dir }}/Desktop'
+
 
 # var2: '{{ vars["var1"] }}'
-zsimpli_dir: "/home/generic/.simpli"
 #simpli_dir: '{{ vars["home_dir"] }}/{{ vars["simpiface_dirname"] }}'
-simpli_dir: '/home/robert/.simpli'
-simpli_utils_dir: '/home/robert/.simpli/utils'
-simpli_config_dir: '/home/robert/.simpli/config'
-simpli_logs_dir: '/home/robert/.simpli/logs'
+simpli_dir: '{{ home_dir }}/{{ simpiface_dirname }}'
+simpli_utils_dir: '{{ simpli_dir }}/utils'
+simpli_config_dir: '{{ simpli_dir }}/config'
+simpli_logs_dir: '{{ simpli_dir }}/logs'
+simpli_media_dir: '{{ simpli_dir }}/media'
+
+device_info_file: '{{ simpli_config_dir }}/dev-info.txt'
+
 
 # USB Media
-usb_media: '/media/robertryan/MEDIA1'
+#usb_media: '/media/robertryan/MEDIA1'
 
 
 device_types:

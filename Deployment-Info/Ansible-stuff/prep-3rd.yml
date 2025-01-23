@@ -54,6 +54,7 @@
         - python3-yaml
         - python3-psutil
         - python3-jinja2
+        - python3-passlib
 
     - name: 5. Install python package
       ansible.builtin.pip:

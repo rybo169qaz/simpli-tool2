@@ -1,0 +1,54 @@
+---
+- name: Creates the relevant groups and users
+  hosts: wanted
+  vars_files:
+    - vars.yml
+  become: true
+  become_user: 'root'
+
+  tasks:
+
+    - name: Ensure group simpliface exists
+      ansible.builtin.group:
+        name: "{{ host_groups }}"
+        state: present
+      when: 1 > 0
+
+    - name: Add the group simpliface to consumer user  robert
+      ansible.builtin.user:
+        name: "robert"
+        shell: /bin/bash
+        groups: "simpliface"
+        append: true
+      when: 1 > 2
+
+    - name: Add the consumer user  simp  with a bash shell
+      ansible.builtin.user:
+        name: "{{ host_user }}"
+        shell: /bin/bash
+        groups: "simpliface"
+        append: true
+      when: 1 > 0
+
+    # DOES NOT WORK: remember to invoke with  --extra-vars newpass=abc
+    # Can a linux user change their password without knowing the current password?
+    #     https://unix.stackexchange.com/questions/37633/can-a-linux-user-change-their-password-without-knowing-the-current-password
+    #
+    # https://forum.ansible.com/t/ansible-cannot-find-passlib-when-creating-a-user-through-github-action/7874/10
+    - name: change user's password
+      user:
+        name: "{{ host_user }}"
+        update_password: always
+        #password: "{{ newpass | password_hash('sha512') }}"
+        password: "{{ newpass }}"
+      when: 1 > 2
+
+
+
+
+
+
+
+
+
+

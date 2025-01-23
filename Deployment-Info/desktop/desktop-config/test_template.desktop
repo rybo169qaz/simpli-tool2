@@ -1,0 +1,3 @@
+River = {{ the_river }}
+Country ={{ the_country }}
+Sentence= In {{ the_country }} there is a river {{ the_river }} flowing through it.
