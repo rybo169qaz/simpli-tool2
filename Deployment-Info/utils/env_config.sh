@@ -9,7 +9,7 @@
 
 # Sets desktop config
 TOOL_FUNC='env_conf'
-USER='robert'
+USER='simp'# was robert
 
 LIGHTDM_CONF_01='/etc/lightdm/lightdm.conf.d/01_my.conf'
 
@@ -23,7 +23,7 @@ dest_dir="/home/${USER}/.simpli/logs"/
 node=$(/usr/bin/uname -n)
 
 NOW=$( date '+%F_%H-%M-%S' )
-HOMEDIR='/home/robert'
+HOMEDIR="/home/${USER}"
 SIMPLI_ROOT="${HOMEDIR}/.simpli"
 SIMPLI_LOGS="${SIMPLI_ROOT}/logs"
 
@@ -88,10 +88,11 @@ mod_lightdm() {
     sudo cat << EOF > ${LIGHTDM_CONF_01}
 [Seat:*]
 greeter-hide-users=false
-autologin-user=robert
+autologin-user=simp
 autologin-user-timeout=5
 
 EOF
+  # was  autologin-user=robert
   fi
 
 }

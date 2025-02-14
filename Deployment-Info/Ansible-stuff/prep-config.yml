@@ -6,66 +6,59 @@
     - vars.yml
 
   tasks:
+    # become_user: "{{ host_user }}" was robert
 
-    - name: 21. desktop env set1
+    - name: 21. desktop env set1 THIS WORKS tries to disable the screen blanking
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/env_config.sh set1 {{ clients[inventory_hostname].desktop }}'
-      become_user: robert
       tags: modenv
-      when: 1>2
+      when: 1>0
 
     - name: 24. perform initial check
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/know-device.sh check {{ clients[inventory_hostname].desktop }}'
-      become_user: robert
       tags: report
       when: 1>2
 
     - name: 25a. desktop setg
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/env_config.sh setg {{ clients[inventory_hostname].desktop }}'
-      become_user: robert
       tags: modenv
       when: 1>2
 
     - name: 25b. desktop setlight
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/env_config.sh setlight {{ clients[inventory_hostname].desktop }}'
-      #become_user: robert
       tags: modenv
       when: 1>2
 
     - name: 25c. desktop xset
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/env_config.sh xset {{ clients[inventory_hostname].desktop }}'
-      become_user: robert
       tags: modenv
       when: 1>2
 
     - name: 28A. set required config
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/know-device.sh set '
-      become_user: {{ host_user }}
       tags: modenv
-      when: 1>0
+      when: 1>2
 
     - name: 28B. set required config
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/know-device.sh setlight '
       tags: modenv
-      when: 1>0
+      when: 1>2
 
 
     - name: 29A. perform final CHECK
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/know-device.sh show {{ clients[inventory_hostname].desktop }}'
-      become_user: {{ host_user }}
       tags: report
 
     - name: 29B. create final state report
       ansible.builtin.shell:
         cmd: '{{ simpli_utils_dir }}/know-device.sh check {{ clients[inventory_hostname].desktop }}'
-      become_user: {{ host_user }}
       tags: report
 
 

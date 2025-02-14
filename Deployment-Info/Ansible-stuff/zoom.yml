@@ -22,8 +22,8 @@
       ansible.builtin.get_url:
         dest: "{{ simpli_dir }}/packages/"
         url: "{{ zoom_amd64_url }}"
-        group: {{ host_user }}
-        owner: {{ host_user }}
+        group: "{{ host_user }}"
+        owner: "{{ host_user }}"
       when: ansible_machine == 'x86_64'
 
     - name: 2. install zoom deb x86 # install the file (x86 only)

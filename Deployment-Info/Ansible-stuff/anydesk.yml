@@ -14,8 +14,8 @@
       ansible.builtin.copy:
         src: "{{ src_deployment_dir }}/local-packages/"
         dest: "{{ simpli_dir }}/packages/"
-        owner: {{ host_user }}
-        group: {{ host_user }}
+        owner: "{{ host_user }}"
+        group: "{{ host_user }}"
         mode: '0755'
       when: 1 > 2
 
@@ -23,16 +23,16 @@
       ansible.builtin.get_url:
         dest: "{{ simpli_dir }}/packages/{{ anydesk_amd64 }}"
         url: "{{ anydesk_amd64_url }}"
-        group: {{ host_user }}
-        owner: {{ host_user }}
+        group: "{{ host_user }}"
+        owner: "{{ host_user }}"
       when: ansible_machine == 'x86_64'
 
     - name: 2B. download anydesk deb (arm rpi only) FROM ANYDESK
       ansible.builtin.get_url:
         dest: "{{ simpli_dir }}/packages/{{ anydesk_arm64 }}"
         url: "{{ anydesk_arm64_url }}"
-        group: {{ host_user }}
-        owner: {{ host_user }}
+        group: "{{ host_user }}"
+        owner: "{{ host_user }}"
       when: ansible_machine == 'aarch64'
 
     - name: 3A. install anydesk deb for amd64

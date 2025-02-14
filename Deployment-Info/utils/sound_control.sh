@@ -2,7 +2,7 @@
 
 # Sets desktop config
 TOOL_FUNC='sound_control'
-USER='robert'
+USER='simp' # #robert'
 PACTL='/usr/bin/pactl'
 LINUX_PULSE_PACKAGE='pulseaudio'
 LINUX_PAVU_PACKAGE='pavucontrol'

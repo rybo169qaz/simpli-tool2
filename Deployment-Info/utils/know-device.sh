@@ -1,5 +1,6 @@
 #!/usr/bin/bash
 
+USERNAME='simp'
 AVAIL_VERBS=("show" "check" "set" "reset" "setlight" "monitor" "monxfcedesk")
 
 GSET='/usr/bin/gsettings'
@@ -57,7 +58,7 @@ MON_DP0='/backdrop/screen0/monitorDisplayPort-0/workspace0/last-image'
 
 NOW=$( date '+%F_T_%H-%M-%S' )
 
-dest_dir='/home/robert/.simpli/logs'
+dest_dir="/home/${USERNAME}/.simpli/logs"
 node=$(/usr/bin/uname -n)
 #op="${dest_dir}/${node}_${NOW}.txt"
 PERMA_NAME="${dest_dir}/${node}_report"
@@ -507,10 +508,11 @@ mod_lightdm() {
     sudo cat << EOF > ${LIGHTDM_CONF_01}
 [Seat:*]
 greeter-hide-users=false
-autologin-user=robert
+autologin-user=simp
 autologin-user-timeout=3
 
 EOF
+  # note that it WAS autologin-user=robert
   fi
 
 }
@@ -518,7 +520,7 @@ EOF
 check_lightdm_settings() {
   printf "\n${DIVIDER_SECTION}\nLIGHTDM SETTINGS\n"
   greeterhide='false'
-  username='robert'
+  username="${USERNAME}"
   usertimeout='3'
 
   checkgreeter="greeter-hide-users=${greeterhide}"
@@ -561,7 +563,11 @@ do_show() {
   show_xset 2>&1 | tee -a $op
   show_nemo 2>&1 | tee -a $op
   printf "\n\nSOUND\n" 2>&1 | tee -a $op
-  /home/robert/.simpli/utils/sound_control.sh list 2>&1 | tee -a $op
+
+  # /home/robert/.simpli/utils/sound_control.sh list 2>&1 | tee -a $op
+  #/home/simp/.simpli/utils/sound_control.sh list 2>&1 | tee -a $op
+  /home/${USERNAME}/.simpli/utils/sound_control.sh list 2>&1 | tee -a $op
+
   get_xfconf_property "$XFCE_DESK" "$MON_DP0"  2>&1 | tee -a $op
 }
 

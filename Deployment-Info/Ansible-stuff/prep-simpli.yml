@@ -27,7 +27,7 @@
       become_user: "{{ host_user }}"
       tags: copy
 
-    - name: 3. create simpli sub folders
+    - name: 3A. create simpli sub folders
       ansible.builtin.file:
         path: "{{ simpli_dir }}/{{ item }}"
         state: directory
@@ -39,6 +39,15 @@
         - utils
         - packages
         - logs
+      tags: copy
+
+    - name: 3B. create home dir sub folders
+      ansible.builtin.file:
+        path: "{{ home_dir }}/{{ item }}"
+        state: directory
+      become_user: "{{ host_user }}"
+      loop:
+        - xDesktop
       tags: copy
 
     - name: 4. copy scripts to utils

@@ -41,7 +41,10 @@ tool_uname: "/usr/bin/uname"
 tool_gedit: "/usr/bin/gedit"
 
 host_groups: 'simpliface'
-host_user: 'robert'  # simp  robert
+
+#host_user: 'robert'  # simp  robert
+host_user: 'simp'  # simp  robert
+
 home_dir: '/home/{{ host_user }}'
 #media_dir: '/media/robert'
 
@@ -53,6 +56,7 @@ local_bin: '{{ home_dir }}/.local/bin'
 #linux_desktop_dir: "/home/robert/Desktop"
 
 desktop_dir: '{{ home_dir }}/Desktop'
+xdesktop_dir: '{{ home_dir }}/xDesktop'
 
 
 # var2: '{{ vars["var1"] }}'
@@ -101,8 +105,22 @@ device_types:
     ram: "?GB"
     persistent_storage: "32GB"
 
+  fujitsu_s7201:
+    model: "FUJO-S720"
+    ram: "4GB"
+    persistent_storage: "16GB"
 
 clients:
+
+    fuj_a:
+      device_type: "fujitsu_s7201"
+      desktop: "xfce"
+      mac_wired: "90:1b:0e:84:bc:c1"
+      ansible_host: "192.168.0.41"
+      os_account: "simp"
+      person: "TBD"
+      comment: "None"
+
     rpi4_a:
       device_type: "rpi4"
       desktop: "xfce"

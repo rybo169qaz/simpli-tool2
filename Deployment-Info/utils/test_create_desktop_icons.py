@@ -1,7 +1,9 @@
 import errno
 import hashlib
+import json
 import os.path
 import platform
+import pytest
 import time
 
 import psutil
@@ -14,7 +16,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 from enum import Enum
 import subprocess
-from create_desktop_icons import DeskIcon, IconSuite
+from create_desktop_icons import DeskIcon, IconNode, IconSuite, CreateDummyKnown, ExtractStructuredAttribute
 
 HOME_DIR = '/home/robertryan'
 REPO_ROOT = HOME_DIR + '/' + 'PROJ2/SIMPLI-TOOL/GIT-REPO/simpli-tool2'
@@ -30,7 +32,90 @@ disabled_dict = dict({ 'entry': 'george', 'enabled': 'false'})
 noname_dict = dict({ 'enabled': 'false'})
 good_dict = dict({ 'entry': 'fred', 'enabled': 'true'})
 
+class TestExtractStructuredAttribute:
+
+    def test_have_valid_structure(self):
+        esa1 = ExtractStructuredAttribute(WKG_DIR + '/' + 'dummy-known.yaml')
+        assert esa1.struct_is_valid() == True
+
+    def test_get_root_id(self):
+        esa1 = ExtractStructuredAttribute(WKG_DIR + '/' + 'dummy-known.yaml')
+        assert esa1.get_root_id() == 'root_id'
+
+    def test_root_attribute_exists(self):
+        esa1 = ExtractStructuredAttribute(WKG_DIR + '/' + 'dummy-known.yaml')
+        assert esa1.root_attribute_exists('env1') == True
+        assert esa1.root_attribute_exists('env3') == False
+
+    def test_root_attribute_value(self):
+        esa1 = ExtractStructuredAttribute(WKG_DIR + '/' + 'dummy-known.yaml')
+        assert esa1.get_root_attribute('env1') == 'env1 root value'
+        assert esa1.get_root_attribute('env3') is None
+
+    def test_get_list_of_first_level_entry_ids(self):
+        esa1 = ExtractStructuredAttribute(WKG_DIR + '/' + 'dummy-known.yaml')
+        assert esa1.get_list_of_first_level_entry_ids() == [ 'country_list', 'mountain_list', 'no attr', 'no entries'  ]
+
+
+    def test_first_level_exists_with_name(self):
+        esa1 = ExtractStructuredAttribute(WKG_DIR + '/' + 'dummy-known.yaml')
+        assert esa1.first_level_exists_with_name('country_list') == True
+        assert esa1.first_level_exists_with_name('gulp') == False
+
+    def test_level2_exists(self):
+        esa1 = ExtractStructuredAttribute(WKG_DIR + '/' + 'dummy-known.yaml')
+        assert esa1.second_level_exists_with_name('country_list', 'france') == True
+        assert esa1.second_level_exists_with_name('country_list', 'germany') == False
+        assert esa1.second_level_exists_with_name('river_list', 'france') == False
+
+    def test_get_dict_of_lev1_lev2(self):
+        esa1 = ExtractStructuredAttribute(WKG_DIR + '/' + 'dummy-known.yaml')
+
+        france_dict = {'env1': 'env1 root value',
+                       'env2': 'root value for env2',
+                       'command_args': 'france_tool1 a b c',
+                       'description': 'France',
+                       'enabled': 'true',
+                       'flag': 'French Flag'
+                       }
+        #assert esa1.get_dict_of_lev1_lev2('country_list', 'france') == france_dict
+
+        # everest_dict = {'env1': 'env1 root value',
+        #                'env2': 'everest value for env2',
+        #                'category_description': 'Well known mountains',
+        #                'tool_command': 'mountain_tool',
+        #                'description': 'Mount Everest',
+        #                 'enabled': 'true',
+        #                'icon': 'nepal_photo'
+        #                }
+
+        root_dict = {'env1': 'env1 root value', 'env2': 'root value for env2' }
+        mountains_dict = {'category_description': 'Well known mountains', 'tool_command': 'mountain_tool'}
+        everest_dict = {
+                        'description': 'Mount Everest',
+                        'enabled': 'true',
+                        'env2': 'everest value for env2',
+                        'icon': 'nepal_photo'
+                        }
+
+        #assert esa1.get_dict_of_lev1_lev2('mountain_list', 'everest') == root_dict
+        #assert esa1.get_dict_of_lev1_lev2('mountain_list', 'everest') == mountains_dict
+        #assert esa1.get_dict_of_lev1_lev2('mountain_list', 'everest') == everest_dict
+
+        full_dict = dict({})
+        full_dict = full_dict | root_dict
+        full_dict = full_dict | mountains_dict
+        full_dict = full_dict | everest_dict
+
+        assert esa1.get_dict_of_lev1_lev2('mountain_list', 'everest') == full_dict
+
+@pytest.mark.deskicon
 class TestDeskIcon:
+
+    def test_create_known(self):
+        dumdata = CreateDummyKnown(WKG_DIR, 'dummy-known.yaml')
+        #dumdata.create_test_data()
+        dumdata.new_create_testd_file()
 
     def test_is_valid_data(self):
         dsk = DeskIcon(WKG_DIR, FULL_GOOD_TEMPLATE_PATH, good_dict)
@@ -132,7 +217,79 @@ class TestDeskIcon:
 
         assert self._strings_found_in_file(expected_sub, gen_filename) == True
 
+@pytest.mark.iconnode
+class TestIconNode:
 
+    def test_get_node_name(self):
+        node1 = IconNode('first', 'fruit', {})
+        assert node1.get_node_name() == 'first'
+
+    def test_get_get_child_type(self):
+        node2 = IconNode('first', 'fish', {})
+        assert node2.get_child_type() == 'fish'
+
+    def test_get_list_attribute_names(self):
+        node3 =IconNode('animals', 'fish', {'eggs': 'brown', 'dogs': '0', 'cats': 42})
+        assert node3.get_list_attribute_names() == ['cats', 'dogs', 'eggs']
+
+    def test_get_attribute_value(self):
+        node4 = IconNode('animals', 'fish', {'eggs': 'brown', 'dogs': '0', 'cats': 42})
+        assert node4.get_attribute_value('cats') == 42
+        assert node4.get_attribute_value('eggs') == 'brown'
+        assert node4.get_attribute_value('trees') == None
+
+    def test_get_count_of_children(self):
+        node5 = IconNode('first', 'fruit', {})
+        assert node5.get_count_of_children() == 0
+        node5 = IconNode('animals', 'fish', {'eggs': 'brown', 'dogs': '0', 'cats': 42})
+        assert node5.get_count_of_children() == 0
+
+    def test_add_child(self):
+        nodeA = IconNode('first', 'fruit', {})
+        assert nodeA.add_child('notfruit', 'key_pqr', 'value_pqr') == False
+        assert nodeA.add_child('fruit', 'key_pqr', 'value_pqr') == True
+
+
+    def test_get_list_of_children_names(self):
+        node7 = node5 = IconNode('root', 'category', {})
+        assert node7.get_list_of_children_names() == []
+        node7.add_child('category', 'key_pqr', 'value_pqr')
+        assert node7.get_list_of_children_names() == ['key_pqr']
+
+        node7.add_child('category', 'key_new', 'value_new')
+        assert node7.get_list_of_children_names() == ['key_new', 'key_pqr']
+
+        node7.add_child('category', 'key_alpha', 'value_alpha')
+        assert node7.get_list_of_children_names() == ['key_alpha', 'key_new', 'key_pqr']
+
+    def test_get_child_of_given_name(self):
+        node8 = IconNode('animals', 'fish', {'eggs': 'brown', 'dogs': '0', 'cats': 42})
+        assert node8.get_child_of_given_name('fred') == None
+        node8.add_child('fish', 'key_alpha', 'value_alpha')
+        node8.add_child('fish', 'key_new', 'value_new')
+        assert node8.get_child_of_given_name('key_new') == 'value_new'
+        #node8.print()
+
+    def test_integration(self):
+        nodeC = IconNode('root', 'categories', {'cat_att1': 'at1_val', 'cat_att2': 'att2val', 'catatt3': 42})
+        #nodeC.print()
+
+        mountain_everest = IconNode('everest', None, {'height': 9999, 'conquered_by': 'Mallory', 'country': 'Tibet'})
+        mountain_mtblanc = IconNode('Mt Blanc', None, {'height': 123, 'conquered_by': 'Unknown', 'country': 'France'})
+
+        mountains = IconNode('mountain_info', 'mountain', {'madeOf': 'rock', 'activity': 'climbable'})
+        assert mountains.add_child('mountain', 'everest', mountain_everest) == True
+        assert mountains.add_child('mountain', 'Mt Blanc', mountain_mtblanc) == True
+
+        root_node = IconNode('root_info', 'mountains', {'vlcPath': '/abc/def', 'description': 'Media playing tool'})
+        assert root_node.add_child('mountains', 'mountaininfo', mountains) == True
+        root_node.print_node()
+        root_node.print_full_node()
+
+
+
+
+@pytest.mark.iconsuite
 class TestIconSuite:
 
     def test_invalid_suite(self):
@@ -152,6 +309,31 @@ class TestIconSuite:
         suite4 = IconSuite(DESKTOP_CONFIG_DIR + '/' + 'test_desktop_known.yml')
         expected_entries = set(('france', 'the_netherlands'))
         assert suite4.get_entries_in_category('countries') == expected_entries
+
+    def test_entries_in_all_categories(self):
+        suite5 = IconSuite(DESKTOP_CONFIG_DIR + '/' + 'test_desktop_known.yml')
+        expected_list_of_cat_ent = [
+            ('countries', 'france'),
+            ('countries', 'the_netherlands'),
+            ('mountains', 'everest'),
+            ('mountains', 'mount blanc')
+        ]
+
+        expected_dict_of_cat_ent = {
+            'countries' : [ 'france', 'the_netherlands'],
+            'mountains': ['everest', 'mount blanc'],
+        }
+        # The following were excluded because they are NOT enabled
+        # ('countries', 'the_netherlands'),
+        ret_struct = suite5.entries_in_all_categories()
+        #assert len(ret_struct) == 4
+        print(f'returned structure')
+        print(json.dumps(ret_struct))
+        print(f'\nexpected structure')
+        print(json.dumps(expected_dict_of_cat_ent))
+
+        assert suite5.entries_in_all_categories() == expected_dict_of_cat_ent
+
 
 
 

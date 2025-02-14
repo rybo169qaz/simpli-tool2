@@ -60,8 +60,9 @@ else
   exit 1
 fi
 
+USER='simp' # was 'robert'
 # overide and set the sound
-sound_tool='/home/robert/.simpli/utils/sound_control.sh setvolume'
+sound_tool="/home/${USER}/.simpli/utils/sound_control.sh setvolume"
 ${sound_tool}
 printf "finished setting sound\n"
 
