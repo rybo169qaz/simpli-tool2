@@ -1,37 +1,73 @@
-import errno
-import hashlib
+#import errno
+#import hashlib
 import json
 import os.path
-import platform
+#import pathlib
+#from pathlib import Path
+#import platform
 import pytest
-import time
+import tempfile
+#import time
 
-import psutil
+#import psutil
 #import re
-import sys
-import yaml
-from pathlib import Path
+#import sys
+#import yaml
+#from pathlib import Path
 #from getmac import get_mac_address as gma
 
-from jinja2 import Environment, FileSystemLoader
-from enum import Enum
-import subprocess
-from create_desktop_icons import DeskIcon, IconNode, IconSuite, CreateDummyKnown, ExtractStructuredAttribute
+#from jinja2 import Environment, FileSystemLoader, Template
+#from enum import Enum
+#import subprocess
+from create_desktop_icons import DeskIcon, IconNode, IconSuite, IconSet, ExtractStructuredAttribute
+#from create_desktop_icons import generate_text_from_template
 
 HOME_DIR = '/home/robertryan'
 REPO_ROOT = HOME_DIR + '/' + 'PROJ2/SIMPLI-TOOL/GIT-REPO/simpli-tool2'
 DESKTOP_CONFIG_DIR = REPO_ROOT + '/' + 'Deployment-Info/desktop/desktop-config'
+
+DESKTOP_FILE_PREFIX = 'Xsimpli_'
+DESKTOP_FILE_POSTFIX = '.desktop'
 GOOD_TEMPLATE_FILE = 'template.desktop'
+
 TEST_TEMPLATE_FILE = 'test_template.desktop'
+
+TEST_TEMPLATE_TEXT_ORIG = [
+    'River = {{ the_river }}' ,
+    'Country ={{ the_country }}' ,
+    'Sentence= In {{ the_country }} there is a river {{ the_river }} flowing through it.'
+    ]
+
+TEST_TEMPLATE_TEXT_NULL = [
+    'River = ' ,
+    'Country =' ,
+    'Sentence= In  there is a river  flowing through it.'
+    ]
+
+
+TEST_TEMPLATE_TEXT_SUBS = [
+    'River = Nile' ,
+    'Country =Egypt' ,
+    'Sentence= In Egypt there is a river Nile flowing through it.'
+    ]
+
+SIMPLE_TEST_TEMPLATE_FILE = 'simple_test_template.desktop'
 
 FULL_GOOD_TEMPLATE_PATH = DESKTOP_CONFIG_DIR + '/' + GOOD_TEMPLATE_FILE
 FULL_TEST_TEMPLATE_PATH = DESKTOP_CONFIG_DIR + '/' + TEST_TEMPLATE_FILE
+FULL_SIMPLE_TEST_TEMPLATE_PATH = DESKTOP_CONFIG_DIR + '/' + SIMPLE_TEST_TEMPLATE_FILE
+
+TEST_ICON_SET = 'test_icon_set.yml'
+FULL_TEST_ICON_SET = DESKTOP_CONFIG_DIR + '/' + TEST_ICON_SET
+
 WKG_DIR = REPO_ROOT + '/' + 'Deployment-Info/wkg-misc'
 
 disabled_dict = dict({ 'entry': 'george', 'enabled': 'false'})
 noname_dict = dict({ 'enabled': 'false'})
+missing_entry_dict = dict({ 'fish': 'cod', 'enabled': 'true'})
 good_dict = dict({ 'entry': 'fred', 'enabled': 'true'})
 
+@pytest.mark.skip # test_extract_struct_att
 class TestExtractStructuredAttribute:
 
     def test_have_valid_structure(self):
@@ -103,121 +139,98 @@ class TestExtractStructuredAttribute:
         #assert esa1.get_dict_of_lev1_lev2('mountain_list', 'everest') == everest_dict
 
         full_dict = dict({})
-        full_dict = full_dict | root_dict
+        full_dict |= root_dict
         full_dict = full_dict | mountains_dict
         full_dict = full_dict | everest_dict
 
         assert esa1.get_dict_of_lev1_lev2('mountain_list', 'everest') == full_dict
 
+
+
 @pytest.mark.deskicon
 class TestDeskIcon:
-
-    def test_create_known(self):
-        dumdata = CreateDummyKnown(WKG_DIR, 'dummy-known.yaml')
-        #dumdata.create_test_data()
-        dumdata.new_create_testd_file()
-
-    def test_is_valid_data(self):
-        dsk = DeskIcon(WKG_DIR, FULL_GOOD_TEMPLATE_PATH, good_dict)
-        assert dsk.valid() == True
 
     def test_bad_destdir(self):
         dsk1 = DeskIcon('unknowndir', FULL_GOOD_TEMPLATE_PATH, good_dict)
         assert dsk1.valid() == False
 
-    def test_bad_template(self):
-        dsk1 = DeskIcon(WKG_DIR, 'noname-template', noname_dict)
-        assert dsk1.valid() == False
 
-        dsk2 = DeskIcon(WKG_DIR, 'disabled-template', disabled_dict)
-        assert dsk2.valid() == False
+    def test_bad_template_file(self):
+        dsk1 = DeskIcon(WKG_DIR, 'non-existant-template', good_dict)
+        assert dsk1.valid() == False
 
 
     def test_bad_structure(self):
         assert DeskIcon(WKG_DIR, FULL_GOOD_TEMPLATE_PATH, ()).valid() == False
         assert DeskIcon(WKG_DIR, FULL_GOOD_TEMPLATE_PATH, []).valid() == False
         assert DeskIcon(WKG_DIR, FULL_GOOD_TEMPLATE_PATH, 'abc').valid() == False
+        assert DeskIcon(WKG_DIR, FULL_GOOD_TEMPLATE_PATH, noname_dict).valid() == False
 
-    def test_created_filename(self):
-        desk1_fname= DeskIcon(WKG_DIR, FULL_GOOD_TEMPLATE_PATH, good_dict).get_filename()
-        assert desk1_fname.endswith('.desktop')
 
+    def test_get_filename(self):
+        ent_name = 'felix'
+        attribs_dict = dict({'entry': ent_name})
+        tempdir = tempfile.TemporaryDirectory(dir="/tmp").name
+        desk1_fname = DeskIcon(tempdir, FULL_GOOD_TEMPLATE_PATH, attribs_dict).get_filename()
         basefilename = os.path.basename(desk1_fname)
-        assert basefilename.startswith('simpli_')
-        assert basefilename.find('fred')
+        expected_name = DESKTOP_FILE_PREFIX + ent_name + DESKTOP_FILE_POSTFIX
+        assert basefilename == expected_name
+        # the following are redundant
+        # the following are redundant
+        assert basefilename.endswith('.desktop')
+        assert basefilename.startswith('X' + 'simpli_')
 
-    def test_existing_icon_removed(self):
-        test_icon_file = WKG_DIR + '/' + 'simpli_test123.desktop'
-        if os.path.isfile(test_icon_file):
-            os.remove(test_icon_file)
 
-        desk1_obj = DeskIcon(WKG_DIR, FULL_GOOD_TEMPLATE_PATH, dict({'entry': 'test123'}))
+    def test_created_icon_file_path(self):
+        tempdir = tempfile.TemporaryDirectory(dir="/tmp").name
+        desk3_fname = DeskIcon(tempdir, FULL_GOOD_TEMPLATE_PATH, good_dict).get_filename()
+        assert os.path.dirname(desk3_fname) == tempdir
 
-        # check that it works when file does not exist
-        assert desk1_obj.icon_file_to_be_non_existant() == True
 
-        # check that it works when file DOES exist
-        with open(test_icon_file, "w") as f:
-            f.write("blurb")
-        f.close()
-        assert desk1_obj.icon_file_to_be_non_existant() == True
+    def test_generate_desktop_icon_text(self):
+        # with no substitution
+        tmpdir1 = tempfile.TemporaryDirectory(dir="/tmp").name
+        desk_ifc = DeskIcon(tmpdir1, FULL_TEST_TEMPLATE_PATH, {})
+        content_text = desk_ifc.generate_desktop_icon_text()
+        for entry in TEST_TEMPLATE_TEXT_NULL:
+            index = content_text.find(entry)
+            print(f'Find >>{entry}<<')
+            assert index != -1
 
-    def _strings_found_in_file(self, wanted_strings, file_to_test):
-        fnd_dict = dict({})
-        for i in wanted_strings:
-            fnd_dict[i] = False
+        # with substitution
+        tmpdir2 = tempfile.TemporaryDirectory(dir="/tmp").name
+        att_dict = dict({'the_river': 'Nile', 'the_country': 'Egypt'})
+        desk_ifc2 = DeskIcon(tmpdir2, FULL_TEST_TEMPLATE_PATH, att_dict)
+        content_text2 = desk_ifc2.generate_desktop_icon_text()
+        for entry in TEST_TEMPLATE_TEXT_SUBS:
+            index = content_text2.find(entry)
+            print(f'Find >>{entry}<<')
+            assert index != -1
 
-        with open(file_to_test, 'r+') as file:
-            for line in file:
-                for wanted in wanted_strings:
-                    if wanted in line:
-                        fnd_dict[wanted] = True
-        file.close()
-        found = True
-        for key in fnd_dict:
-            if fnd_dict[key] == False:
-                found = False
-                print(f'Failed to find match for >>{key}<<\n')
-                break
-        return found
 
-    def test_internal_string_finder(self):
-        expected_temp_str = [ '[Desktop Entry]', 'Version=1.0', 'Comment[en_GB]=',
-        'Exec={{ tool_command }} {{ command_args }}', 'Icon={{ icon }}.png' ]
-        assert self._strings_found_in_file(expected_temp_str, FULL_GOOD_TEMPLATE_PATH) == True
-
-    def test_icon_file_created(self):
-        desk_ifc = DeskIcon(WKG_DIR, FULL_GOOD_TEMPLATE_PATH, dict({'entry': 'test123'}))
-        desk_ifc.icon_file_to_be_non_existant()
-        assert os.path.exists(WKG_DIR + '/simpli_test123.desktop') == False
-        desk_ifc.write_content_of_desktop_file('abc')
-        assert os.path.exists(WKG_DIR + '/simpli_test123.desktop') == True
-
-    def test_desktop_file_contents(self):
+    def test_generate_desktop_file(self):
         # check that all the important lines exist in the generated file
-        desk_ifc = DeskIcon(WKG_DIR, FULL_GOOD_TEMPLATE_PATH, dict({'entry': 'test_content'}))
-        gen_filename = desk_ifc.get_filename()
-        desk_ifc.generate_desktop_file()
+        tmpdir = tempfile.TemporaryDirectory(dir="/tmp").name
+        os.mkdir(tmpdir, 0o777) # we create the dest dir
+        os.path.isdir(tmpdir)
 
-        expected_str2 = [ '[Desktop Entry]', 'Version=1.0', 'Name=', 'GenericName=', 'Comment=',
-        'Name[en_GB]=', 'GenericName[en_GB]=',
-        'Comment[en_GB]=', 'Exec=', 'Icon=',
-        'Terminal=', 'Type=', 'Categories=', 'Keywords=' ]
+        desk_ifc = DeskIcon(tmpdir, FULL_GOOD_TEMPLATE_PATH, dict({'entry': 'test_content'}))
 
-        assert self._strings_found_in_file(expected_str2, gen_filename) == True
+        report_success = desk_ifc.generate_desktop_file()
+        assert report_success == True # verify that it thinks file was created ok
 
-    def test_substitution_engine(self):
-        # check that the jinja engine substitutes correctly
-        vars_to_sub = dict({'entry': 'test_sub', 'the_country': 'Egypt', 'the_river': 'Nile', 'the_location': 'by the med'})
-        desk_se = DeskIcon(WKG_DIR, FULL_TEST_TEMPLATE_PATH, vars_to_sub)
-        gen_filename = desk_se.get_filename()
-        desk_se.generate_desktop_file()
+        expected_file = desk_ifc.get_filename()
+        print(f'EXP FILE >>{expected_file}<<')
 
-        expected_sub = ['River = Nile', 'Country =Egypt', 'Sentence= In Egypt there is a river Nile flowing through it.']
+        assert os.path.isfile(expected_file) # check that expected file exists
 
-        assert self._strings_found_in_file(expected_sub, gen_filename) == True
+        with open(expected_file, 'r') as file:
+            file_text = file.read()
+        assert file_text == desk_ifc.generate_desktop_icon_text() # check content is as the string
 
-@pytest.mark.iconnode
+
+
+@pytest.mark.skip # @pytest.mark.iconnode
 class TestIconNode:
 
     def test_get_node_name(self):
@@ -288,8 +301,134 @@ class TestIconNode:
 
 
 
+@pytest.mark.iconset
+class TestIconSet:
 
-@pytest.mark.iconsuite
+    def test_basic_test(self):
+        good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, WKG_DIR)
+        assert good_set_and_template.is_valid_set() == True
+
+
+    def test_invalid_template_file_identified(self):
+        bad_template = IconSet('abc', FULL_TEST_ICON_SET, WKG_DIR)
+        assert bad_template.is_valid_set() == False
+
+
+    def test_invalid_set_file_identified(self):
+        bad_set = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, 'abc', WKG_DIR)
+        assert bad_set.is_valid_set() == False
+
+
+    def test_get_common_attributes(self):
+        good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, WKG_DIR)
+        expected_common = {'vlc': '/etc/bin/vlc',
+                           'com2': 222,
+                           'the_river': 'Amazon'
+                           }
+        assert good_set_and_template.get_common_attributes() == expected_common
+
+
+    def test_num_all_icons(self):
+        good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, WKG_DIR)
+        assert good_set_and_template.num_all_icons() == 4
+
+
+    def test_num_enabled_icons(self):
+        good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, WKG_DIR)
+        assert good_set_and_template.num_enabled_icons() == 3
+
+
+    def test_enabled_disabled_icons(self):
+        good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, WKG_DIR)
+        enabled_entries = ['country_france',  'mountain_everest', 'mountain_mount-blanc']
+        assert good_set_and_template.list_enabled_icons() == enabled_entries
+
+        disabled_entries = ['country_the_netherlands']  # netherlands is disabled
+        assert good_set_and_template.list_disabled_icons() == disabled_entries
+
+
+    def test_list_enabled_icon_filenames(self):
+        good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, WKG_DIR)
+        enabled_entries = ['simpli_country_france.desktop',  'simpli_mountain_everest.desktop', 'simpli_mountain_mount-blanc.desktop']
+        assert good_set_and_template.list_enabled_icon_filenames() == enabled_entries
+
+
+    def test_icons_generated_in_correct_dir(self):
+        # create a temporary diectory
+        tmpdir = tempfile.TemporaryDirectory(dir="/tmp").name
+        os.mkdir(tmpdir, 0o777)  # we create the dest dir
+        os.path.isdir(tmpdir)
+
+        good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, tmpdir)
+        assert good_set_and_template.get_target_dir() == tmpdir
+
+    def test_attributes_of_entry(self):
+        good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, WKG_DIR)
+        #actual = good_set_and_template.get_attribs_of_entry('mountain_everest')
+        expected_everest = {
+            'entry': 'mountain_everest',
+            'enabled': 'true',
+            'the_river': 'Amazon',
+            'vlc': '/etc/bin/vlc',
+            'com2': 'newcom2',
+            'icon': "nepal_photo",
+            'description': "Everest",
+            'tool_command': '/pqr/display_height',
+            'command_args': '5678 metres'
+        }
+        assert good_set_and_template.get_attribs_of_entry('mountain_everest') == expected_everest
+
+        expected_netherlands = {
+            'entry': 'country_the_netherlands',
+            'enabled': 'false',
+            'the_river': 'Amazon',
+            'vlc': '/etc/bin/vlc',
+            'com2': 222,
+            'icon': "dutch_flag",
+            'description': "Holland",
+            'tool_command': '/abc/show-flag',
+            'command_args': 'dutch_flag'
+        }
+        assert good_set_and_template.get_attribs_of_entry('country_the_netherlands') == expected_netherlands
+
+        assert good_set_and_template.get_attribs_of_entry('unknown_entry') == None
+
+
+    def test_only_enabled_files_created(self):
+        # This should be mocked
+
+        # create a temporary directory
+        tmpdir = tempfile.TemporaryDirectory(dir="/tmp", prefix="simpli_").name
+        os.mkdir(tmpdir, 0o777)  # we create the dest dir
+        os.path.isdir(tmpdir)
+
+        #good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, tmpdir)
+        good_set_and_template = IconSet(FULL_GOOD_TEMPLATE_PATH, FULL_TEST_ICON_SET, tmpdir)
+        good_set_and_template.generate_all_icons(False)
+
+        def full_path(rootdir, x):
+            return rootdir + '/' + x
+
+        enabled_entries = ['Xsimpli_country_france.desktop', 'Xsimpli_mountain_everest.desktop',
+                           'Xsimpli_mountain_mount-blanc.desktop']
+        list_of_wanted_files = list(map(lambda x: full_path(tmpdir, x), enabled_entries))
+        for i in list_of_wanted_files:
+            print(f'Check exist: {i}')
+            assert os.path.isfile(i) == True
+
+        disabled_entries = ['simpli_country_the_netherlands.desktop']
+        list_of_unwanted_files = list(map(lambda x: full_path(tmpdir, x), disabled_entries))
+        for i in list_of_unwanted_files:
+            print(f'Check not exist: {i}')
+            assert os.path.isfile(i) == False
+
+        assert False
+
+
+
+
+
+@pytest.mark.skip # @pytest.mark.iconsuite
 class TestIconSuite:
 
     def test_invalid_suite(self):

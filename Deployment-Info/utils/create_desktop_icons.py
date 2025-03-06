@@ -9,8 +9,8 @@ import psutil
 #import re
 import sys
 import yaml
-from pathlib import Path
-#from getmac import get_mac_address as gma
+#from pathlib import Path
+##from getmac import get_mac_address as gma
 
 from jinja2 import Environment, FileSystemLoader
 from enum import Enum
@@ -89,18 +89,18 @@ def get_mac():
             break
     return my_mac
 
-def get_network_physical_address(netInterfaceName):
-  nics = psutil.net_if_addrs()
-  macAddress = ([j.address for i in nics for j in nics[i] if i==netInterfaceName and j.family==psutil.AF_LINK])[0]
-  return macAddress.replace('-',':')
+# def get_network_physical_address(netInterfaceName):
+#   nics = psutil.net_if_addrs()
+#   macAddress = ([j.address for i in nics for j in nics[i] if i==netInterfaceName and j.family==psutil.AF_LINK])[0]
+#   return macAddress.replace('-',':')
 
-def get_device_id():
-    if_name = 'enp1s0'
-    full_mac = get_network_physical_address(if_name)
-
-    dev_id = full_mac + '_' + platform.node()
-    print(f'DEV_ID = {dev_id}')
-    return dev_id
+# def get_device_id():
+#     if_name = 'enp1s0'
+#     full_mac = get_network_physical_address(if_name)
+#
+#     dev_id = full_mac + '_' + platform.node()
+#     print(f'DEV_ID = {dev_id}')
+#     return dev_id
 
 def get_dir_and_file(the_template):
     base_file = os.path.basename(the_template)
@@ -146,13 +146,26 @@ def remove_all_simpli_files_in_desktop_dir(my_dir):
     time.sleep(3)
 
 
-def generate_from_template(template, var_struct, filename):
+def generate_text_from_template(template, var_struct) -> str:
+    """Uses the given dictionary to substitute into the template (from jinja) and return the text output."""
+    return template.render(var_struct)
+
+
+def generate_file_from_template(template, var_struct, filename):
+    """Uses the given structure to expand the (jinja) template and write output to the file."""
     renderop(f'Generating template_desktop_file: {filename}', Optype.DEBUG)
-    content = template.render(var_struct)
+
+    #content = template.render(var_struct)
+    content = generate_text_from_template(template, var_struct)
+    if content is None:
+        return False
+
+    conten2 = 'abc'
     with open(filename, mode="w", encoding="utf-8") as message:
         message.write(content)
         renderop(f"... Created {filename}", Optype.DEBUG)
         os.chmod(filename, 0o755)
+    return True
 
 
 def make_desktop_file_trusted_by_xfce(desktop_file):
@@ -263,7 +276,7 @@ def derive_desktop_category(global_data, category_data, icon_base_dir, template_
         silentremove(fname) # remove file if it exists
 
         if info_struct['enabled'] == 'true':
-            generate_from_template(template_desktop_file, new_struct, fname)
+            generate_file_from_template(template_desktop_file, new_struct, fname)
 
             if desktop_env == 'xfce':            # xfce needs checksum creating
                 make_desktop_file_trusted_by_xfce(fname)
@@ -409,13 +422,13 @@ class CreateDummyKnown:
             my_dict['entries'] = entry_list
         return my_dict
 
-    def _write_yaml_to_file(self, filen, the_struct):
-        filen = open(filen, "w")
-        filen.write("---\n")
-        yaml.dump(the_struct, filen)
-        filen.write("...\n")
-        filen.close()
-        print(f'YAML file saved to file {filen}.')
+    def _write_yaml_to_file(self, filename, the_struct):
+        file_handle = open(filename, "w")
+        file_handle.write("---\n")
+        yaml.dump(the_struct, file_handle)
+        file_handle.write("...\n")
+        file_handle.close()
+        print(f'YAML file saved to file {filename}.')
 
     def new_create_testd_file(self):
 
@@ -525,15 +538,21 @@ class CreateDummyKnown:
 
 
 class DeskIcon:
-    def __init__(self, dest_dir, template_file, provided_args):
-        self.dest_dir = dest_dir
+    """
+    Given the specified jinja template in the template file, it uses the provided_args
+    to populate the necessary text in the file at the specified base_dir
+    """
+    def __init__(self, base_dir, template_file, provided_args):
+        self.dest_dir = base_dir
         self.template_file = template_file
         self.provided_args = provided_args # dictionary
-        self.FILE_PREFIX = SIMPLI_PREFIX
+        self.FILE_PREFIX = 'X' + SIMPLI_PREFIX
         self.is_valid = False
         self._validate_args()
 
+
     def _validate_args(self):
+        """Necessary validation checks for the object to be valid."""
         if not os.path.isdir(self.dest_dir):
             return False
         if not os.path.isfile(self.template_file):
@@ -544,55 +563,57 @@ class DeskIcon:
             return False
         self.is_valid = True
 
+
     def valid(self):
         return self.is_valid
 
+
     def get_filename(self):
-        fname = f"{self.dest_dir}/{self.FILE_PREFIX}_{self.provided_args['entry']}.desktop"
+        """The full filename of the desktop file that would be created."""
+
+        renderop(f"DEST_DIR = {self.dest_dir}", Optype.INFO)
+        renderop(f"FILE_PREFIX = {self.FILE_PREFIX}", Optype.INFO)
+        str_args = str(self.provided_args)
+        renderop(f"Provided args:  {str_args}", Optype.INFO)
+
+        #the_entry = self.provided_args['entry']
+        the_entry = self.provided_args.get('entry')
+        if the_entry is None:
+            print(f'self.provided_args[entry] = NON-EXISTANT')
+            fname = None
+        else:
+            print(f'self.provided_args[entry] = {the_entry}')
+            fname = f"{self.dest_dir}/{self.FILE_PREFIX}_{self.provided_args['entry']}.desktop"
         return fname
 
-    def write_content_of_desktop_file(self, content_text):
-        fname = self.get_filename()
-        with open(fname, "w") as f:
-            f.write(content_text)
-        f.close()
+
+    def generate_desktop_icon_text(self):
+        dict_of_vars_to_replace = self.provided_args  # dict({}
+        # this loads the template file and then processes the string
+        with open(self.template_file, 'r') as file:
+            template_string = file.read()
+        environment = Environment()
+        template_obj = environment.from_string(template_string)
+
+        cont = template_obj.render(dict_of_vars_to_replace)
+        return cont
 
 
+    def generate_desktop_file(self, make_trusted=False):
+        text_content = self.generate_desktop_icon_text()
+        filename = self.get_filename()
+        with open(filename, mode="w", encoding="utf-8") as message:
+            message.write(text_content)
+            renderop(f"... Created {filename}", Optype.DEBUG)
+            os.chmod(filename, 0o755)
+            if make_trusted:
+                make_desktop_file_trusted_by_xfce(filename)
+        return True
+
+    def generate_trusted_desktop_file(self):
+        self.generate_desktop_file(make_trusted=True)
 
 
-
-    def generate_desktop_file(self):
-        self.icon_file_to_be_non_existant()
-        dict_of_vars_to_replace = self.provided_args # dict({})
-
-        # Obtain the overall template
-        (dirpath, basefile) = get_dir_and_file(self.template_file)
-        environment = Environment(loader=FileSystemLoader(dirpath))
-        template = environment.get_template(basefile)
-
-        generate_from_template(template, dict_of_vars_to_replace, self.get_filename())
-
-    def icon_file_to_be_non_existant(self):
-        full_path = self.get_filename()
-        if not os.path.isfile(full_path):
-            return True
-        the_file = os.path.basename(full_path)
-
-        # just do a sanity check to ensure that we have a desktop file (in case we wipe an important file)
-        the_postfix = '.desktop'
-        if not the_file.endswith(the_postfix):
-            return False # should throw exception
-
-        the_prefix = 'simpli'
-        if not the_file.startswith(the_prefix):
-            return False  # should throw exception
-
-        print(f'REMOVE NORMAL FILE: {full_path}\n')
-        os.remove(full_path)
-        if os.path.isfile(full_path):
-            return False
-        else:
-            return True
 
 class IconNode:
     def __init__(self, node_name, child_type, attrib_struct):
@@ -662,20 +683,137 @@ class IconNode:
 
 
 
+class IconSet:
 
-class NodeTree:
-    def __init__(self, node_name, child_type_name, attrib_struct):
-        self.node_name = node_name
-        self.child_type_name = child_type_name
-        self.attrib_struct = attrib_struct
-        self.whole_struct = dict({})
-        self.whole_struct['attributes'] = attrib_struct
+    """
+    This takes the specified icon_set file and for each entry it
+    invokes the DeskIcon class to create the relevant desktop
+    icon file.
+    """
+    FILE_PREFIX = 'simpli_'
+    FILE_POSTFIX = '.desktop'
+
+    def __init__(self, template_file, icons_set_file, target_dir):
+        self.template_file = template_file
+        self.icons_set_file = icons_set_file
+        self.target_dir = target_dir
+        self.the_dict = None
+        self.common = None
+        self.entries = None
+        self.is_valid = False
+        self._validate()
+
+    def _validate(self):
+        if not os.path.isfile(self.template_file):
+            return False
+        if not os.path.isfile(self.icons_set_file):
+            return False
+        with open(self.icons_set_file) as stream:
+            try:
+                self.the_dict = yaml.safe_load(stream)
+                # print(yaml.safe_load(stream))
+            except yaml.YAMLError as exc:
+                sys.exit('Structure has malformed YAML in the icon file.')
+            self.common = self.the_dict.get('common')
+            if self.common is None:
+                sys.exit('Structure is missing the "common" section in the icon file.')
+
+            self.entries = self.the_dict.get('entries')
+            if self.entries is None:
+                sys.exit('Structure is missing the "entries" section in the icon file.')
+            # we should check that for each there are the two entries : "entry" and "enabled"
+        self.is_valid = True
+
+    def is_valid_set(self):
+        return self.is_valid
+
+    def get_common_attributes(self):
+        return self.common
+
+    def num_all_icons(self):
+        return len(self.entries)
+
+    def get_full_filename_of_entry(self, the_entry):
+        return self.FILE_PREFIX + the_entry + self.FILE_POSTFIX
+
+    def list_icon_files(self):
+        enabled_icons = []
+        disabled_icons = []
+        for the_entry in self.entries:
+            nam = the_entry['entry']
+            if the_entry['enabled'] == 'true':
+                enabled_icons.append(nam) # fullname
+            else:
+                disabled_icons.append(nam) # fullname
+        return enabled_icons, disabled_icons
 
 
+    def list_disabled_icons(self):
+        enab, disab = self.list_icon_files()
+        return disab
 
 
+    def list_enabled_icons(self):
+        enab, disab = self.list_icon_files()
+        return enab
 
+    def num_enabled_icons(self):
+        enab, disab = self.list_icon_files()
+        return len(enab)
 
+    def list_enabled_icon_filenames(self):
+        enab, disab = self.list_icon_files()
+        return list(map(lambda x: self.get_full_filename_of_entry(x) , enab))
+
+    def get_target_dir(self):
+        return self.target_dir
+
+    def list_fullpath_icons_to_create(self):
+        enab, disab = self.list_icon_files()
+        list_of_all_entries = list(map(lambda x: self.get_target_dir() + '/' + x, enab))
+        return list_of_all_entries
+
+    def get_attribs_of_entry(self, entry_name):
+        specific_dict = self.common.copy()
+        found_entry = False
+        for ent in self.entries:
+            if ent['entry'] == entry_name:
+                found_entry = True
+                specific_dict.update(ent)
+                break
+        if found_entry is False:
+            specific_dict = None
+        return specific_dict
+
+    def generate_all_icons(self,fake_it):
+        """
+        This has been written for readablity not performance
+        :param fake_it:
+        :return:
+        """
+        files_to_be_created = []
+        invalid_entry_found = False
+        for ent in self.list_enabled_icons():
+            atts = self.get_attribs_of_entry(ent)
+            #fname = self.get_full_filename_of_entry(ent)
+            iconobj = DeskIcon(self.target_dir, self.template_file, atts)
+
+            if not fake_it:
+                iconobj.generate_desktop_file()
+
+            # exp_fname = iconobj.get_filename()
+            # if exp_fname is None:
+            #     invalid_entry_found = True
+            # else:
+            #     files_to_be_created.append(exp_fname)
+
+        # if fake_it:
+        #     # dummy_list_of_files = []  # [ 'aa.txt', 'b.txt']
+        #     # ret_list = dummy_list_of_files
+        # else:
+        #     ret_list = files_to_be_created
+
+        #return ret_list
 
 
 class IconSuite:
@@ -771,7 +909,7 @@ def new_create_icons():
     print(f'')
 
 def create_desktop_icon_main():
-    tool_name == os.path.basename(sys.argv[0])
+    tool_name = os.path.basename(sys.argv[0])
     renderop(f'TOOL_NAME == {tool_name}\n', Optype.DEBUG)
 
     if len(sys.argv) <= 1:
@@ -798,7 +936,6 @@ def create_desktop_icon_main():
         global debug_mode
         debug_mode = True
         cmndline_args.pop(0)
-
 
     if len(cmndline_args) != 4:
         show_syntax()

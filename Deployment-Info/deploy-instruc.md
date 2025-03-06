@@ -43,6 +43,7 @@ Installing Ansible
 - use of ssh
     - ssh *userName*@*ipAddress*
     - e.g. **ssh robert@192.168.0.49**
+    - e.g. **ssh simp@192.168.0.41**
 
 ### Copy the document for reading
 
