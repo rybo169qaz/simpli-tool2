@@ -214,19 +214,29 @@ class TestDeskIcon:
         os.mkdir(tmpdir, 0o777) # we create the dest dir
         os.path.isdir(tmpdir)
 
-        desk_ifc = DeskIcon(tmpdir, FULL_GOOD_TEMPLATE_PATH, dict({'entry': 'test_content'}))
+        # check that if not enabled then no file is to be created
+        desk_not_enabled = DeskIcon(tmpdir, FULL_GOOD_TEMPLATE_PATH, dict({'entry': 'test_not_enabled', 'enabled': 'false'}))
+        report_success = desk_not_enabled.generate_desktop_file()
+        assert report_success == False  # verify that it thinks the file was NOT created
+        assert os.path.isfile(desk_not_enabled.get_filename())  == False # check that expected file does not exist
 
-        report_success = desk_ifc.generate_desktop_file()
+        # if enabled field not specified then it wil be disabled
+        desk_not_specify_enabled = DeskIcon(tmpdir, FULL_GOOD_TEMPLATE_PATH, dict({'entry': 'test_not_specify_enabled'}))
+        report_success = desk_not_specify_enabled.generate_desktop_file()
+        assert report_success == False  # verify that it thinks the file was NOT created
+        assert os.path.isfile(desk_not_specify_enabled.get_filename()) == False  # check that expected file does not exist
+
+        #  desktop icon is enabled
+        desk_enabled = DeskIcon(tmpdir, FULL_GOOD_TEMPLATE_PATH, dict({'entry': 'test_content', 'enabled': 'true'}))
+        report_success = desk_enabled.generate_desktop_file()
         assert report_success == True # verify that it thinks file was created ok
 
-        expected_file = desk_ifc.get_filename()
-        print(f'EXP FILE >>{expected_file}<<')
-
+        expected_file = desk_enabled.get_filename()
         assert os.path.isfile(expected_file) # check that expected file exists
 
         with open(expected_file, 'r') as file:
             file_text = file.read()
-        assert file_text == desk_ifc.generate_desktop_icon_text() # check content is as the string
+        assert file_text == desk_enabled.generate_desktop_icon_text() # check content is as the string
 
 
 

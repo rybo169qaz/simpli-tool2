@@ -600,15 +600,19 @@ class DeskIcon:
 
 
     def generate_desktop_file(self, make_trusted=False):
-        text_content = self.generate_desktop_icon_text()
-        filename = self.get_filename()
-        with open(filename, mode="w", encoding="utf-8") as message:
-            message.write(text_content)
-            renderop(f"... Created {filename}", Optype.DEBUG)
-            os.chmod(filename, 0o755)
-            if make_trusted:
-                make_desktop_file_trusted_by_xfce(filename)
-        return True
+        gen_file = False
+        if self.provided_args.get('enabled') == 'true':
+            # create file as it is enabled
+            gen_file = True
+            text_content = self.generate_desktop_icon_text()
+            filename = self.get_filename()
+            with open(filename, mode="w", encoding="utf-8") as message:
+                message.write(text_content)
+                renderop(f"... Created {filename}", Optype.DEBUG)
+                os.chmod(filename, 0o755)
+                if make_trusted:
+                    make_desktop_file_trusted_by_xfce(filename)
+        return gen_file
 
     def generate_trusted_desktop_file(self):
         self.generate_desktop_file(make_trusted=True)
