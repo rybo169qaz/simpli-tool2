@@ -410,6 +410,7 @@ class TestIconSet:
         # create a temporary directory
         tmpdir = tempfile.TemporaryDirectory(dir="/tmp", prefix="simpli_").name
         os.mkdir(tmpdir, 0o777)  # we create the dest dir
+        print(f'Tempdir = {tmpdir}')
         os.path.isdir(tmpdir)
 
         #good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, tmpdir)
@@ -431,10 +432,6 @@ class TestIconSet:
         for i in list_of_unwanted_files:
             print(f'Check not exist: {i}')
             assert os.path.isfile(i) == False
-
-        assert False
-
-
 
 
 
