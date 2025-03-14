@@ -1,5 +1,6 @@
 #import errno
-#import hashlib
+from dictdiffer import diff, patch, swap, revert
+import hashlib
 import json
 import os.path
 #import pathlib
@@ -12,7 +13,7 @@ import tempfile
 #import psutil
 #import re
 #import sys
-#import yaml
+import yaml
 #from pathlib import Path
 #from getmac import get_mac_address as gma
 
@@ -410,7 +411,7 @@ class TestIconSet:
         # create a temporary directory
         tmpdir = tempfile.TemporaryDirectory(dir="/tmp", prefix="simpli_").name
         os.mkdir(tmpdir, 0o777)  # we create the dest dir
-        print(f'Tempdir = {tmpdir}')
+        print(f'XYZ Tempdir = {tmpdir}')
         os.path.isdir(tmpdir)
 
         #good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, tmpdir)
@@ -433,6 +434,70 @@ class TestIconSet:
             print(f'Check not exist: {i}')
             assert os.path.isfile(i) == False
 
+
+
+    def test_dump_config_to_file(self):
+        '''
+        Checks whether the dumped data file representing the icon-set matches what
+        is used when loading.
+        Note: because there are multiple representations of the same data, and the
+        input file is not necessarily canonical, then rather than check the text in
+        the file, it is better to check the dictionary/structure that is obtained when loaded.
+        If at some point we may be able to specify the layout of data (say using pydantic)
+        then we may be able revert to file comparision.
+        '''
+
+        def calculate_md5(file_path):
+            hasher = hashlib.md5()
+            with open(file_path, 'rb') as f:
+                for chunk in iter(lambda: f.read(4096), b''):
+                    hasher.update(chunk)
+            return hasher.hexdigest()
+
+        def compare_struct_from_yaml_file(fileA, fileB):
+            # see https://miguendes.me/the-best-way-to-compare-two-dictionaries-in-python
+            # use dictdiffer (as deepdiff encountered error)
+            # https://dictdiffer.readthedocs.io/en/latest/
+            resp = True
+            print(f'Comparing \n\t"{fileA}" and \n\t"{fileB}"\n')
+            with open(fileA, 'r') as f:
+                dataA = yaml.load(f, Loader=yaml.SafeLoader)
+            with open(fileB, 'r') as f:
+                dataB = yaml.load(f, Loader=yaml.SafeLoader)
+
+            # bodge dataB for testing purposes
+            if False:
+                dataB['common']['extra_common_value'] = 'unwanted_common_value'
+                # entries = dataB['entries']['extra_common_value'] = 'unwanted_common_value'
+                # entries.append({'unwanted_entry_key': 'unwanted_entry_value'})
+
+            result = diff(dataA, dataB)
+            list_info = list(result)
+            print(f'Comparison >>{list_info}<<')
+            assert list_info == []
+            return resp
+
+        tmpdir = tempfile.TemporaryDirectory(dir="/tmp", prefix="simpli_").name
+        os.mkdir(tmpdir, 0o777)  # we create the dest dir
+        print(f'XYZ Tempdir = {tmpdir}')
+        os.path.isdir(tmpdir)
+
+        wkg_set = IconSet(FULL_GOOD_TEMPLATE_PATH, FULL_TEST_ICON_SET, tmpdir)
+        dump_file = tmpdir + '/' + 'dumped.txt'
+        assert os.path.isfile(FULL_TEST_ICON_SET) == True
+        assert os.path.isfile(dump_file) == False # ensure file doe snot exist
+
+        dump_success = wkg_set.dump_config_to_file(dump_file)
+        assert dump_success == True
+
+        #compare two files
+        assert os.path.isfile(dump_file) == True # ensure file now exists
+        #assert calculate_md5(FULL_TEST_ICON_SET) == calculate_md5(dump_file)
+
+        # compare structures obtained when loading the files
+        assert compare_struct_from_yaml_file(FULL_TEST_ICON_SET, dump_file) == True
+
+        #assert False
 
 
 @pytest.mark.skip # @pytest.mark.iconsuite

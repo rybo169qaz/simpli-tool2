@@ -5,12 +5,12 @@ common:
   the_river: 'Amazon'
 
 entries:
-  - entry: "country_france"
+  - entry: 'country_france'
     enabled: 'true'
-    icon: "france_flag"
-    description: "France"
+    icon: 'france_flag'
+    description: 'France'
     tool_command: '/abc/show-flag'
-    command_args: "france_flag"
+    command_args: 'france_flag'
 
   - entry: "country_the_netherlands"
     enabled: 'false'

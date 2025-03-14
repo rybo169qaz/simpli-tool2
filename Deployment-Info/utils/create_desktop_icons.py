@@ -805,19 +805,25 @@ class IconSet:
             if not fake_it:
                 iconobj.generate_desktop_file()
 
-            # exp_fname = iconobj.get_filename()
-            # if exp_fname is None:
-            #     invalid_entry_found = True
-            # else:
-            #     files_to_be_created.append(exp_fname)
+    def dump_config_to_file(self, dump_name):
+        is_successful = False
+        thedict = dict({})
+        thedict['common'] = self.common
+        thedict['entries'] = self.entries
+        yaml_string = yaml.dump(thedict)
 
-        # if fake_it:
-        #     # dummy_list_of_files = []  # [ 'aa.txt', 'b.txt']
-        #     # ret_list = dummy_list_of_files
-        # else:
-        #     ret_list = files_to_be_created
+        if os.path.isfile(dump_name):
+            return False # file must NOT exist
+        file = open(dump_name, "w")
+        yaml.dump(thedict, file)
+        file.close()
 
-        #return ret_list
+        if os.path.isfile(dump_name):
+            return True # file must exist
+        else:
+            return False
+
+
 
 
 class IconSuite:
