@@ -615,7 +615,6 @@ class IconText:
         self.template_text = template_text
         self.args_to_replace = args_to_replace
 
-
     def gen_icon_text(self):
         """
         If the template text is invalid, then return None
@@ -628,6 +627,7 @@ class IconText:
             cont = template_obj.render(self.args_to_replace)
         except:
             # if the jinja engine throws an error then return None
+            print(f'Exception - jinja')
             cont = None
         return cont
 
@@ -683,16 +683,13 @@ class DeskIcon:
         return fname
 
 
-    def generate_desktop_icon_text(self):
-        dict_of_vars_to_replace = self.provided_args  # dict({}
-        # this loads the template file and then processes the string
-        with open(self.template_file, 'r') as file:
-            template_string = file.read()
-        environment = Environment()
-        template_obj = environment.from_string(template_string)
-
-        cont = template_obj.render(dict_of_vars_to_replace)
-        return cont
+    # def generate_desktop_icon_text(self):
+    #     #dict_of_vars_to_replace = self.provided_args  # dict({}
+    #     # this loads the template file and then processes the string
+    #     with open(self.template_file, 'r') as file:
+    #         template_string = file.read()
+    #     cont = IconText(template_string, self.provided_args).gen_icon_text()
+    #     return cont
 
 
     def generate_desktop_file(self, make_trusted=False):
@@ -700,7 +697,12 @@ class DeskIcon:
         if self.provided_args.get('enabled') == 'true':
             # create file as it is enabled
             gen_file = True
-            text_content = self.generate_desktop_icon_text()
+
+            #text_content = self.generate_desktop_icon_text()
+            with open(self.template_file, 'r') as file:
+                template_string = file.read()
+            text_content = IconText(template_string, self.provided_args).gen_icon_text()
+
             filename = self.get_filename()
             with open(filename, mode="w", encoding="utf-8") as message:
                 message.write(text_content)

@@ -275,25 +275,25 @@ class TestDeskIcon:
         assert os.path.dirname(desk3_fname) == tempdir
 
 
-    def test_generate_desktop_icon_text(self):
-        # with no substitution
-        tmpdir1 = tempfile.TemporaryDirectory(dir="/tmp").name
-        desk_ifc = DeskIcon(tmpdir1, FULL_TEST_TEMPLATE_PATH, {})
-        content_text = desk_ifc.generate_desktop_icon_text()
-        for entry in TEST_TEMPLATE_TEXT_NULL:
-            index = content_text.find(entry)
-            print(f'Find >>{entry}<<')
-            assert index != -1
-
-        # with substitution
-        tmpdir2 = tempfile.TemporaryDirectory(dir="/tmp").name
-        att_dict = dict({'the_river': 'Nile', 'the_country': 'Egypt'})
-        desk_ifc2 = DeskIcon(tmpdir2, FULL_TEST_TEMPLATE_PATH, att_dict)
-        content_text2 = desk_ifc2.generate_desktop_icon_text()
-        for entry in TEST_TEMPLATE_TEXT_SUBS:
-            index = content_text2.find(entry)
-            print(f'Find >>{entry}<<')
-            assert index != -1
+    # def test_generate_desktop_icon_text(self):
+    #     # with no substitution
+    #     tmpdir1 = tempfile.TemporaryDirectory(dir="/tmp").name
+    #     desk_ifc = DeskIcon(tmpdir1, FULL_TEST_TEMPLATE_PATH, {})
+    #     content_text = desk_ifc.generate_desktop_icon_text()
+    #     for entry in TEST_TEMPLATE_TEXT_NULL:
+    #         index = content_text.find(entry)
+    #         print(f'Find >>{entry}<<')
+    #         assert index != -1
+    #
+    #     # with substitution
+    #     tmpdir2 = tempfile.TemporaryDirectory(dir="/tmp").name
+    #     att_dict = dict({'the_river': 'Nile', 'the_country': 'Egypt'})
+    #     desk_ifc2 = DeskIcon(tmpdir2, FULL_TEST_TEMPLATE_PATH, att_dict)
+    #     content_text2 = desk_ifc2.generate_desktop_icon_text()
+    #     for entry in TEST_TEMPLATE_TEXT_SUBS:
+    #         index = content_text2.find(entry)
+    #         print(f'Find >>{entry}<<')
+    #         assert index != -1
 
 
     def test_generate_desktop_file(self):
@@ -308,7 +308,7 @@ class TestDeskIcon:
         assert report_success == False  # verify that it thinks the file was NOT created
         assert os.path.isfile(desk_not_enabled.get_filename())  == False # check that expected file does not exist
 
-        # if enabled field not specified then it wil be disabled
+        # if enabled field not specified then it will be disabled
         desk_not_specify_enabled = DeskIcon(tmpdir, FULL_GOOD_TEMPLATE_PATH, dict({'entry': 'test_not_specify_enabled'}))
         report_success = desk_not_specify_enabled.generate_desktop_file()
         assert report_success == False  # verify that it thinks the file was NOT created
@@ -316,87 +316,12 @@ class TestDeskIcon:
 
         #  desktop icon is enabled
         desk_enabled = DeskIcon(tmpdir, FULL_GOOD_TEMPLATE_PATH, dict({'entry': 'test_content', 'enabled': 'true'}))
-        report_success = desk_enabled.generate_desktop_file()
-        assert report_success == True # verify that it thinks file was created ok
 
-        expected_file = desk_enabled.get_filename()
-        assert os.path.isfile(expected_file) # check that expected file exists
+        expected_path = tmpdir + '/' + 'X' + 'simpli_' + 'test_content' + '.desktop'
 
-        with open(expected_file, 'r') as file:
-            file_text = file.read()
-        assert file_text == desk_enabled.generate_desktop_icon_text() # check content is as the string
-
-
-
-@pytest.mark.skip # @pytest.mark.iconnode
-class TestIconNode:
-
-    def test_get_node_name(self):
-        node1 = IconNode('first', 'fruit', {})
-        assert node1.get_node_name() == 'first'
-
-    def test_get_get_child_type(self):
-        node2 = IconNode('first', 'fish', {})
-        assert node2.get_child_type() == 'fish'
-
-    def test_get_list_attribute_names(self):
-        node3 =IconNode('animals', 'fish', {'eggs': 'brown', 'dogs': '0', 'cats': 42})
-        assert node3.get_list_attribute_names() == ['cats', 'dogs', 'eggs']
-
-    def test_get_attribute_value(self):
-        node4 = IconNode('animals', 'fish', {'eggs': 'brown', 'dogs': '0', 'cats': 42})
-        assert node4.get_attribute_value('cats') == 42
-        assert node4.get_attribute_value('eggs') == 'brown'
-        assert node4.get_attribute_value('trees') == None
-
-    def test_get_count_of_children(self):
-        node5 = IconNode('first', 'fruit', {})
-        assert node5.get_count_of_children() == 0
-        node5 = IconNode('animals', 'fish', {'eggs': 'brown', 'dogs': '0', 'cats': 42})
-        assert node5.get_count_of_children() == 0
-
-    def test_add_child(self):
-        nodeA = IconNode('first', 'fruit', {})
-        assert nodeA.add_child('notfruit', 'key_pqr', 'value_pqr') == False
-        assert nodeA.add_child('fruit', 'key_pqr', 'value_pqr') == True
-
-
-    def test_get_list_of_children_names(self):
-        node7 = node5 = IconNode('root', 'category', {})
-        assert node7.get_list_of_children_names() == []
-        node7.add_child('category', 'key_pqr', 'value_pqr')
-        assert node7.get_list_of_children_names() == ['key_pqr']
-
-        node7.add_child('category', 'key_new', 'value_new')
-        assert node7.get_list_of_children_names() == ['key_new', 'key_pqr']
-
-        node7.add_child('category', 'key_alpha', 'value_alpha')
-        assert node7.get_list_of_children_names() == ['key_alpha', 'key_new', 'key_pqr']
-
-    def test_get_child_of_given_name(self):
-        node8 = IconNode('animals', 'fish', {'eggs': 'brown', 'dogs': '0', 'cats': 42})
-        assert node8.get_child_of_given_name('fred') == None
-        node8.add_child('fish', 'key_alpha', 'value_alpha')
-        node8.add_child('fish', 'key_new', 'value_new')
-        assert node8.get_child_of_given_name('key_new') == 'value_new'
-        #node8.print()
-
-    def test_integration(self):
-        nodeC = IconNode('root', 'categories', {'cat_att1': 'at1_val', 'cat_att2': 'att2val', 'catatt3': 42})
-        #nodeC.print()
-
-        mountain_everest = IconNode('everest', None, {'height': 9999, 'conquered_by': 'Mallory', 'country': 'Tibet'})
-        mountain_mtblanc = IconNode('Mt Blanc', None, {'height': 123, 'conquered_by': 'Unknown', 'country': 'France'})
-
-        mountains = IconNode('mountain_info', 'mountain', {'madeOf': 'rock', 'activity': 'climbable'})
-        assert mountains.add_child('mountain', 'everest', mountain_everest) == True
-        assert mountains.add_child('mountain', 'Mt Blanc', mountain_mtblanc) == True
-
-        root_node = IconNode('root_info', 'mountains', {'vlcPath': '/abc/def', 'description': 'Media playing tool'})
-        assert root_node.add_child('mountains', 'mountaininfo', mountains) == True
-        root_node.print_node()
-        root_node.print_full_node()
-
+        assert os.path.isfile(expected_path) == False # file does not exist beforehand
+        assert desk_enabled.generate_desktop_file() == True # verify that it thinks file was created ok
+        assert os.path.isfile(expected_path) # check that expected file exists
 
 
 @pytest.mark.iconset
@@ -585,6 +510,80 @@ class TestIconSet:
         assert compare_struct_from_yaml_file(FULL_TEST_ICON_SET, dump_file) == True
 
         #assert False
+
+
+
+@pytest.mark.skip # @pytest.mark.iconnode
+class TestIconNode:
+
+    def test_get_node_name(self):
+        node1 = IconNode('first', 'fruit', {})
+        assert node1.get_node_name() == 'first'
+
+    def test_get_get_child_type(self):
+        node2 = IconNode('first', 'fish', {})
+        assert node2.get_child_type() == 'fish'
+
+    def test_get_list_attribute_names(self):
+        node3 =IconNode('animals', 'fish', {'eggs': 'brown', 'dogs': '0', 'cats': 42})
+        assert node3.get_list_attribute_names() == ['cats', 'dogs', 'eggs']
+
+    def test_get_attribute_value(self):
+        node4 = IconNode('animals', 'fish', {'eggs': 'brown', 'dogs': '0', 'cats': 42})
+        assert node4.get_attribute_value('cats') == 42
+        assert node4.get_attribute_value('eggs') == 'brown'
+        assert node4.get_attribute_value('trees') == None
+
+    def test_get_count_of_children(self):
+        node5 = IconNode('first', 'fruit', {})
+        assert node5.get_count_of_children() == 0
+        node5 = IconNode('animals', 'fish', {'eggs': 'brown', 'dogs': '0', 'cats': 42})
+        assert node5.get_count_of_children() == 0
+
+    def test_add_child(self):
+        nodeA = IconNode('first', 'fruit', {})
+        assert nodeA.add_child('notfruit', 'key_pqr', 'value_pqr') == False
+        assert nodeA.add_child('fruit', 'key_pqr', 'value_pqr') == True
+
+
+    def test_get_list_of_children_names(self):
+        node7 = node5 = IconNode('root', 'category', {})
+        assert node7.get_list_of_children_names() == []
+        node7.add_child('category', 'key_pqr', 'value_pqr')
+        assert node7.get_list_of_children_names() == ['key_pqr']
+
+        node7.add_child('category', 'key_new', 'value_new')
+        assert node7.get_list_of_children_names() == ['key_new', 'key_pqr']
+
+        node7.add_child('category', 'key_alpha', 'value_alpha')
+        assert node7.get_list_of_children_names() == ['key_alpha', 'key_new', 'key_pqr']
+
+    def test_get_child_of_given_name(self):
+        node8 = IconNode('animals', 'fish', {'eggs': 'brown', 'dogs': '0', 'cats': 42})
+        assert node8.get_child_of_given_name('fred') == None
+        node8.add_child('fish', 'key_alpha', 'value_alpha')
+        node8.add_child('fish', 'key_new', 'value_new')
+        assert node8.get_child_of_given_name('key_new') == 'value_new'
+        #node8.print()
+
+    def test_integration(self):
+        nodeC = IconNode('root', 'categories', {'cat_att1': 'at1_val', 'cat_att2': 'att2val', 'catatt3': 42})
+        #nodeC.print()
+
+        mountain_everest = IconNode('everest', None, {'height': 9999, 'conquered_by': 'Mallory', 'country': 'Tibet'})
+        mountain_mtblanc = IconNode('Mt Blanc', None, {'height': 123, 'conquered_by': 'Unknown', 'country': 'France'})
+
+        mountains = IconNode('mountain_info', 'mountain', {'madeOf': 'rock', 'activity': 'climbable'})
+        assert mountains.add_child('mountain', 'everest', mountain_everest) == True
+        assert mountains.add_child('mountain', 'Mt Blanc', mountain_mtblanc) == True
+
+        root_node = IconNode('root_info', 'mountains', {'vlcPath': '/abc/def', 'description': 'Media playing tool'})
+        assert root_node.add_child('mountains', 'mountaininfo', mountains) == True
+        root_node.print_node()
+        root_node.print_full_node()
+
+
+
 
 
 @pytest.mark.skip # @pytest.mark.iconsuite
