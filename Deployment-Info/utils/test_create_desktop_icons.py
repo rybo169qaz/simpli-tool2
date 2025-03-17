@@ -20,7 +20,8 @@ import yaml
 #from jinja2 import Environment, FileSystemLoader, Template
 #from enum import Enum
 #import subprocess
-from create_desktop_icons import DeskIcon, IconNode, IconSuite, IconSet, ExtractStructuredAttribute
+from create_desktop_icons import IconText, DeskIcon, IconSet
+from create_desktop_icons import IconNode, IconSuite, ExtractStructuredAttribute
 #from create_desktop_icons import generate_text_from_template
 
 HOME_DIR = '/home/robertryan'
@@ -145,6 +146,92 @@ class TestExtractStructuredAttribute:
         full_dict = full_dict | everest_dict
 
         assert esa1.get_dict_of_lev1_lev2('mountain_list', 'everest') == full_dict
+
+@pytest.mark.icontext
+class TestIconText:
+
+    def test_no_args_to_sub(self):
+        simple_template_text = "BEFORE {{ field1 }} MID {{ field2 }} AFTER"
+        expected_icon_text = "BEFORE  MID  AFTER"
+        icontext1 = IconText(simple_template_text, dict({}))
+        assert icontext1.gen_icon_text() == expected_icon_text
+
+
+    def test_empty_template_text(self):
+        args_dict = dict({'first': 'xxfirstxxx', 'second': 'xxsecondxx'})
+        icontext2 = IconText("", args_dict)
+        assert icontext2.gen_icon_text() == ""
+        assert IconText("", args_dict).gen_icon_text() == ""
+
+
+    def test_template_bad_syntax(self):
+        args_dict = dict({'first': 'xxfirstxxx', 'second': 'xxsecondxx'})
+        template_missing_brace1 = "Other={ field1 }} PACK"
+        assert IconText(template_missing_brace1, args_dict).gen_icon_text() == template_missing_brace1
+
+        template_missing_brace2 = "Other={{ field1 } PACK"
+        assert IconText(template_missing_brace2, args_dict).gen_icon_text() == None
+
+
+    def test_bad_arg_name_starts_wth_numeric(self):
+        # jinja does not allow args which start with non-alpha
+        bad_first_char_dict_numeric = dict({'9abcdefghijklmnopqrstuvwxyz': 'xyz'})
+        template_text1 = "BEFORE {{ 9abcdefghijklmnopqrstuvwxyz }} MID {{ field2 }} AFTER"
+        assert IconText(template_text1, bad_first_char_dict_numeric).gen_icon_text() == None
+
+        bad_first_char_dict_other = dict({'+abcdefghijklmnopqrstuvwxyz': 'xyz'})
+        template_text1 = "BEFORE {{ +abcdefghijklmnopqrstuvwxyz }} MID {{ field2 }} AFTER"
+        assert IconText(template_text1, bad_first_char_dict_other).gen_icon_text() == None
+
+
+    def test_template_not_found_args(self):
+        args_dict = dict({'field2': 'pqr'})
+        simple_template_text = "BEFORE {{ field1 }} MID {{ field2 }} AFTER"
+        expected_icon_text = "BEFORE  MID pqr AFTER"
+        assert IconText(simple_template_text, args_dict).gen_icon_text() == expected_icon_text
+
+
+    def test_template_multiple_on_same_line(self):
+        args_dict = dict({'field1': 'xyz'})
+        template_text = "Other={{ field1 }} PACK {{ field1 }}"
+        expected_icon_text = "Other=xyz PACK xyz"
+        assert IconText(template_text, args_dict).gen_icon_text() == expected_icon_text
+
+
+    def test_template_extra_space_in_braces(self):
+        # jinja allows extra spaces in the braces - it appears
+        args_dict = dict({'first': 'abc', 'second': 'rst'})
+        expected_text = "BEFOREabcAFTER"
+
+        template_extra_space_before = "BEFORE{{  first }}AFTER"
+        assert IconText(template_extra_space_before, args_dict).gen_icon_text() == expected_text
+
+        # mismatch in spacing fails to match
+        template_extra_space_after = "BEFORE{{ first  }}AFTER"
+        assert IconText(template_extra_space_after, args_dict).gen_icon_text() == expected_text
+
+        template_extra_space_before_and_after = "BEFORE{{  first  }}AFTER"
+        assert IconText(template_extra_space_before_and_after, args_dict).gen_icon_text() == expected_text
+
+    def test_complex_template_and_args(self):
+        args_dict = dict({'field1': 'abc', 'field3': 'xyz'})
+        template_text = "INITIAL={{ field1  }} FIRST {{ fields2 }} SECOND{{  field1 }}NOSPACE{{  field1  }}"
+        expected_icon_text = "INITIAL=abc FIRST  SECONDabcNOSPACEabc"
+        assert IconText(template_text, args_dict).gen_icon_text() == expected_icon_text
+
+
+    def test_long_arg_name(self):
+        args_dict = dict({'a2bcdefghijklmnopqrstuvwxyz': 'xyz'})
+        temp_text = "BEFORE {{ a2bcdefghijklmnopqrstuvwxyz }} MID {{ field2 }} AFTER"
+        expected_icon_text = "BEFORE xyz MID  AFTER"
+        assert IconText(temp_text, args_dict).gen_icon_text() == expected_icon_text
+
+
+    def test_template_spaces_preserved(self):
+        args_dict = dict({'first': 'abc', 'second': 'rst', 'third': 'xyz'})
+        template_text = "ALPHA{{  first }}BETA {{  second }}  GAMMA  {{ third  }}OMEGA"
+        expected_text = "ALPHAabcBETA rst  GAMMA  xyzOMEGA"
+        assert IconText(template_text, args_dict).gen_icon_text() == expected_text
 
 
 
