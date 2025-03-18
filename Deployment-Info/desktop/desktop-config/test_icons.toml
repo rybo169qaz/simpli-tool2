@@ -1,0 +1,41 @@
+# This is a toml document
+
+title = "Config data for desktop icons"
+
+[common]
+vlc = "/etc/bin/vlc"
+com2 = "222"
+the_river = "Amazon"
+
+
+[entries]
+
+[entries.country_france]
+enabled = "true"
+icon = "france_flag"
+description = "France"
+tool_command = "/abc/show-flag"
+command_args = 'france_flag'
+
+[entries.country_the_netherlands]
+enabled = "false"
+icon = "dutch_flag"
+description = "Holland"
+tool_command = "/abc/show-flag"
+command_args = "dutch_flag"
+
+[entries.mountain_everest]
+enabled = 'true"
+icon = "nepal_photo"
+description = "Everest"
+tool_command = "/pqr/display_height"
+command_args = "5678 metres"
+com2 = "newcom2"
+
+[entries.mountain_mount-blanc]
+enabled = "true"
+icon = "photo_of_mt_blanc"
+description = "Mt Blanc"
+tool_command = "/pqr/display_height"
+command_args = "3210 metres"
+

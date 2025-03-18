@@ -62,6 +62,9 @@ FULL_SIMPLE_TEST_TEMPLATE_PATH = DESKTOP_CONFIG_DIR + '/' + SIMPLE_TEST_TEMPLATE
 TEST_ICON_SET = 'test_icon_set.yml'
 FULL_TEST_ICON_SET = DESKTOP_CONFIG_DIR + '/' + TEST_ICON_SET
 
+TEST_ICON_TOML_SET = 'test_icons.toml'
+FULL_TEST_ICON_TOML_SET = DESKTOP_CONFIG_DIR + '/' + TEST_ICON_TOML_SET
+
 WKG_DIR = REPO_ROOT + '/' + 'Deployment-Info/wkg-misc'
 
 disabled_dict = dict({ 'entry': 'george', 'enabled': 'false'})
@@ -499,7 +502,7 @@ class TestIconSet:
         assert os.path.isfile(FULL_TEST_ICON_SET) == True
         assert os.path.isfile(dump_file) == False # ensure file doe snot exist
 
-        dump_success = wkg_set.dump_config_to_file(dump_file)
+        dump_success = wkg_set.dump_config_to_yaml_file(dump_file)
         assert dump_success == True
 
         #compare two files

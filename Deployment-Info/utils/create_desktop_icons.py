@@ -737,6 +737,7 @@ class IconSet:
         self.the_dict = None
         self.common = None
         self.entries = None
+        self.newentries = None
         self.is_valid = False
         self._validate()
 
@@ -758,6 +759,12 @@ class IconSet:
             self.entries = self.the_dict.get('entries')
             if self.entries is None:
                 sys.exit('Structure is missing the "entries" section in the icon file.')
+
+            # self.newentries = self.the_dict.get('newentries')
+            # if self.newentries is None:
+            #     sys.exit('Structure is missing the "newentries" section in the icon file.')
+
+
             # we should check that for each there are the two entries : "entry" and "enabled"
         self.is_valid = True
 
@@ -768,7 +775,7 @@ class IconSet:
         return self.common
 
     def num_all_icons(self):
-        return len(self.entries)
+        return len(self.entries) # + len(self.newentries)
 
     def get_full_filename_of_entry(self, the_entry):
         return self.FILE_PREFIX + the_entry + self.FILE_POSTFIX
@@ -794,21 +801,26 @@ class IconSet:
         enab, disab = self.list_icon_files()
         return enab
 
+
     def num_enabled_icons(self):
         enab, disab = self.list_icon_files()
         return len(enab)
+
 
     def list_enabled_icon_filenames(self):
         enab, disab = self.list_icon_files()
         return list(map(lambda x: self.get_full_filename_of_entry(x) , enab))
 
+
     def get_target_dir(self):
         return self.target_dir
+
 
     def list_fullpath_icons_to_create(self):
         enab, disab = self.list_icon_files()
         list_of_all_entries = list(map(lambda x: self.get_target_dir() + '/' + x, enab))
         return list_of_all_entries
+#
 
     def get_attribs_of_entry(self, entry_name):
         specific_dict = self.common.copy()
@@ -821,6 +833,7 @@ class IconSet:
         if found_entry is False:
             specific_dict = None
         return specific_dict
+
 
     def generate_all_icons(self,fake_it):
         """
@@ -838,7 +851,7 @@ class IconSet:
             if not fake_it:
                 iconobj.generate_desktop_file()
 
-    def dump_config_to_file(self, dump_name):
+    def dump_config_to_yaml_file(self, dump_name):
         is_successful = False
         thedict = dict({})
         thedict['common'] = self.common
@@ -856,6 +869,8 @@ class IconSet:
         else:
             return False
 
+    def dumP_config_to_json_file(self, dump_json_name):
+        pass
 
 
 
