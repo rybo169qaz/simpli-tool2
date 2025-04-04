@@ -292,72 +292,70 @@ def derive_desktop_category(global_data, category_data, icon_base_dir, template_
 
 
 
-
-
-class IconNode:
-    def __init__(self, node_name, child_type, attrib_struct):
-        self.node_name = node_name
-        self.child_type_name = child_type
-        self.attrib_struct = attrib_struct
-        self.child_struct = dict({})
-
-    def get_node_name(self):
-        return self.node_name
-
-    def get_child_type(self):
-        return self.child_type_name
-
-    def get_list_attribute_names(self):
-        the_list = list(self.attrib_struct.keys())
-        the_list.sort()
-        return the_list
-
-    def get_attribute_value(self, attr_name):
-        return self.attrib_struct.get(attr_name)
-
-    def get_count_of_children(self):
-        return len(self.child_struct)
-
-    def get_list_of_children_names(self):
-        the_list = list(self.child_struct)
-        the_list.sort() # we return a sorted list
-        return the_list
-
-    def add_child(self, new_child_type, child_key, child_value):
-        if new_child_type != self.child_type_name:
-            return False
-        self.child_struct[child_key] = child_value
-        return True
-
-    def get_child_of_given_name(self, wanted_child_name):
-        child = self.child_struct.get(wanted_child_name) # this is None if it is non-existant
-        return child
-
-    def get_node_struct(self):
-        mystruct = dict({})
-        mystruct['attributes'] = self.attrib_struct
-        child_names = self.get_list_of_children_names()
-        mystruct['children'] = child_names
-
-    def get_full_node_struct(self):
-        mystruct = dict({})
-        mystruct['attributes'] = self.attrib_struct
-        mystruct['children'] = None
-        child_names = self.get_list_of_children_names()
-
-        children_handle = mystruct['children']
-        child_struct = dict({})
-        for child_name in child_names:
-            children_handle[child_name] = self.get_child_of_given_name(child_name)
-        return mystruct
-
-    def print_node(self):
-        mystruct = self.get_node_struct()
-        print(json.dumps(mystruct, sort_keys=True, indent=4))
-
-    def print_full_node(self):
-        mystruct = self.get_full_node_struct()
-        print(json.dumps(mystruct, sort_keys=True, indent=4))
+# class IconNode:
+#     def __init__(self, node_name, child_type, attrib_struct):
+#         self.node_name = node_name
+#         self.child_type_name = child_type
+#         self.attrib_struct = attrib_struct
+#         self.child_struct = dict({})
+#
+#     def get_node_name(self):
+#         return self.node_name
+#
+#     def get_child_type(self):
+#         return self.child_type_name
+#
+#     def get_list_attribute_names(self):
+#         the_list = list(self.attrib_struct.keys())
+#         the_list.sort()
+#         return the_list
+#
+#     def get_attribute_value(self, attr_name):
+#         return self.attrib_struct.get(attr_name)
+#
+#     def get_count_of_children(self):
+#         return len(self.child_struct)
+#
+#     def get_list_of_children_names(self):
+#         the_list = list(self.child_struct)
+#         the_list.sort() # we return a sorted list
+#         return the_list
+#
+#     def add_child(self, new_child_type, child_key, child_value):
+#         if new_child_type != self.child_type_name:
+#             return False
+#         self.child_struct[child_key] = child_value
+#         return True
+#
+#     def get_child_of_given_name(self, wanted_child_name):
+#         child = self.child_struct.get(wanted_child_name) # this is None if it is non-existant
+#         return child
+#
+#     def get_node_struct(self):
+#         mystruct = dict({})
+#         mystruct['attributes'] = self.attrib_struct
+#         child_names = self.get_list_of_children_names()
+#         mystruct['children'] = child_names
+#
+#     def get_full_node_struct(self):
+#         mystruct = dict({})
+#         mystruct['attributes'] = self.attrib_struct
+#         mystruct['children'] = None
+#         child_names = self.get_list_of_children_names()
+#
+#         children_handle = mystruct['children']
+#         child_struct = dict({})
+#         for child_name in child_names:
+#             children_handle[child_name] = self.get_child_of_given_name(child_name)
+#         return mystruct
+#
+#     def print_node(self):
+#         mystruct = self.get_node_struct()
+#         print(json.dumps(mystruct, sort_keys=True, indent=4))
+#
+#     def print_full_node(self):
+#         mystruct = self.get_full_node_struct()
+#         print(json.dumps(mystruct, sort_keys=True, indent=4))
 
 
 
@@ -470,9 +468,6 @@ class DeskIcon:
 
     def generate_trusted_desktop_file(self):
         self.generate_desktop_file(make_trusted=True)
-
-
-
 
 
 
