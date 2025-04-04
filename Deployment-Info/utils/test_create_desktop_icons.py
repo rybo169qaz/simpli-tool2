@@ -21,7 +21,7 @@ import yaml
 #from enum import Enum
 #import subprocess
 from create_desktop_icons import IconText, DeskIcon, IconSet
-from create_desktop_icons import IconNode, IconSuite, ExtractStructuredAttribute
+from create_desktop_icons import IconNode
 #from create_desktop_icons import generate_text_from_template
 
 HOME_DIR = '/home/robertryan'
@@ -59,8 +59,8 @@ FULL_GOOD_TEMPLATE_PATH = DESKTOP_CONFIG_DIR + '/' + GOOD_TEMPLATE_FILE
 FULL_TEST_TEMPLATE_PATH = DESKTOP_CONFIG_DIR + '/' + TEST_TEMPLATE_FILE
 FULL_SIMPLE_TEST_TEMPLATE_PATH = DESKTOP_CONFIG_DIR + '/' + SIMPLE_TEST_TEMPLATE_FILE
 
-TEST_ICON_SET = 'test_icon_set.yml'
-FULL_TEST_ICON_SET = DESKTOP_CONFIG_DIR + '/' + TEST_ICON_SET
+TEST_ICON_YAML_SET = 'test_icon_set.yml'
+FULL_TEST_ICON_YAML_SET = DESKTOP_CONFIG_DIR + '/' + TEST_ICON_YAML_SET
 
 TEST_ICON_TOML_SET = 'test_icons.toml'
 FULL_TEST_ICON_TOML_SET = DESKTOP_CONFIG_DIR + '/' + TEST_ICON_TOML_SET
@@ -72,83 +72,19 @@ noname_dict = dict({ 'enabled': 'false'})
 missing_entry_dict = dict({ 'fish': 'cod', 'enabled': 'true'})
 good_dict = dict({ 'entry': 'fred', 'enabled': 'true'})
 
-@pytest.mark.skip # test_extract_struct_att
-class TestExtractStructuredAttribute:
 
-    def test_have_valid_structure(self):
-        esa1 = ExtractStructuredAttribute(WKG_DIR + '/' + 'dummy-known.yaml')
-        assert esa1.struct_is_valid() == True
+def display_text(the_string, description):
+    bar_size = 7
+    start_text = 'v' * bar_size
+    end_text = '^' * bar_size
+    print(f'\n{start_text} START OF: {description} {start_text}')
+    print(the_string)
+    print(f'{end_text} END OF: {description} {end_text}\n')
 
-    def test_get_root_id(self):
-        esa1 = ExtractStructuredAttribute(WKG_DIR + '/' + 'dummy-known.yaml')
-        assert esa1.get_root_id() == 'root_id'
-
-    def test_root_attribute_exists(self):
-        esa1 = ExtractStructuredAttribute(WKG_DIR + '/' + 'dummy-known.yaml')
-        assert esa1.root_attribute_exists('env1') == True
-        assert esa1.root_attribute_exists('env3') == False
-
-    def test_root_attribute_value(self):
-        esa1 = ExtractStructuredAttribute(WKG_DIR + '/' + 'dummy-known.yaml')
-        assert esa1.get_root_attribute('env1') == 'env1 root value'
-        assert esa1.get_root_attribute('env3') is None
-
-    def test_get_list_of_first_level_entry_ids(self):
-        esa1 = ExtractStructuredAttribute(WKG_DIR + '/' + 'dummy-known.yaml')
-        assert esa1.get_list_of_first_level_entry_ids() == [ 'country_list', 'mountain_list', 'no attr', 'no entries'  ]
-
-
-    def test_first_level_exists_with_name(self):
-        esa1 = ExtractStructuredAttribute(WKG_DIR + '/' + 'dummy-known.yaml')
-        assert esa1.first_level_exists_with_name('country_list') == True
-        assert esa1.first_level_exists_with_name('gulp') == False
-
-    def test_level2_exists(self):
-        esa1 = ExtractStructuredAttribute(WKG_DIR + '/' + 'dummy-known.yaml')
-        assert esa1.second_level_exists_with_name('country_list', 'france') == True
-        assert esa1.second_level_exists_with_name('country_list', 'germany') == False
-        assert esa1.second_level_exists_with_name('river_list', 'france') == False
-
-    def test_get_dict_of_lev1_lev2(self):
-        esa1 = ExtractStructuredAttribute(WKG_DIR + '/' + 'dummy-known.yaml')
-
-        france_dict = {'env1': 'env1 root value',
-                       'env2': 'root value for env2',
-                       'command_args': 'france_tool1 a b c',
-                       'description': 'France',
-                       'enabled': 'true',
-                       'flag': 'French Flag'
-                       }
-        #assert esa1.get_dict_of_lev1_lev2('country_list', 'france') == france_dict
-
-        # everest_dict = {'env1': 'env1 root value',
-        #                'env2': 'everest value for env2',
-        #                'category_description': 'Well known mountains',
-        #                'tool_command': 'mountain_tool',
-        #                'description': 'Mount Everest',
-        #                 'enabled': 'true',
-        #                'icon': 'nepal_photo'
-        #                }
-
-        root_dict = {'env1': 'env1 root value', 'env2': 'root value for env2' }
-        mountains_dict = {'category_description': 'Well known mountains', 'tool_command': 'mountain_tool'}
-        everest_dict = {
-                        'description': 'Mount Everest',
-                        'enabled': 'true',
-                        'env2': 'everest value for env2',
-                        'icon': 'nepal_photo'
-                        }
-
-        #assert esa1.get_dict_of_lev1_lev2('mountain_list', 'everest') == root_dict
-        #assert esa1.get_dict_of_lev1_lev2('mountain_list', 'everest') == mountains_dict
-        #assert esa1.get_dict_of_lev1_lev2('mountain_list', 'everest') == everest_dict
-
-        full_dict = dict({})
-        full_dict |= root_dict
-        full_dict = full_dict | mountains_dict
-        full_dict = full_dict | everest_dict
-
-        assert esa1.get_dict_of_lev1_lev2('mountain_list', 'everest') == full_dict
+def display_file(filename, desc = ''):
+    with open(filename, 'r') as file:
+        file_content = file.read()
+    display_text(file_content, desc + ': File==' + filename)
 
 @pytest.mark.icontext
 class TestIconText:
@@ -325,58 +261,84 @@ class TestDeskIcon:
         assert os.path.isfile(expected_path) == False # file does not exist beforehand
         assert desk_enabled.generate_desktop_file() == True # verify that it thinks file was created ok
         assert os.path.isfile(expected_path) # check that expected file exists
+        #display_text('SOME TEXT\nON TWO LINES\n', 'ExpERIMENTAL')
+        #display_file(expected_path, '(test_generate_desktop_file)')
+        #assert False
 
 
 @pytest.mark.iconset
 class TestIconSet:
 
-    def test_basic_test(self):
-        good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, WKG_DIR)
+    def test_basic_yaml_test(self):
+        good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_YAML_SET, WKG_DIR)
         assert good_set_and_template.is_valid_set() == True
 
 
-    def test_invalid_template_file_identified(self):
-        bad_template = IconSet('abc', FULL_TEST_ICON_SET, WKG_DIR)
+    def test_invalid_yaml_template_file_identified(self):
+        bad_template = IconSet('abc', FULL_TEST_ICON_YAML_SET, WKG_DIR)
         assert bad_template.is_valid_set() == False
 
 
-    def test_invalid_set_file_identified(self):
+    def test_invalid_yaml_set_file_identified(self):
         bad_set = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, 'abc', WKG_DIR)
         assert bad_set.is_valid_set() == False
 
 
+    def test_get_title(self):
+        good_yaml_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_YAML_SET, WKG_DIR)
+        assert good_yaml_set_and_template.get_title() is None
+
+        good_toml_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_TOML_SET, WKG_DIR)
+        assert good_toml_set_and_template.get_title() == "Config data for desktop icons"
+
+
     def test_get_common_attributes(self):
-        good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, WKG_DIR)
         expected_common = {'vlc': '/etc/bin/vlc',
                            'com2': 222,
                            'the_river': 'Amazon'
                            }
-        assert good_set_and_template.get_common_attributes() == expected_common
+        good_yaml_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_YAML_SET, WKG_DIR)
+        assert good_yaml_set_and_template.get_common_attributes() == expected_common
+
+        good_toml_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_TOML_SET, WKG_DIR)
+        assert good_toml_set_and_template.get_common_attributes() == expected_common
 
 
     def test_num_all_icons(self):
-        good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, WKG_DIR)
-        assert good_set_and_template.num_all_icons() == 4
+        good_yaml_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_YAML_SET, WKG_DIR)
+        assert good_yaml_set_and_template.num_all_icons() == 4
+
+        good_toml_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_TOML_SET, WKG_DIR)
+        assert good_toml_set_and_template.num_all_icons() == 4
 
 
     def test_num_enabled_icons(self):
-        good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, WKG_DIR)
-        assert good_set_and_template.num_enabled_icons() == 3
+        good_yaml_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_YAML_SET, WKG_DIR)
+        assert good_yaml_set_and_template.num_enabled_icons() == 3
+
+        good_toml_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_TOML_SET, WKG_DIR)
+        assert good_toml_set_and_template.num_enabled_icons() == 3
 
 
     def test_enabled_disabled_icons(self):
-        good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, WKG_DIR)
-        enabled_entries = ['country_france',  'mountain_everest', 'mountain_mount-blanc']
-        assert good_set_and_template.list_enabled_icons() == enabled_entries
-
+        enabled_entries = ['country_france', 'mountain_everest', 'mountain_mount-blanc']
         disabled_entries = ['country_the_netherlands']  # netherlands is disabled
-        assert good_set_and_template.list_disabled_icons() == disabled_entries
+
+        good_yaml_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_YAML_SET, WKG_DIR)
+        good_toml_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_TOML_SET, WKG_DIR)
+        assert good_yaml_set_and_template.list_enabled_icons() == enabled_entries
+        assert good_toml_set_and_template.list_enabled_icons() == enabled_entries
+
+        assert good_yaml_set_and_template.list_disabled_icons() == disabled_entries
+        assert good_toml_set_and_template.list_disabled_icons() == disabled_entries
 
 
     def test_list_enabled_icon_filenames(self):
-        good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, WKG_DIR)
         enabled_entries = ['simpli_country_france.desktop',  'simpli_mountain_everest.desktop', 'simpli_mountain_mount-blanc.desktop']
-        assert good_set_and_template.list_enabled_icon_filenames() == enabled_entries
+        good_yaml_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_YAML_SET, WKG_DIR)
+        good_toml_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_TOML_SET, WKG_DIR)
+        assert good_yaml_set_and_template.list_enabled_icon_filenames() == enabled_entries
+        assert good_toml_set_and_template.list_enabled_icon_filenames() == enabled_entries
 
 
     def test_icons_generated_in_correct_dir(self):
@@ -385,12 +347,18 @@ class TestIconSet:
         os.mkdir(tmpdir, 0o777)  # we create the dest dir
         os.path.isdir(tmpdir)
 
-        good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, tmpdir)
-        assert good_set_and_template.get_target_dir() == tmpdir
+        good_yaml_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_YAML_SET, tmpdir)
+        assert good_yaml_set_and_template.get_target_dir() == tmpdir
+
+        good_toml_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_TOML_SET, WKG_DIR)
+        assert good_toml_set_and_template.get_target_dir() == tmpdir
+
+
 
     def test_attributes_of_entry(self):
-        good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, WKG_DIR)
-        #actual = good_set_and_template.get_attribs_of_entry('mountain_everest')
+        good_yaml_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_YAML_SET, WKG_DIR)
+        good_toml_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_TOML_SET, WKG_DIR)
+
         expected_everest = {
             'entry': 'mountain_everest',
             'enabled': 'true',
@@ -402,7 +370,8 @@ class TestIconSet:
             'tool_command': '/pqr/display_height',
             'command_args': '5678 metres'
         }
-        assert good_set_and_template.get_attribs_of_entry('mountain_everest') == expected_everest
+        assert good_yaml_set_and_template.get_attribs_of_entry('mountain_everest') == expected_everest
+        assert good_toml_set_and_template.get_attribs_of_entry('mountain_everest') == expected_everest
 
         expected_netherlands = {
             'entry': 'country_the_netherlands',
@@ -415,9 +384,11 @@ class TestIconSet:
             'tool_command': '/abc/show-flag',
             'command_args': 'dutch_flag'
         }
-        assert good_set_and_template.get_attribs_of_entry('country_the_netherlands') == expected_netherlands
+        assert good_yaml_set_and_template.get_attribs_of_entry('country_the_netherlands') == expected_netherlands
+        assert good_toml_set_and_template.get_attribs_of_entry('country_the_netherlands') == expected_netherlands
 
-        assert good_set_and_template.get_attribs_of_entry('unknown_entry') == None
+        assert good_yaml_set_and_template.get_attribs_of_entry('unknown_entry') == None
+        assert good_toml_set_and_template.get_attribs_of_entry('unknown_entry') == None
 
 
     def test_only_enabled_files_created(self):
@@ -429,8 +400,8 @@ class TestIconSet:
         print(f'XYZ Tempdir = {tmpdir}')
         os.path.isdir(tmpdir)
 
-        #good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_SET, tmpdir)
-        good_set_and_template = IconSet(FULL_GOOD_TEMPLATE_PATH, FULL_TEST_ICON_SET, tmpdir)
+        #good_set_and_template = IconSet(FULL_SIMPLE_TEST_TEMPLATE_PATH, FULL_TEST_ICON_YAML_SET, tmpdir)
+        good_set_and_template = IconSet(FULL_GOOD_TEMPLATE_PATH, FULL_TEST_ICON_YAML_SET, tmpdir)
         good_set_and_template.generate_all_icons(False)
 
         def full_path(rootdir, x):
@@ -497,9 +468,9 @@ class TestIconSet:
         print(f'XYZ Tempdir = {tmpdir}')
         os.path.isdir(tmpdir)
 
-        wkg_set = IconSet(FULL_GOOD_TEMPLATE_PATH, FULL_TEST_ICON_SET, tmpdir)
+        wkg_set = IconSet(FULL_GOOD_TEMPLATE_PATH, FULL_TEST_ICON_YAML_SET, tmpdir)
         dump_file = tmpdir + '/' + 'dumped.txt'
-        assert os.path.isfile(FULL_TEST_ICON_SET) == True
+        assert os.path.isfile(FULL_TEST_ICON_YAML_SET) == True
         assert os.path.isfile(dump_file) == False # ensure file doe snot exist
 
         dump_success = wkg_set.dump_config_to_yaml_file(dump_file)
@@ -507,10 +478,10 @@ class TestIconSet:
 
         #compare two files
         assert os.path.isfile(dump_file) == True # ensure file now exists
-        #assert calculate_md5(FULL_TEST_ICON_SET) == calculate_md5(dump_file)
+        #assert calculate_md5(FULL_TEST_ICON_YAML_SET) == calculate_md5(dump_file)
 
         # compare structures obtained when loading the files
-        assert compare_struct_from_yaml_file(FULL_TEST_ICON_SET, dump_file) == True
+        assert compare_struct_from_yaml_file(FULL_TEST_ICON_YAML_SET, dump_file) == True
 
         #assert False
 
@@ -584,56 +555,6 @@ class TestIconNode:
         assert root_node.add_child('mountains', 'mountaininfo', mountains) == True
         root_node.print_node()
         root_node.print_full_node()
-
-
-
-
-
-@pytest.mark.skip # @pytest.mark.iconsuite
-class TestIconSuite:
-
-    def test_invalid_suite(self):
-        suite1 = IconSuite('unknownfile')
-        assert suite1.validsuite() == False
-
-    def test_valid_suite(self):
-        suite2 = IconSuite(DESKTOP_CONFIG_DIR + '/' + 'test_desktop_known.yml')
-        assert suite2.validsuite() == True
-
-    def test_categories(self):
-        suite3 = IconSuite(DESKTOP_CONFIG_DIR + '/' + 'test_desktop_known.yml')
-        expected_categories = set(('countries', 'mountains'))
-        assert suite3.get_categories() == expected_categories
-
-    def test_entries_in_category(self):
-        suite4 = IconSuite(DESKTOP_CONFIG_DIR + '/' + 'test_desktop_known.yml')
-        expected_entries = set(('france', 'the_netherlands'))
-        assert suite4.get_entries_in_category('countries') == expected_entries
-
-    def test_entries_in_all_categories(self):
-        suite5 = IconSuite(DESKTOP_CONFIG_DIR + '/' + 'test_desktop_known.yml')
-        expected_list_of_cat_ent = [
-            ('countries', 'france'),
-            ('countries', 'the_netherlands'),
-            ('mountains', 'everest'),
-            ('mountains', 'mount blanc')
-        ]
-
-        expected_dict_of_cat_ent = {
-            'countries' : [ 'france', 'the_netherlands'],
-            'mountains': ['everest', 'mount blanc'],
-        }
-        # The following were excluded because they are NOT enabled
-        # ('countries', 'the_netherlands'),
-        ret_struct = suite5.entries_in_all_categories()
-        #assert len(ret_struct) == 4
-        print(f'returned structure')
-        print(json.dumps(ret_struct))
-        print(f'\nexpected structure')
-        print(json.dumps(expected_dict_of_cat_ent))
-
-        assert suite5.entries_in_all_categories() == expected_dict_of_cat_ent
-
 
 
 

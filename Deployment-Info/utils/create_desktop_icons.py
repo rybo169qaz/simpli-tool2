@@ -3,7 +3,9 @@ import hashlib
 import json
 import os.path
 import platform
+from pydantic import BaseModel, ConfigDict
 import time
+import tomli as tomllib
 
 import psutil
 #import re
@@ -288,253 +290,7 @@ def derive_desktop_category(global_data, category_data, icon_base_dir, template_
             except:
                 renderop(f'Attempting to remove non-existent file ( {fname} )')
 
-class ExtractStructuredAttribute:
-    def __init__(self, input_file):
-        self.input_file = input_file
-        self.the_struct = None
-        self.is_valid = False
-        self._validate_args()
-        self.attribs = None
-        self.entries = None
 
-    def _validate_args(self):
-        if not os.path.isfile(self.input_file):
-            return False
-        with open(self.input_file) as stream:
-            try:
-                self.the_struct = yaml.safe_load(stream)
-                # print(yaml.safe_load(stream))
-            except yaml.YAMLError as exc:
-                print(f'Bad YAML\n')
-                exit(99)
-
-        if 'attributes' not in self.the_struct:
-            print(f'Missing root attributes')
-            return False
-        self.attribs = self.the_struct['attributes']
-
-        if 'entries' not in self.the_struct:
-            print(f'Missing root entries')
-            return False
-        self.entries = self.the_struct['entries']
-        self.is_valid = True
-
-    def struct_is_valid(self):
-        return self.is_valid
-
-    def get_root_id(self):
-        return self.the_struct.get('a_id')
-
-
-
-    def root_attribute_exists(self, attrib_name):
-        if self.is_valid is False: return False
-        if self.the_struct.get('attributes') is None: return False
-        if self.the_struct['attributes'].get(attrib_name) is None:
-            return False
-        else:
-            return True
-
-    def _get_list_of_entries(self, root):
-        the_entry_list = root['entries']
-        list_of_ids = []
-        for entry in the_entry_list:
-            list_of_ids.append(entry['a_id'])
-        return list_of_ids
-
-    def _get_attributes(self, root):
-        return root['attributes']
-
-    def _get_specified_attribute(self, root, attribute_name):
-        atts = root.get('attributes')
-        return atts.get(attribute_name)
-
-    def _get_specified_entry(self, root, entry_name):
-        the_entry_list = root['entries']
-        entry_obj = None
-        for entry in the_entry_list:
-            if entry['a_id'] == entry_name:
-                entry_obj = entry
-                break
-        return entry_obj
-
-    def get_root_attribute(self, attrib_name):
-        return self._get_specified_attribute(self.the_struct, attrib_name)
-
-    def get_list_of_first_level_entry_ids(self):
-        return self._get_list_of_entries(self.the_struct)
-
-    def first_level_exists_with_name(self, level1_name ):
-        obj = self._get_specified_entry(self.the_struct, level1_name)
-        if obj is None:
-            return False
-        else:
-            return True
-
-    def second_level_exists_with_name(self, level1_name, level2_name ):
-        obj1 = self._get_specified_entry(self.the_struct, level1_name)
-        if obj1 is None: return False
-
-        obj2 = self._get_specified_entry(obj1, level2_name)
-        if obj2 is None: return False
-        return True
-
-    def get_dict_of_lev1_lev2(self, level1_name, level2_name):
-        if self.second_level_exists_with_name(level1_name, level2_name) is False: return None
-        cumulative = dict({})
-
-        cumulative = cumulative | self._get_attributes(self.the_struct)
-
-        lev1 = self._get_specified_entry(self.the_struct, level1_name)
-        cumulative = cumulative | self._get_attributes(lev1)
-
-        lev2 = self._get_specified_entry(lev1, level2_name)
-        cumulative = cumulative | self._get_attributes(lev2)
-
-        return cumulative
-
-
-
-
-
-
-
-class CreateDummyKnown:
-    def __init__(self, dest_dir, dest_gen_file):
-        self.dest_dir = dest_dir
-        self.dest_gen_file = dest_gen_file
-        self.test_data = None
-
-    def _create_node_struct(self, node_id, list_of_entries, dict_of_atts):
-        create_empty_structures = True
-
-        attrib_dict = dict({})
-        for key in dict_of_atts:
-            attrib_dict[key] = dict_of_atts[key]
-
-        entry_list = []
-        for entry in list_of_entries:
-            entry_list.append(entry)
-
-        my_dict = dict({'a_id': node_id, 'attributes': attrib_dict})
-        # create_empty_structures
-        if create_empty_structures or len(entry_list) != 0:
-            my_dict['entries'] = entry_list
-        return my_dict
-
-    def _write_yaml_to_file(self, filename, the_struct):
-        file_handle = open(filename, "w")
-        file_handle.write("---\n")
-        yaml.dump(the_struct, file_handle)
-        file_handle.write("...\n")
-        file_handle.close()
-        print(f'YAML file saved to file {filename}.')
-
-    def new_create_testd_file(self):
-
-        france_struct = self._create_node_struct('france', [],
-                                                 {'command_args': 'france_tool1 a b c',
-                                                  'enabled': 'true',
-                                                  'description': 'France',
-                                                  'flag': 'French Flag'})
-        self._write_yaml_to_file(f'{self.dest_dir}/dummy-france.yml', france_struct)
-
-        neth_struct = self._create_node_struct('netherlands', [],
-                                                 {
-                                                  'enabled': 'false',
-                                                  'description': 'Holland',
-                                                  'flag': 'Dutch Flag'})
-        self._write_yaml_to_file(f'{self.dest_dir}/dummy-netherlands.yml', neth_struct)
-
-        #countries_entries_list = [ 'france-placeholder', 'netherlands-placeholder']
-        countries_entries_list = [france_struct, neth_struct]
-        countries_struct = self._create_node_struct('country_list', countries_entries_list,
-                                               {'command_args': 'country_tool1 A B C',
-                                                'description': 'European countries'})
-        self._write_yaml_to_file(f'{self.dest_dir}/dummy-countries.yml', countries_struct)
-
-        # mountains
-        everest_struct = self._create_node_struct('everest', [],
-                                                 {
-                                                    'enabled': 'true',
-                                                  'description': 'Mount Everest',
-                                                     'env2': 'everest value for env2',
-                                                  'icon': 'nepal_photo'})
-        #self._write_yaml_to_file(f'{self.dest_dir}/dummy-everest.yml', everest_struct)
-
-        mtblanc_struct = self._create_node_struct('mt blanc', [],
-                                                  {
-                                                      'enabled': 'false',
-                                                      'description': 'Mt Blanc',
-                                                      'icon': 'photo_of_my_blanc'})
-
-        mountains_entries_list = [everest_struct, mtblanc_struct]
-        mountains_struct = self._create_node_struct('mountain_list', mountains_entries_list,
-                                                    {'category_description': 'Well known mountains',
-                                                     'tool_command': 'mountain_tool'})
-        self._write_yaml_to_file(f'{self.dest_dir}/dummy-mountains.yml', mountains_struct)
-
-        # CATEGORY with no attributes
-        no_attr_struct1 = self._create_node_struct('no_attr1', [], { 'abc': 'cba', 'def': 'fed'})
-        no_attr_struct2 = self._create_node_struct('no_attr2', [], {'pqr': 'rqp', 'xyz': 'zyx'})
-        no_attr_struct = self._create_node_struct('no attr', [no_attr_struct1, no_attr_struct2],{})
-
-        #category with no entries
-        no_entr_struct = self._create_node_struct('no entries', [], {'attribute_of_no_entry': 'myatt'})
-
-        #root_entries_list = ['a', 'b']
-        root_entries_list = [countries_struct, mountains_struct, no_attr_struct, no_entr_struct]
-
-        root_struct = {
-            'env1': 'env1 root value',
-            'env2': 'root value for env2'}
-        root_struct = self._create_node_struct('root_id', root_entries_list, root_struct)
-
-        #root_filename = f'{self.dest_dir}/dummy-rooty.yml'
-        root_filename = f"{self.dest_dir}/{self.dest_gen_file}"
-        self._write_yaml_to_file(root_filename, root_struct)
-
-
-
-    def create_test_data(self):
-        attrib_france = dict({'identity': 'france', 'enabled': 'true', 'flag': 'france_flag', 'description': 'France',
-                              'command_args': '/home/robert/.simpli/config/dev-info.txt'})
-        entry_france = dict({'attributes': attrib_france })
-
-        attrib_netherlands = dict({'identity': 'the_netherlands', 'enabled': 'false', 'flag': 'dutch_flag', 'description': 'Holland',
-                              'command_args': '/home/robert/.simpli/config/dev-info.txt'})
-        entry_netherlands = dict({'attributes': attrib_netherlands })
-
-        attrib_countries = dict({'category_description': 'Lots of countries', 'tool_command': 'country_tools', 'location_for_icon': 'simpli-admin'})
-        entry_countries = list([entry_france, entry_netherlands])
-        obj_countries = dict({'attributes': attrib_countries, 'entries': entry_countries})
-
-
-        attrib_everest = dict({'identity': 'everest', 'enabled': 'true', 'photo': 'nepal_photo', 'description': 'Everest' })
-        entry_everest = dict({'attributes': attrib_everest})
-
-        attrib_mtblanc = dict(
-            {'identity': 'mount blanc', 'enabled': 'true', 'photo': 'photo_of_mt_blanc', 'description': 'Mt Blanc',
-             'tool_command': 'special_mountain_tool'})
-        entry_mtblanc = dict({'attributes': attrib_mtblanc})
-
-        attrib_mountains = dict({'category_description': 'Well known mountains', 'tool_command': 'mountain_tool'})
-        entry_mountains = list([entry_everest, entry_mtblanc])
-        obj_mountains = dict({'attributes': attrib_mountains, 'entries': entry_mountains})
-
-        attrib_global = dict({'com1': '111', 'com2': '222'})
-
-        self.test_data = dict({
-            'attributes': attrib_global,
-            'entries': [obj_countries, obj_mountains]
-        })
-
-        #yaml_string = yaml.dump(self.test_data)
-        #print("The YAML string is:")
-        #print(yaml_string)
-
-        dummy_fname = f"{self.dest_dir}/{self.dest_gen_file}"
-        self._write_yaml_to_file(dummy_fname, self.test_data)
 
 
 
@@ -735,9 +491,10 @@ class IconSet:
         self.icons_set_file = icons_set_file
         self.target_dir = target_dir
         self.the_dict = None
+        self.set_format_is_toml = None
         self.common = None
         self.entries = None
-        self.newentries = None
+        self.toml_entries = None
         self.is_valid = False
         self._validate()
 
@@ -746,36 +503,85 @@ class IconSet:
             return False
         if not os.path.isfile(self.icons_set_file):
             return False
-        with open(self.icons_set_file) as stream:
+
+        if self.icons_set_file.endswith('.yml'):
+            self.set_format_is_toml = False
+            self._validate_yaml(self.icons_set_file)
+        elif self.icons_set_file.endswith('.toml'):
+            self.set_format_is_toml = True
+            self._validate_toml(self.icons_set_file)
+        else:
+            return False
+
+        self.common = self.the_dict.get('common')
+        if self.common is None:
+            self._dump_structure()
+            sys.exit('Structure is missing the "common" section in the icon file.')
+
+        self._dump_structure()
+        self.is_valid = True
+
+    def _validate_toml(self, toml_set_file):
+        with (open(toml_set_file, 'r') as file):
+            catch_flag = True
+            try:
+                file_content = file.read()
+                self.the_dict =tomllib.loads(file_content)
+                # print(yaml.safe_load(stream))
+            except tomllib.TOMLDecodeError as exc:
+                sys.exit('Structure has malformed TOML in the icon file.')
+
+            self.toml_entries = self.the_dict.get('entries')
+            if self.toml_entries is None:
+                self._dump_structure()
+                sys.exit('Structure is missing the "toml_entries" section in the icon file.')
+            # we should check that for each there are the two entries : "entry" and "enabled"
+
+    def _validate_yaml(self, yaml_set_file):
+        with open(yaml_set_file) as stream:
             try:
                 self.the_dict = yaml.safe_load(stream)
                 # print(yaml.safe_load(stream))
             except yaml.YAMLError as exc:
                 sys.exit('Structure has malformed YAML in the icon file.')
-            self.common = self.the_dict.get('common')
-            if self.common is None:
-                sys.exit('Structure is missing the "common" section in the icon file.')
 
             self.entries = self.the_dict.get('entries')
             if self.entries is None:
+                self._dump_structure()
                 sys.exit('Structure is missing the "entries" section in the icon file.')
-
-            # self.newentries = self.the_dict.get('newentries')
-            # if self.newentries is None:
-            #     sys.exit('Structure is missing the "newentries" section in the icon file.')
-
-
             # we should check that for each there are the two entries : "entry" and "enabled"
-        self.is_valid = True
+
+
+    def _dump_specific_struct(self, my_struct, header):
+        json_object = json.dumps(my_struct, indent=4)
+        print(f'STRUCT {header}\n{json_object}\nEND-STRUCT\n\n')
+
+    def _dump_structure(self):
+        if self.set_format_is_toml is True:
+            desc = 'TOML'
+        else:
+            desc = 'YAML'
+        self._dump_specific_struct(self.the_dict, desc)
+
 
     def is_valid_set(self):
         return self.is_valid
+
+    def get_title(self):
+        if self.set_format_is_toml:
+            return self.the_dict.get('title')
+        else:
+            return None
 
     def get_common_attributes(self):
         return self.common
 
     def num_all_icons(self):
-        return len(self.entries) # + len(self.newentries)
+        if self.set_format_is_toml:
+            self._dump_specific_struct(self.toml_entries, 'TOML_ENTRIES')
+            return len(self.toml_entries)
+        else:
+            return len(self.entries)
 
     def get_full_filename_of_entry(self, the_entry):
         return self.FILE_PREFIX + the_entry + self.FILE_POSTFIX
@@ -783,12 +589,26 @@ class IconSet:
     def list_icon_files(self):
         enabled_icons = []
         disabled_icons = []
-        for the_entry in self.entries:
-            nam = the_entry['entry']
-            if the_entry['enabled'] == 'true':
-                enabled_icons.append(nam) # fullname
-            else:
-                disabled_icons.append(nam) # fullname
+        if self.set_format_is_toml:
+            app_entries = self.toml_entries
+            for key in app_entries:
+                print(f'Processing key {key}\n')
+                #self._dump_specific_struct(app_entries[key], 'LISTENTRY' + key)
+                if app_entries[key].get('enabled') == 'true':
+                    enabled_icons.append(key)
+                else:
+                    disabled_icons.append(key)
+
+        else:
+            app_entries = self.entries
+            for the_entry in app_entries:
+                nam = the_entry['entry']
+                if the_entry['enabled'] == 'true':
+                    enabled_icons.append(nam)  # fullname
+                else:
+                    disabled_icons.append(nam)  # fullname
+
+
         return enabled_icons, disabled_icons
 
 
@@ -869,69 +689,9 @@ class IconSet:
         else:
             return False
 
-    def dumP_config_to_json_file(self, dump_json_name):
+    def dump_config_to_toml_file(self, dump_toml_name):
         pass
 
-
-
-class IconSuite:
-    def __init__(self, icon_spec_file):
-        self.icon_spec_file = icon_spec_file
-        self.the_dict = None
-        self.is_valid = False
-        self._validate_icon_args()
-
-    def _validate_icon_args(self):
-        if not os.path.isfile(self.icon_spec_file):
-            return False
-        with open(self.icon_spec_file) as stream:
-            try:
-                self.the_dict = yaml.safe_load(stream)
-                # print(yaml.safe_load(stream))
-            except yaml.YAMLError as exc:
-                print(f'Bad YAML\n')
-                exit(99)
-        self.is_valid = True
-
-    def validsuite(self):
-        return self.is_valid
-
-    def get_categories(self):
-        category_dict = self.the_dict.get('categories')
-        if not category_dict:
-            return None
-        category_set = set(())
-        for entry in category_dict:
-            category_set.add(entry)
-            print(f'Category: {entry}\n')
-        return category_set
-
-    def get_entries_in_category(self, cat):
-        the_cat_info = self.the_dict.get('categories').get(cat)
-        if not the_cat_info:
-            return None
-        entries_dict = the_cat_info['entries']
-        entry_set = set(())
-        for entry in entries_dict:
-            entry_name = entry['entry']
-            entry_set.add(entry_name)
-            #print(f'Entry: {entry_name}\n')
-        return entry_set
-
-    def entries_in_all_categories(self):
-        gen_list = []
-        gen_dict = dict({})
-        list_of_cat = self.get_categories()
-        print(f'All categories= {list_of_cat}')
-        for cat in list_of_cat:
-            gen_dict[cat] = []
-            list_of_entries = self.get_entries_in_category(cat)
-            for entry in list_of_entries:
-                print(f'Category={cat}   , Entry={entry}')
-                gen_dict[cat].append(entry)
-                gen_list.append((cat, entry))
-        print(json.dumps(gen_dict))
-        return gen_dict
 
 
 

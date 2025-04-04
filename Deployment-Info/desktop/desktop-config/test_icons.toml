@@ -4,7 +4,7 @@ title = "Config data for desktop icons"
 
 [common]
 vlc = "/etc/bin/vlc"
-com2 = "222"
+com2 = 222
 the_river = "Amazon"
 
 
@@ -25,7 +25,7 @@ tool_command = "/abc/show-flag"
 command_args = "dutch_flag"
 
 [entries.mountain_everest]
-enabled = 'true"
+enabled = "true"
 icon = "nepal_photo"
 description = "Everest"
 tool_command = "/pqr/display_height"
