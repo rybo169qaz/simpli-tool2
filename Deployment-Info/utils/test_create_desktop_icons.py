@@ -701,19 +701,19 @@ class TestDeskEntryCreator:
         }
         pos_good_abs_base = {
             "dep_base_dir": '/tmp/simpli',
-            "dep_entry_name": "apple"
+            "dep_entry_name": "pathCheckApple"
         }
         position_good_no_base = {
             "dep_base_dir": '',
-            "dep_entry_name": "berry"
+            "dep_entry_name": "pathCheckBerry"
         }
 
         dec_abs_base = DeskEntryCreator(struct_good_struct, pos_good_abs_base, None)
-        assert dec_abs_base.get_path_of_desktop_file() == '/tmp/simpli/simpli-apple.desktop'
+        assert dec_abs_base.get_path_of_desktop_file() == '/tmp/simpli/simpli-pathCheckApple.desktop'
 
         dec_no_base = DeskEntryCreator(struct_good_struct, position_good_no_base, None)
         who_i_am = 'robertryan'
-        assert dec_no_base.get_path_of_desktop_file() == '/home/' + who_i_am + '/Desktop/simpli-berry.desktop'
+        assert dec_no_base.get_path_of_desktop_file() == '/home/' + who_i_am + '/Desktop/simpli-pathCheckBerry.desktop'
 
     def test_content(self):
         tmpdir = tempfile.TemporaryDirectory(dir="/tmp", prefix="SIMPLI_").name
@@ -721,7 +721,7 @@ class TestDeskEntryCreator:
 
         pos_good_abs_base = {
             "dep_base_dir": tmpdir,
-            "dep_entry_name": "apple"
+            "dep_entry_name": "content-apple"
         }
         struct_good_struct = {
             "description": "mydesc",
@@ -740,11 +740,7 @@ class TestDeskEntryCreator:
         tmpdir = tempfile.TemporaryDirectory(dir="/tmp", prefix="SIMPLI_").name
         os.mkdir(tmpdir, 0o777)  # we create the dest dir
 
-        pos_good_abs_base = {
-            "dep_base_dir": tmpdir,
-            "dep_entry_name": "cherry"
-        }
-
+        # create a dummy icon file
         icon_file_path = os.path.join(tmpdir, 'dumicon')
         open(icon_file_path, 'w')
         assert os.path.isfile(icon_file_path) # ensure that the dummy icon file exists
@@ -755,10 +751,32 @@ class TestDeskEntryCreator:
             "command_args": "cmdargs",
             "icon": icon_file_path
         }
+        template_text = "A {{ description }} B {{ tool_command }} C {{ command_args }} D {{ icon }} E"
+        expected_text = "A mydesc B toolcmd C cmdargs D " + icon_file_path + " E"
 
-        template_text = 'ABCDEFGH'
-        dec = DeskEntryCreator(struct_good_struct, pos_good_abs_base, template_text)
-        expected_file = os.path.join(tmpdir, 'simpli-cherry.desktop')
+        pos_good_abs_base_no_checksum = {
+            "dep_base_dir": tmpdir,
+            "dep_entry_name": "fileGenFig"
+        }
+        dec_no_cs = DeskEntryCreator(struct_good_struct, pos_good_abs_base_no_checksum, template_text)
+        expected_file = os.path.join(tmpdir, 'simpli-fileGenFig.desktop')
         assert os.path.isfile(expected_file) == False
-        assert dec.generate_file() == True
+        assert dec_no_cs.generate_file() == True
         assert os.path.isfile(expected_file) == True
+
+        pos_good_abs_base_with_checksum = {
+            "dep_base_dir": tmpdir,
+            "dep_entry_name": "fileGenPear",
+            "dep_make_trusted": False
+        }
+        dec_cs = DeskEntryCreator(struct_good_struct, pos_good_abs_base_with_checksum, template_text)
+        expected_file = os.path.join(tmpdir, 'simpli-fileGenPear.desktop')
+        assert os.path.isfile(expected_file) == False
+        assert dec_cs.generate_file() == True
+        assert os.path.isfile(expected_file) == True
+
+        # read back contents
+        with open(expected_file, 'r') as file:
+            file_content = file.read()
+        assert file_content == expected_text
+

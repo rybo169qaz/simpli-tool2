@@ -341,7 +341,7 @@ class DeskEntryPositioning(BaseModel):
     dep_base_dir: str
     #dep_relative_dir: str = None
     dep_entry_name: str
-    #dep_make_trusted: bool
+    dep_make_trusted: bool = False
 
 
 class DeskEntryCreator:
@@ -429,10 +429,9 @@ class DeskEntryCreator:
         if os.path.isfile(filename): # ensure that file exists
             return True
 
-        # check content
-        with open(filename, 'r') as file:
-            file_content = file.read()
-        assert file_content == text_content
+        if self.dep.dep_make_trusted:
+            make_desktop_file_trusted_by_xfce(filename)
+
 
 
 class DeskIcon:
