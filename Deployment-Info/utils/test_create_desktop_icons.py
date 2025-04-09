@@ -1,4 +1,6 @@
 #import errno
+from xml.dom import ValidationErr
+
 from dictdiffer import diff, patch, swap, revert
 import hashlib
 import json
@@ -22,6 +24,7 @@ import yaml
 #import subprocess
 from create_desktop_icons import IconText, DeskIcon, IconSet
 #from create_desktop_icons import IconNode
+from create_desktop_icons import DeskEntryStructure, DeskEntryPositioning, DeskEntryCreator
 #from create_desktop_icons import generate_text_from_template
 
 HOME_DIR = '/home/robertryan'
@@ -558,3 +561,204 @@ class TestIconSet:
 
 
 
+
+@pytest.mark.deskentrystruct
+class TestDeskEntryStructure:
+
+    def test_good_des(self):
+        minimal_pop = {
+            "description": "desc",
+            "tool_command": "toolcmd",
+            "command_args": "cmdargs",
+            "icon": "iconfile"
+        }
+
+        de_min = DeskEntryStructure.model_validate(minimal_pop)
+        assert de_min.description == 'desc'
+        assert de_min.client_hostname == 'UNK-CLIENT'
+        assert de_min.comment == 'NO COMMENT'
+        assert de_min.tool_command == 'toolcmd'
+        assert de_min.command_args == 'cmdargs'
+        assert de_min.icon == 'iconfile'
+
+        partial_pop = dict(minimal_pop)
+        partial_pop["desktop_categories"] = ""
+        partial_pop["kde_protocols"] = "kdeprot"
+        partial_pop["keywords"] = ""
+
+        de_partial = DeskEntryStructure.model_validate(partial_pop)
+        assert de_partial.description == 'desc'
+        assert de_partial.desktop_categories == ''
+        assert de_partial.kde_protocols == 'kdeprot'
+        assert de_partial.keywords == ''
+
+        fully_pop = dict(partial_pop)
+        fully_pop["desktop_categories"] = "deskcat"
+        fully_pop["keywords"] = "keyw"
+
+        de_full = DeskEntryStructure.model_validate(fully_pop)
+        assert de_full.description == 'desc'
+        assert de_full.desktop_categories == 'deskcat'
+        assert de_full.keywords == 'keyw'
+
+
+    def test_bad_des(self):
+        missing_description = {
+            "tool_command": "toolcmd",
+            "command_args": "cmdargs",
+            "icon": "iconfile"
+        }
+        with pytest.raises(Exception) as e_info:
+            de_no_desc = DeskEntryStructure.model_validate(missing_description)
+
+        missing_command_args = {
+            "tool_command": "toolcmd",
+            "description": "mydesc",
+            "icon": "iconfile"
+        }
+        with pytest.raises(Exception) as e_info:
+            de_no_cmd_args = DeskEntryStructure.model_validate(missing_command_args)
+
+
+@pytest.mark.deskentrypositioning
+class TestDeskEntryPositioning:
+    """
+    Is there any point in testing the Pydantic structures?
+    """
+
+    def test_good_dep(self):
+        minimal_dep = {
+            "dep_base_dir": "",
+            "dep_entry_name": "fish",
+            "dep_make_trusted": True
+        }
+        dep_minimal = DeskEntryPositioning.model_validate(minimal_dep)
+        assert dep_minimal.dep_base_dir == ''
+        assert dep_minimal.dep_entry_name == 'fish'
+
+        # partial_dep = dict(minimal_dep)
+        # partial_dep["dep_relative_dir"] = "fgh"
+        # dep_partial = DeskEntryPositioning.model_validate(partial_dep)
+        # assert dep_partial.dep_relative_dir == 'fgh'
+
+
+    def test_bad_dep(self):
+        missing_entry = {
+            "dep_make_trusted": True
+        }
+        with pytest.raises(Exception) as e_info:
+            dep_no_entry = DeskEntryPositioning.model_validate(missing_entry)
+
+        # missing_trusted = {
+        #     "dep_entry_name": "abc"
+        # }
+        # with pytest.raises(Exception) as e_info:
+        #     dep_no_trusted = DeskEntryPositioning.model_validate(missing_trusted)
+
+
+@pytest.mark.deskentrycreator
+class TestDeskEntryCreator:
+
+    # negative tests
+    def test_bad_structural_data(self):
+        struct_missing_tool_cmd = {
+            "de_description": "mydesc",
+            "de_command_args": "cmdargs",
+            "de_icon_file": "iconfile"
+        }
+        struct_good_struct = {
+            "de_description": "mydesc",
+            "de_tool_command": "toolcmd",
+            "de_command_args": "cmdargs",
+            "de_icon_file": "iconfile"
+        }
+
+        position_missing_entry = {
+        }
+        position_good_abs_base = {
+            "dep_base_dir": '/tmp/simpli',
+            "dep_entry_name": "apple"
+        }
+        position_good_no_base = {
+            "dep_base_dir": '',
+            "dep_entry_name": "berry"
+        }
+
+        with pytest.raises(Exception) as e_info:
+            DeskEntryCreator(struct_missing_tool_cmd,
+                                position_good_no_base, None)
+
+        with pytest.raises(Exception) as e_info:
+            DeskEntryCreator(struct_good_struct,
+                                position_missing_entry, None)
+
+    def test_path(self):
+        struct_good_struct = {
+            "description": "mydesc",
+            "tool_command": "toolcmd",
+            "command_args": "cmdargs",
+            "icon": "iconfile"
+        }
+        pos_good_abs_base = {
+            "dep_base_dir": '/tmp/simpli',
+            "dep_entry_name": "apple"
+        }
+        position_good_no_base = {
+            "dep_base_dir": '',
+            "dep_entry_name": "berry"
+        }
+
+        dec_abs_base = DeskEntryCreator(struct_good_struct, pos_good_abs_base, None)
+        assert dec_abs_base.get_path_of_desktop_file() == '/tmp/simpli/simpli-apple.desktop'
+
+        dec_no_base = DeskEntryCreator(struct_good_struct, position_good_no_base, None)
+        who_i_am = 'robertryan'
+        assert dec_no_base.get_path_of_desktop_file() == '/home/' + who_i_am + '/Desktop/simpli-berry.desktop'
+
+    def test_content(self):
+        tmpdir = tempfile.TemporaryDirectory(dir="/tmp", prefix="SIMPLI_").name
+        os.mkdir(tmpdir, 0o777)  # we create the dest dir
+
+        pos_good_abs_base = {
+            "dep_base_dir": tmpdir,
+            "dep_entry_name": "apple"
+        }
+        struct_good_struct = {
+            "description": "mydesc",
+            "tool_command": "toolcmd",
+            "command_args": "cmdargs",
+            "icon": "iconfile"
+        }
+        template_text = "A {{ description }} B {{ tool_command }} C {{ command_args }} D {{ icon }} E"
+        expected_text = "A mydesc B toolcmd C cmdargs D iconfile E"
+        dec = DeskEntryCreator(struct_good_struct, pos_good_abs_base, template_text)
+        assert dec.get_generated_text() == expected_text
+
+    def test_file_generation(self):
+
+
+        tmpdir = tempfile.TemporaryDirectory(dir="/tmp", prefix="SIMPLI_").name
+        os.mkdir(tmpdir, 0o777)  # we create the dest dir
+
+        pos_good_abs_base = {
+            "dep_base_dir": tmpdir,
+            "dep_entry_name": "cherry"
+        }
+
+        icon_file_path = os.path.join(tmpdir, 'dumicon')
+        open(icon_file_path, 'w')
+        assert os.path.isfile(icon_file_path) # ensure that the dummy icon file exists
+
+        struct_good_struct = {
+            "description": "mydesc",
+            "tool_command": "toolcmd",
+            "command_args": "cmdargs",
+            "icon": icon_file_path
+        }
+
+        template_text = 'ABCDEFGH'
+        dec = DeskEntryCreator(struct_good_struct, pos_good_abs_base, template_text)
+        expected_file = os.path.join(tmpdir, 'simpli-cherry.desktop')
+        assert os.path.isfile(expected_file) == False
+        assert dec.generate_file() == True
+        assert os.path.isfile(expected_file) == True

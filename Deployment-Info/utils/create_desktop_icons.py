@@ -291,74 +291,6 @@ def derive_desktop_category(global_data, category_data, icon_base_dir, template_
                 renderop(f'Attempting to remove non-existent file ( {fname} )')
 
 
-
-# class IconNode:
-#     def __init__(self, node_name, child_type, attrib_struct):
-#         self.node_name = node_name
-#         self.child_type_name = child_type
-#         self.attrib_struct = attrib_struct
-#         self.child_struct = dict({})
-#
-#     def get_node_name(self):
-#         return self.node_name
-#
-#     def get_child_type(self):
-#         return self.child_type_name
-#
-#     def get_list_attribute_names(self):
-#         the_list = list(self.attrib_struct.keys())
-#         the_list.sort()
-#         return the_list
-#
-#     def get_attribute_value(self, attr_name):
-#         return self.attrib_struct.get(attr_name)
-#
-#     def get_count_of_children(self):
-#         return len(self.child_struct)
-#
-#     def get_list_of_children_names(self):
-#         the_list = list(self.child_struct)
-#         the_list.sort() # we return a sorted list
-#         return the_list
-#
-#     def add_child(self, new_child_type, child_key, child_value):
-#         if new_child_type != self.child_type_name:
-#             return False
-#         self.child_struct[child_key] = child_value
-#         return True
-#
-#     def get_child_of_given_name(self, wanted_child_name):
-#         child = self.child_struct.get(wanted_child_name) # this is None if it is non-existant
-#         return child
-#
-#     def get_node_struct(self):
-#         mystruct = dict({})
-#         mystruct['attributes'] = self.attrib_struct
-#         child_names = self.get_list_of_children_names()
-#         mystruct['children'] = child_names
-#
-#     def get_full_node_struct(self):
-#         mystruct = dict({})
-#         mystruct['attributes'] = self.attrib_struct
-#         mystruct['children'] = None
-#         child_names = self.get_list_of_children_names()
-#
-#         children_handle = mystruct['children']
-#         child_struct = dict({})
-#         for child_name in child_names:
-#             children_handle[child_name] = self.get_child_of_given_name(child_name)
-#         return mystruct
-#
-#     def print_node(self):
-#         mystruct = self.get_node_struct()
-#         print(json.dumps(mystruct, sort_keys=True, indent=4))
-#
-#     def print_full_node(self):
-#         mystruct = self.get_full_node_struct()
-#         print(json.dumps(mystruct, sort_keys=True, indent=4))
-
-
-
 class IconText:
     """
     Given the template text and the args to be substituted,
@@ -385,6 +317,122 @@ class IconText:
             cont = None
         return cont
 
+class DeskEntryStructure(BaseModel):
+    """
+    This holds the data required for a Desktop Entry file.
+    """
+    description: str
+    client_hostname: str = 'UNK-CLIENT'
+    comment: str = 'NO COMMENT'
+    tool_command: str
+    command_args: str
+    icon: str
+    desktop_categories: str = ''
+    kde_protocols: str = ''
+    keywords: str = ''
+
+class DeskEntryPositioning(BaseModel):
+    """
+    This holds the data required for fixing the desk entry
+    structure file in position.
+    If the base dir is not specified it implicitly means that the
+    users home directory should be used as the base dir.
+    """
+    dep_base_dir: str
+    #dep_relative_dir: str = None
+    dep_entry_name: str
+    #dep_make_trusted: bool
+
+
+class DeskEntryCreator:
+    """
+    The class for creating a Desk Entry file using a DeskEntry object.
+    """
+    default_template_text = """
+    [Desktop Entry]
+    Version=1.0
+    Name={{ description }}
+    GenericName=Generic {{ description }}
+    Comment=Comment {{ description }}
+    Name[en_GB]={{ description }} {{ client_hostname }}
+    GenericName[en_GB]=GB Generic {{ description }} {{ client_hostname }}
+    Comment[en_GB]=Details: {{ comment }}
+    Exec={{ tool_command }} {{ command_args }}
+    Icon={{ icon }}
+    Terminal=false
+    Type=Application
+    Categories={{ desktop_categories }}
+    X-KDE-Protocols={{ desktop_kde_protocols }}
+    Keywords={{ desktop_keywords }}
+    """
+    def __init__(self, des: DeskEntryStructure, dep: DeskEntryPositioning, template_text: str = default_template_text):
+        self.des = des
+        self.dep = dep
+        self.template_text = template_text # The template on which to apply the DeskEntryStructure
+        self._validate_data()
+
+    def _validate_data(self):
+        DeskEntryPositioning.model_validate(self.dep)
+        DeskEntryStructure.model_validate(self.des)
+        # try:
+        #     DeskEntryPositioning.model_validate(self.dep)
+        #     DeskEntryStructure.model_validate(self.dep)
+        # except Exception as ex:
+        #     exit_msg(72, f'Invoking data is invalid.\nvvv\n{ex}\n^^^\n')
+
+    def get_generated_text(self):
+        """
+        Returns the content of the desktop icon file.
+        Will return None if structure information is invalid"""
+        environment = Environment()
+        try:
+            template_obj = environment.from_string(self.template_text)
+            cont = template_obj.render(self.des)
+        except:
+            # if the jinja engine throws an error then return None
+            print(f'Exception - jinja')
+            cont = None
+        return cont
+
+    def get_path_of_desktop_file(self):
+        """
+        Derived from the base_dir and the entry_name.
+        Will return None if the file al
+        """
+        base_dir = self.dep['dep_base_dir']
+        entry = 'simpli-' + self.dep['dep_entry_name'] + '.desktop'
+        if base_dir == '':
+            path_name = os.path.join(os.path.expanduser("~"), os.path.join('Desktop', entry))
+        else:
+            path_name = os.path.join(base_dir, entry)
+        return path_name
+
+    def get_path_of_con_file(self):
+        return self.des.icon
+
+    def generate_file(self):
+        """
+        Writes the generated text to the required file.
+        The destination file MUST NOT exist.
+        The icon file must exist.
+        """
+        # if os.path.isfile(self.get_path_of_con_file()) == False : # icon file must exist
+        #     return False
+
+        filename = self.get_path_of_desktop_file()
+        if os.path.isfile(filename): # desktop file must NOT exist
+            return False
+        text_content = self.get_generated_text()
+        with open(filename, mode="w", encoding="utf-8") as message:
+            message.write(text_content)
+            os.chmod(filename, 0o755)
+        if os.path.isfile(filename): # ensure that file exists
+            return True
+
+        # check content
+        with open(filename, 'r') as file:
+            file_content = file.read()
+        assert file_content == text_content
 
 
 class DeskIcon:
