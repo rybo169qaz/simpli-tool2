@@ -1,0 +1,7 @@
+Name={{ description }}
+Client={{ client_hostname }}
+Comment={{ comment }}
+Exec={{ tool_command }} {{ command_args }}
+Icon={{ icon }}
+
+

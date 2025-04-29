@@ -1,3 +1,4 @@
-River = {{ the_river }}
-Country ={{ the_country }}
-Sentence= In {{ the_country }} there is a river {{ the_river }} flowing through it.
+Description: {{ description }}
+Icon to be used: {{ icon }}
+Tool to be invoked: {{ tool_command }}  {{ command_args }}
+

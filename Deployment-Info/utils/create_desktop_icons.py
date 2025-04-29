@@ -1,8 +1,13 @@
+from enum import Enum
 import errno
 import hashlib
+from fileinput import close
+
+import jinja2
 import json
 import os.path
 import platform
+import pprint
 from pydantic import BaseModel, ConfigDict
 import time
 import tomli as tomllib
@@ -301,20 +306,37 @@ class IconText:
         self.template_text = template_text
         self.args_to_replace = args_to_replace
 
+    def __str__(self):
+        print(f'vvvv Template text vvvv\n{self.template_text}\n^^^^\n')
+        pp = pprint.PrettyPrinter(indent=4)
+        print('vvvv Params vvvv')
+        pp.pprint(self.args_to_replace)
+        print('^^^^')
+
+
     def gen_icon_text(self):
         """
         If the template text is invalid, then return None
         Else return the substituted
         :return:
         """
-        environment = Environment()
+        #environment = Environment()
+        environment = Environment(undefined=jinja2.StrictUndefined)
+
         try:
             template_obj = environment.from_string(self.template_text)
             cont = template_obj.render(self.args_to_replace)
-        except:
-            # if the jinja engine throws an error then return None
-            print(f'Exception - jinja')
+        except (jinja2.exceptions.UndefinedError, jinja2.exceptions.TemplateSyntaxError) as exception:
+            #print('JINJA UndefinedError')
+            print(f"Exception Name: {type(exception).__name__}")
+            print(f"Exception Desc: {exception}")
+            self.__str__()
+            #raise ValueError('Missing parameter substitutions')
             cont = None
+        except(Exception):
+            print('JINJA other')
+            cont = None
+
         return cont
 
 class DeskEntryStructure(BaseModel):
@@ -432,7 +454,14 @@ class DeskEntryCreator:
         if self.dep.dep_make_trusted:
             make_desktop_file_trusted_by_xfce(filename)
 
-
+class IconCreationStatus(Enum):
+    ICONFILECREATED = 1
+    ICONNOTENABLED = 2
+    COULDNOTWRITEFILE = 3
+    FAILURETOPROCESSTEMPLATE = 4
+    ASSERTERROR = 5
+    TYPEERROR = 6
+    OTHERERROR = 7
 
 class DeskIcon:
     """
@@ -447,23 +476,48 @@ class DeskIcon:
         self.is_valid = False
         self._validate_args()
 
+    def __str__(self):
+        return f'DeskIcon\n\tTemplate file={self.template_file}\n\tBase dir={self.dest_dir}\n\tProvided args={self.provided_args}\n'
 
     def _validate_args(self):
         """Necessary validation checks for the object to be valid."""
-        if not os.path.isdir(self.dest_dir):
-            return False
-        if not os.path.isfile(self.template_file):
-            return False
         if not isinstance(self.provided_args, dict):
+            print("is NOT dictionary")
+            raise ValueError('Args is not a dictionary')
+
+        entryname = self.provided_args.get('entry')
+        if entryname is None:
+            raise ValueError('Missing entry key')
+
+        if not isinstance(entryname, str):
+            print("is NOT string")
+            raise ValueError('Entry field is not a string')
+
+        if len(entryname) == 0:
+            raise ValueError('Entry name is zero length')
+
+        #self.paths_are_valid()
+
+    def dest_dir_is_valid(self):
+        if os.path.isdir(self.dest_dir):
+            return True
+        else:
             return False
-        if not 'entry' in self.provided_args:
+
+    def template_file_exists(self):
+        if os.path.isfile(self.template_file):
+            return True
+        else:
             return False
-        self.is_valid = True
 
+    def paths_are_valid(self):
+        if self.dest_dir_is_valid() and self.template_file_exists():
+            return True
+        else:
+            return False
 
-    def valid(self):
-        return self.is_valid
-
+    # def valid(self):
+    #     return self.is_valid
 
     def get_filename(self):
         """The full filename of the desktop file that would be created."""
@@ -494,24 +548,40 @@ class DeskIcon:
 
 
     def generate_desktop_file(self, make_trusted=False):
-        gen_file = False
-        if self.provided_args.get('enabled') == 'true':
-            # create file as it is enabled
-            gen_file = True
-
-            #text_content = self.generate_desktop_icon_text()
+        # pp = pprint.PrettyPrinter(indent=4)
+        # print('vvvvv')
+        # pp.pprint(self.provided_args)
+        # print('^^^^')
+        if self.provided_args.get('enabled') != 'true':
+            resp = IconCreationStatus.ICONNOTENABLED
+        else:
+            # attempt to create file as it is enabled
+            #print(f'Template={self.template_file}')
             with open(self.template_file, 'r') as file:
                 template_string = file.read()
             text_content = IconText(template_string, self.provided_args).gen_icon_text()
-
-            filename = self.get_filename()
-            with open(filename, mode="w", encoding="utf-8") as message:
-                message.write(text_content)
-                renderop(f"... Created {filename}", Optype.DEBUG)
-                os.chmod(filename, 0o755)
-                if make_trusted:
-                    make_desktop_file_trusted_by_xfce(filename)
-        return gen_file
+            if text_content is None:
+                resp = IconCreationStatus.FAILURETOPROCESSTEMPLATE
+            else:
+                filename = self.get_filename()
+                #print(f'generate_desktop_file filename={filename}')
+                try:
+                    with open(filename, mode="w", encoding="utf-8") as message:
+                        message.write(text_content)
+                    renderop(f"... Created {filename}", Optype.DEBUG)
+                    os.chmod(filename, 0o755)
+                    resp = IconCreationStatus.ICONFILECREATED
+                    if make_trusted:
+                        make_desktop_file_trusted_by_xfce(filename)
+                except TypeError as exception:
+                    resp = IconCreationStatus.TYPEERROR
+                except AssertionError as exception:
+                    resp = IconCreationStatus.ASSERTERROR
+                except BaseException as exception:
+                    # print(f"Exception Name: {type(exception).__name__}")
+                    # print(f"Exception Desc: {exception}")
+                    resp = IconCreationStatus.OTHERERROR
+        return resp
 
     def generate_trusted_desktop_file(self):
         self.generate_desktop_file(make_trusted=True)
@@ -539,6 +609,9 @@ class IconSet:
         self.toml_entries = None
         self.is_valid = False
         self._validate()
+
+    def __str__(self):
+        return f'IconSet\n\tTemplate file={self.template_file}\n\tIcon set file={self.icons_set_file}\n\tTarget dir={self.target_dir}\n'
 
     def _validate(self):
         if not os.path.isfile(self.template_file):
@@ -593,7 +666,6 @@ class IconSet:
                 sys.exit('Structure is missing the "entries" section in the icon file.')
             # we should check that for each there are the two entries : "entry" and "enabled"
 
-
     def _dump_specific_struct(self, my_struct, header):
         json_object = json.dumps(my_struct, indent=4)
         print(f'STRUCT {header}\n{json_object}\nEND-STRUCT\n\n')
@@ -604,7 +676,6 @@ class IconSet:
         else:
             desc = 'YAML'
         self._dump_specific_struct(self.the_dict, desc)
-
 
     def is_valid_set(self):
         return self.is_valid
@@ -618,17 +689,30 @@ class IconSet:
     def get_common_attributes(self):
         return self.common
 
+    def entry_exists(self, entry_name):
+        if self.set_format_is_toml:
+            found_it = self.toml_entries.get(entry_name)
+            if found_it is None:
+                resp = False
+            else:
+                resp = True
+        else:
+            resp = False
+        return resp
+
+    def list_of_all_entries(self):
+        return list(self.toml_entries.keys())
+
     def num_all_icons(self):
         if self.set_format_is_toml:
-            self._dump_specific_struct(self.toml_entries, 'TOML_ENTRIES')
-            return len(self.toml_entries)
+            return len(self.list_of_all_entries())
         else:
             return len(self.entries)
 
     def get_full_filename_of_entry(self, the_entry):
         return self.FILE_PREFIX + the_entry + self.FILE_POSTFIX
 
-    def list_icon_files(self):
+    def list_icon_entries(self):
         enabled_icons = []
         disabled_icons = []
         if self.set_format_is_toml:
@@ -640,7 +724,6 @@ class IconSet:
                     enabled_icons.append(key)
                 else:
                     disabled_icons.append(key)
-
         else:
             app_entries = self.entries
             for the_entry in app_entries:
@@ -649,51 +732,50 @@ class IconSet:
                     enabled_icons.append(nam)  # fullname
                 else:
                     disabled_icons.append(nam)  # fullname
-
-
         return enabled_icons, disabled_icons
 
-
-    def list_disabled_icons(self):
-        enab, disab = self.list_icon_files()
-        return disab
-
-
     def list_enabled_icons(self):
-        enab, disab = self.list_icon_files()
+        enab, disab = self.list_icon_entries()
         return enab
 
-
     def num_enabled_icons(self):
-        enab, disab = self.list_icon_files()
-        return len(enab)
-
+        return len(self.list_enabled_icons())
 
     def list_enabled_icon_filenames(self):
-        enab, disab = self.list_icon_files()
+        enab, disab = self.list_icon_entries()
         return list(map(lambda x: self.get_full_filename_of_entry(x) , enab))
-
 
     def get_target_dir(self):
         return self.target_dir
 
-
     def list_fullpath_icons_to_create(self):
-        enab, disab = self.list_icon_files()
+        enab, disab = self.list_icon_entries()
         list_of_all_entries = list(map(lambda x: self.get_target_dir() + '/' + x, enab))
         return list_of_all_entries
-#
+
+    def get_raw_attribs_of_entry(self, entry_name):
+        return self.toml_entries.get(entry_name)
 
     def get_attribs_of_entry(self, entry_name):
-        specific_dict = self.common.copy()
-        found_entry = False
-        for ent in self.entries:
-            if ent['entry'] == entry_name:
-                found_entry = True
-                specific_dict.update(ent)
-                break
-        if found_entry is False:
-            specific_dict = None
+        """Will return None if the entry does not exist"""
+        if self.set_format_is_toml:
+            specific_dict = self.common.copy()
+            raw_att = self.get_raw_attribs_of_entry(entry_name)
+            if raw_att is None:
+                specific_dict = None
+            else:
+                specific_dict.update(raw_att)
+        else:
+            specific_dict = self.common.copy()
+            found_entry = False
+            for ent in self.entries:
+                if ent['entry'] == entry_name:
+                    found_entry = True
+                    specific_dict.update(ent)
+                    del specific_dict['entry']
+                    break
+            if found_entry is False:
+                specific_dict = None
         return specific_dict
 
 
@@ -705,13 +787,42 @@ class IconSet:
         """
         files_to_be_created = []
         invalid_entry_found = False
+        invalid_entries = []
         for ent in self.list_enabled_icons():
+            renderop(f'\nENTRY= {ent}', Optype.INFO)
             atts = self.get_attribs_of_entry(ent)
-            #fname = self.get_full_filename_of_entry(ent)
-            iconobj = DeskIcon(self.target_dir, self.template_file, atts)
+            atts['entry'] = ent
+            try:
+                iconobj = DeskIcon(self.target_dir, self.template_file, atts)
+                #print(f'IconSet::generate_all_icons : {str(iconobj)} \n')
+                if not fake_it:
+                    iconobj.generate_desktop_file()
+                    print(f'TRYING TO GNERATE DESKTOP FILE')
+            except ValueError as exception:
+                desc = str(exception)
+                inval_entry = (desc, atts)
+                invalid_entries.append(inval_entry)
+                #print(f'Failed to create deskicon1 >>{desc}\nvvv\n{atts}\n^^^')
 
-            if not fake_it:
-                iconobj.generate_desktop_file()
+        bad_entries = len(invalid_entries)
+        renderop(f'IconSet::generate_all_icons:', Optype.INFO)
+        renderop(f'\tNumber of entries that failed={bad_entries}', Optype.INFO)
+        if bad_entries > 0:
+            for item in invalid_entries:
+                descrip, the_struct = item
+                #renderop(f'ENTRY= {ent}', Optype.INFO)
+                renderop(f'\tError={descrip}', Optype.INFO)
+                print(f'vvv{the_struct}\n^^^\n')
+
+            # pp = pprint.PrettyPrinter(indent=4)
+            # print('vvvvv')
+            # pp.pprint(atts)
+            # print('^^^^')
+
+            # except BaseException as exception:
+            #     print(f'Failed to create deskicon2')
+            #     print(f"Exception Name: {type(exception).__name__}")
+            #     print(f"Exception Desc: {exception}")
 
     def dump_config_to_yaml_file(self, dump_name):
         is_successful = False
