@@ -2,10 +2,10 @@
 Version=1.0
 Name={{ description }}
 GenericName=Generic {{ description }}
-Comment=Comment {{ description }}
-Name[en_GB]={{ description }} {{ client_hostname }}
-GenericName[en_GB]=GB Generic {{ description }} {{ client_hostname }}
-Comment[en_GB]=Details: {{ comment }}
+Comment=Comment {{ description }} (on {{ client_hostname }})
+Name[en_GB]={{ description }}
+GenericName[en_GB]=GB Generic {{ description }}
+Comment[en_GB]=Details: {{ comment }} {{ client_hostname }}
 Exec={{ tool_command }} {{ command_args }}
 Icon={{ icon }}.png
 Terminal=false

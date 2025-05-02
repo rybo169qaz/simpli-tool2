@@ -1,7 +1,7 @@
 #import errno
 from copy import deepcopy
 from xml.dom import ValidationErr
-
+import difflib
 import jinja2.exceptions
 from dictdiffer import diff, patch, swap, revert
 import filecmp
@@ -12,6 +12,8 @@ import os.path
 #from pathlib import Path
 #import platform
 import pytest
+import shutil
+import sys
 import tempfile
 #import time
 
@@ -25,7 +27,7 @@ import yaml
 #from jinja2 import Environment, FileSystemLoader, Template
 #from enum import Enum
 #import subprocess
-from create_desktop_icons import IconText, DeskIcon, IconSet
+from create_desktop_icons import IconText, DeskIcon, IconSet, legacy_invoke
 #from create_desktop_icons import IconNode
 from create_desktop_icons import IconCreationStatus
 from create_desktop_icons import DeskEntryStructure, DeskEntryPositioning, DeskEntryCreator
@@ -35,7 +37,7 @@ HOME_DIR = '/home/robertryan'
 REPO_ROOT = HOME_DIR + '/' + 'PROJ2/SIMPLI-TOOL/GIT-REPO/simpli-tool2'
 DESKTOP_CONFIG_DIR = REPO_ROOT + '/' + 'Deployment-Info/desktop/desktop-config'
 
-DESKTOP_FILE_PREFIX = 'Xsimpli_'
+DESKTOP_FILE_PREFIX = 'simpli_' # 'Xsimpli_'
 DESKTOP_FILE_POSTFIX = '.desktop'
 GOOD_TEMPLATE_FILE = 'template.desktop'
 
@@ -154,6 +156,16 @@ def create_test_folder():
         raise ValueError('Failed to create temp directory')
     return tmpdir
 
+def write_text_to_file(dest_dir, filename, text_to_use):
+    full_path_filename = os.path.join(dest_dir, filename)
+    if os.path.isfile(full_path_filename): raise RuntimeError(f'{PYT_PRE} File already exists')
+
+    with open(full_path_filename, mode="w", encoding="utf-8") as message:
+        message.write(text_to_use)
+    if os.path.isfile(full_path_filename) is False:
+        raise ValueError('write_text_to_file: failed to create file')
+    return full_path_filename
+
 PYT_PRE = 'Pytest Pre-condition test failed. Test framework has an error'
 
 @pytest.mark.deskicon
@@ -229,12 +241,15 @@ class TestDeskIcon:
     def test_generate_desktop_enabled_is_true(self):
         tmpdir = create_test_folder()
 
-        expected_path = tmpdir + '/' + 'X' + 'simpli_' + 'test_content' + '.desktop'
+        SIMPLI_PREFIX = '' # 'X'
+        expected_path = tmpdir + '/' + SIMPLI_PREFIX + 'simpli_' + 'test_content' + '.desktop'
         if os.path.isfile(expected_path): raise RuntimeError(f'{PYT_PRE} File already exists')
 
         the_dict = dict({'entry': 'test_content', 'enabled': 'true'})
-        the_dict['the_river'] = 'abc'
-        the_dict['the_country'] = 'pqr'
+        the_dict['description'] = 'myDescription'
+        the_dict['icon'] = 'myIconFile'
+        the_dict['tool_command'] = 'MyToolCommand'
+        the_dict['command_args'] = 'MyArgs'
         desk_enabled = DeskIcon(tmpdir, FULL_TEST_TEMPLATE_PATH, the_dict)
         resp = desk_enabled.generate_desktop_file()
         assert resp == IconCreationStatus.ICONFILECREATED
@@ -254,16 +269,111 @@ class TestDeskIcon:
         assert resp == IconCreationStatus.FAILURETOPROCESSTEMPLATE
         assert os.path.isfile(expected_path) == False # check that file has not been created
 
+def safe_copy(src_dir, dest_dir, filename):
+    #print(f'safe_copy: copying \n\tsrc_dir={src_dir}\n\tdest_dir={dest_dir}\n\tfilename={filename}')
 
-def write_text_to_file(dest_dir, filename, text_to_use):
-    full_path_filename = os.path.join(dest_dir, filename)
-    if os.path.isfile(full_path_filename): raise RuntimeError(f'{PYT_PRE} File already exists')
+    if os.path.isdir(src_dir) is False:
+        exit(f'missing src dir ({src_dir})')
+    if '/.simpli' not in  dest_dir:
+        exit(f'dest_dir is not safe as it does not contain /.simpli/ ({dest_dir})')
+    if os.path.isdir(dest_dir) is False:
+        exit(f'missing dest dir ({dest_dir})')
+    if os.path.isfile(os.path.join(src_dir, filename)) is False:
+        exit(f'missing src file ({filename})')
 
-    with open(full_path_filename, mode="w", encoding="utf-8") as message:
-        message.write(text_to_use)
-    if os.path.isfile(full_path_filename) is False:
-        raise ValueError('write_text_to_file: failed to create file')
-    return full_path_filename
+    shutil.copyfile(os.path.join(src_dir, filename), os.path.join(dest_dir, filename))
+    if os.path.isfile(os.path.join(dest_dir, filename)) is False:
+        exit('missing dest file: we failed top copy it {filename}')
+
+def populate_as_deployed(config_src_dir, config_dest_dir, template_file, param_file, dest_dir):
+    ''' Populates the system ready for invocation. This allows invocation on dev system as well as real deployment. '''
+    safe_copy(config_src_dir, config_dest_dir, template_file)
+    safe_copy(config_src_dir, config_dest_dir, param_file)
+    if os.path.isdir(dest_dir) is False:
+        exit(f'missing dest dir ({dest_dir})')
+
+def fcompare(f1name, f2name):
+    def fopen(fname):
+        try:
+            return open(fname)
+        except IOError as detail:
+            return exit(f'couldnot open file ({fname})')
+            #return fail("couldn't open " + fname + ": " + str(detail))
+
+    f1 = fopen(f1name)
+    f2 = fopen(f2name)
+    if not f1 or not f2:
+        return 0
+
+    a = f1.readlines(); f1.close()
+    b = f2.readlines(); f2.close()
+    for line in difflib.ndiff(a, b):
+        print(line, end=' ')
+    print('')
+    return 1
+
+
+
+@pytest.mark.legacy
+class TestLegacy:
+
+    def test_legacy_default(self):
+        report_file_existence_difference = True
+        file_existance_list = []
+        show_content_difference = True
+        dev_home = '/home/robertryan'
+        dev_config_path = os.path.join(dev_home,
+                                       'PROJ2/SIMPLI-TOOL/GIT-REPO/simpli-tool2/Deployment-Info/desktop/desktop-config')
+        target_home = dev_home
+        target_config_path = os.path.join(target_home, '.simpli/config')
+        src_rel_template_file = 'template.desktop'
+        template_file = os.path.join(target_config_path, src_rel_template_file)
+
+        src_yaml_param_file = 'desktop_known.yml'
+        src_toml_param_file = 'desktop_params.toml'
+
+        new_desktop_dir = 'yDesktop'
+        new_desktop_full_dir = os.path.join(dev_home, new_desktop_dir)
+
+        legacy_desktop_dir = 'xDesktop'
+        legacy_desktop_full_dir = os.path.join(dev_home, legacy_desktop_dir)
+
+        do_y = True
+        if do_y:
+            # config_file_toml = os.path.join(target_config_path, src_yaml_param_file)
+            config_file_toml = os.path.join(target_config_path, src_toml_param_file)
+            populate_as_deployed(dev_config_path, target_config_path, src_rel_template_file, src_toml_param_file,
+                                 new_desktop_full_dir)
+            new_iconset = IconSet(template_file, config_file_toml, new_desktop_full_dir)
+            new_iconset.generate_all_icons(False)
+
+        do_x = True
+        if do_x:
+            config_file_yaml = os.path.join(target_config_path, src_yaml_param_file)
+            populate_as_deployed(dev_config_path, target_config_path, src_rel_template_file, src_yaml_param_file,
+                                 legacy_desktop_full_dir)
+            legacy_invoke(template_file, config_file_yaml, legacy_desktop_full_dir)
+
+        for file in os.listdir(legacy_desktop_full_dir):
+            if file.endswith(".desktop"):
+                print(f'Found {file}')
+                leg_fname = os.path.join(legacy_desktop_full_dir, file)
+                new_fname = os.path.join(new_desktop_full_dir, file)
+                if os.path.isfile(new_fname) is False:
+                    file_existance_list.append(file)
+                    print(f'\tMissing new file == {new_fname}\n')
+                else:
+                    if show_content_difference:
+                        print(f'Comparing \n\t{leg_fname}\n\t{new_fname}\n\tTemplate={template_file}')
+                        fcompare(leg_fname, new_fname)
+                        #assert False
+
+        if len(file_existance_list) > 0:
+            print(f'Missing files: {str(file_existance_list)}')
+            assert False
+
+        #assert False
+
 
 @pytest.mark.iconset
 class TestIconSet:
@@ -406,38 +516,43 @@ class TestIconSet:
 
     def test_only_enabled_files_created(self):
         # This should be mocked
-
+        # We perform the tests for yaml and toml files effectively in parallel
         destdir_yaml = create_test_folder()
         destdir_toml = create_test_folder()
 
-        # FULL_TEST_ICON_TOML_SET
-        # FULL_TEST_TEMPLATE_PATH
         good_yaml_set_and_template = IconSet(FULL_TEST_TEMPLATE_PATH, FULL_TEST_ICON_YAML_SET, destdir_yaml)
         good_toml_set_and_template = IconSet(FULL_TEST_TEMPLATE_PATH, FULL_TEST_ICON_TOML_SET, destdir_toml)
-        print(f'test_only_enabled_files_created : {str(good_yaml_set_and_template)} \n')
-        print(f'test_only_enabled_files_created : {str(good_toml_set_and_template)} \n')
+        # print(f'test_only_enabled_files_created : {str(good_yaml_set_and_template)} \n')
+        # print(f'test_only_enabled_files_created : {str(good_toml_set_and_template)} \n')
 
         good_yaml_set_and_template.generate_all_icons(False)
         good_toml_set_and_template.generate_all_icons(False)
 
-        enabled_entries = ['Xsimpli_country_france.desktop', 'Xsimpli_mountain_everest.desktop',
-                           'Xsimpli_mountain_mount-blanc.desktop']
+        orig_entries = ['simpli_country_france.desktop', 'simpli_mountain_everest.desktop',
+                           'simpli_mountain_mount-blanc.desktop']
+        def add_prefix(nam):
+            prefix = '' # 'X'
+            return prefix + nam
+
+        enabled_entries = map(add_prefix, orig_entries)
+        # enabled_entries = ['Xsimpli_country_france.desktop', 'Xsimpli_mountain_everest.desktop',
+        #                    'Xsimpli_mountain_mount-blanc.desktop']
 
         list_of_wanted_yaml_files = list(map(lambda x: os.path.join(destdir_yaml, x), enabled_entries))
         for i in list_of_wanted_yaml_files:
+            print(f'Checking yaml == {i}')
             assert os.path.isfile(i) is True
 
         list_of_wanted_toml_files = list(map(lambda x: os.path.join(destdir_toml, x), enabled_entries))
         for i in list_of_wanted_toml_files:
             assert os.path.isfile(i) is True
 
-        # check that files in yaml and toml dest folders are the same
+        # check that files in yaml and toml dest folders have the same contents
         for file in enabled_entries:
             #(matching, mismatching, errs) = filecmp.cmpfiles(destdir_yaml, destdir_toml, file) is True
             yaml_file = os.path.join(destdir_yaml, file)
             toml_file = os.path.join(destdir_toml, file)
             assert filecmp.cmp(yaml_file, toml_file) is True
-
 
         disabled_entries = ['simpli_country_the_netherlands.desktop']
 
@@ -451,138 +566,66 @@ class TestIconSet:
 
         #assert False
 
-    def test_dump_config_to_file(self):
-        '''
-        Checks whether the dumped data file representing the icon-set matches what
-        is used when loading.
-        Note: because there are multiple representations of the same data, and the
-        input file is not necessarily canonical, then rather than check the text in
-        the file, it is better to check the dictionary/structure that is obtained when loaded.
-        If at some point we may be able to specify the layout of data (say using pydantic)
-        then we may be able revert to file comparision.
-        '''
-
-        def calculate_md5(file_path):
-            hasher = hashlib.md5()
-            with open(file_path, 'rb') as f:
-                for chunk in iter(lambda: f.read(4096), b''):
-                    hasher.update(chunk)
-            return hasher.hexdigest()
-
-        def compare_struct_from_yaml_file(fileA, fileB):
-            # see https://miguendes.me/the-best-way-to-compare-two-dictionaries-in-python
-            # use dictdiffer (as deepdiff encountered error)
-            # https://dictdiffer.readthedocs.io/en/latest/
-            resp = True
-            print(f'Comparing \n\t"{fileA}" and \n\t"{fileB}"\n')
-            with open(fileA, 'r') as f:
-                dataA = yaml.load(f, Loader=yaml.SafeLoader)
-            with open(fileB, 'r') as f:
-                dataB = yaml.load(f, Loader=yaml.SafeLoader)
-
-            # bodge dataB for testing purposes
-            if False:
-                dataB['common']['extra_common_value'] = 'unwanted_common_value'
-                # entries = dataB['entries']['extra_common_value'] = 'unwanted_common_value'
-                # entries.append({'unwanted_entry_key': 'unwanted_entry_value'})
-
-            result = diff(dataA, dataB)
-            list_info = list(result)
-            print(f'Comparison >>{list_info}<<')
-            assert list_info == []
-            return resp
-
-        tmpdir = create_test_folder()
-
-        wkg_set = IconSet(FULL_GOOD_TEMPLATE_PATH, FULL_TEST_ICON_YAML_SET, tmpdir)
-        dump_file = tmpdir + '/' + 'dumped.txt'
-        assert os.path.isfile(FULL_TEST_ICON_YAML_SET) == True
-        assert os.path.isfile(dump_file) == False # ensure file doe snot exist
-
-        dump_success = wkg_set.dump_config_to_yaml_file(dump_file)
-        assert dump_success == True
-
-        #compare two files
-        assert os.path.isfile(dump_file) == True # ensure file now exists
-        #assert calculate_md5(FULL_TEST_ICON_YAML_SET) == calculate_md5(dump_file)
-
-        # compare structures obtained when loading the files
-        assert compare_struct_from_yaml_file(FULL_TEST_ICON_YAML_SET, dump_file) == True
-
-        #assert False
-
-
-
-# @pytest.mark.skip # @pytest.mark.iconnode
-# class TestIconNode:
-#
-#     def test_get_node_name(self):
-#         node1 = IconNode('first', 'fruit', {})
-#         assert node1.get_node_name() == 'first'
-#
-#     def test_get_get_child_type(self):
-#         node2 = IconNode('first', 'fish', {})
-#         assert node2.get_child_type() == 'fish'
-#
-#     def test_get_list_attribute_names(self):
-#         node3 =IconNode('animals', 'fish', {'eggs': 'brown', 'dogs': '0', 'cats': 42})
-#         assert node3.get_list_attribute_names() == ['cats', 'dogs', 'eggs']
-#
-#     def test_get_attribute_value(self):
-#         node4 = IconNode('animals', 'fish', {'eggs': 'brown', 'dogs': '0', 'cats': 42})
-#         assert node4.get_attribute_value('cats') == 42
-#         assert node4.get_attribute_value('eggs') == 'brown'
-#         assert node4.get_attribute_value('trees') == None
-#
-#     def test_get_count_of_children(self):
-#         node5 = IconNode('first', 'fruit', {})
-#         assert node5.get_count_of_children() == 0
-#         node5 = IconNode('animals', 'fish', {'eggs': 'brown', 'dogs': '0', 'cats': 42})
-#         assert node5.get_count_of_children() == 0
-#
-#     def test_add_child(self):
-#         nodeA = IconNode('first', 'fruit', {})
-#         assert nodeA.add_child('notfruit', 'key_pqr', 'value_pqr') == False
-#         assert nodeA.add_child('fruit', 'key_pqr', 'value_pqr') == True
-#
-#
-#     def test_get_list_of_children_names(self):
-#         node7 = node5 = IconNode('root', 'category', {})
-#         assert node7.get_list_of_children_names() == []
-#         node7.add_child('category', 'key_pqr', 'value_pqr')
-#         assert node7.get_list_of_children_names() == ['key_pqr']
-#
-#         node7.add_child('category', 'key_new', 'value_new')
-#         assert node7.get_list_of_children_names() == ['key_new', 'key_pqr']
-#
-#         node7.add_child('category', 'key_alpha', 'value_alpha')
-#         assert node7.get_list_of_children_names() == ['key_alpha', 'key_new', 'key_pqr']
-#
-#     def test_get_child_of_given_name(self):
-#         node8 = IconNode('animals', 'fish', {'eggs': 'brown', 'dogs': '0', 'cats': 42})
-#         assert node8.get_child_of_given_name('fred') == None
-#         node8.add_child('fish', 'key_alpha', 'value_alpha')
-#         node8.add_child('fish', 'key_new', 'value_new')
-#         assert node8.get_child_of_given_name('key_new') == 'value_new'
-#         #node8.print()
-#
-#     def test_integration(self):
-#         nodeC = IconNode('root', 'categories', {'cat_att1': 'at1_val', 'cat_att2': 'att2val', 'catatt3': 42})
-#         #nodeC.print()
-#
-#         mountain_everest = IconNode('everest', None, {'height': 9999, 'conquered_by': 'Mallory', 'country': 'Tibet'})
-#         mountain_mtblanc = IconNode('Mt Blanc', None, {'height': 123, 'conquered_by': 'Unknown', 'country': 'France'})
-#
-#         mountains = IconNode('mountain_info', 'mountain', {'madeOf': 'rock', 'activity': 'climbable'})
-#         assert mountains.add_child('mountain', 'everest', mountain_everest) == True
-#         assert mountains.add_child('mountain', 'Mt Blanc', mountain_mtblanc) == True
-#
-#         root_node = IconNode('root_info', 'mountains', {'vlcPath': '/abc/def', 'description': 'Media playing tool'})
-#         assert root_node.add_child('mountains', 'mountaininfo', mountains) == True
-#         root_node.print_node()
-#         root_node.print_full_node()
-
-
+    # def test_dump_config_to_file(self):
+    #     '''
+    #     Checks whether the dumped data file representing the icon-set matches what
+    #     is used when loading.
+    #     Note: because there are multiple representations of the same data, and the
+    #     input file is not necessarily canonical, then rather than check the text in
+    #     the file, it is better to check the dictionary/structure that is obtained when loaded.
+    #     If at some point we may be able to specify the layout of data (say using pydantic)
+    #     then we may be able revert to file comparision.
+    #     '''
+    #
+    #     def calculate_md5(file_path):
+    #         hasher = hashlib.md5()
+    #         with open(file_path, 'rb') as f:
+    #             for chunk in iter(lambda: f.read(4096), b''):
+    #                 hasher.update(chunk)
+    #         return hasher.hexdigest()
+    #
+    #     def compare_struct_from_yaml_file(fileA, fileB):
+    #         # see https://miguendes.me/the-best-way-to-compare-two-dictionaries-in-python
+    #         # use dictdiffer (as deepdiff encountered error)
+    #         # https://dictdiffer.readthedocs.io/en/latest/
+    #         resp = True
+    #         print(f'Comparing \n\t"{fileA}" and \n\t"{fileB}"\n')
+    #         with open(fileA, 'r') as f:
+    #             dataA = yaml.load(f, Loader=yaml.SafeLoader)
+    #         with open(fileB, 'r') as f:
+    #             dataB = yaml.load(f, Loader=yaml.SafeLoader)
+    #
+    #         # bodge dataB for testing purposes
+    #         if False:
+    #             dataB['common']['extra_common_value'] = 'unwanted_common_value'
+    #             # entries = dataB['entries']['extra_common_value'] = 'unwanted_common_value'
+    #             # entries.append({'unwanted_entry_key': 'unwanted_entry_value'})
+    #
+    #         result = diff(dataA, dataB)
+    #         list_info = list(result)
+    #         print(f'Comparison >>{list_info}<<')
+    #         assert list_info == []
+    #         return resp
+    #
+    #     tmpdir = create_test_folder()
+    #
+    #     wkg_set = IconSet(FULL_GOOD_TEMPLATE_PATH, FULL_TEST_ICON_YAML_SET, tmpdir)
+    #     dump_file = tmpdir + '/' + 'dumped.txt'
+    #     assert os.path.isfile(FULL_TEST_ICON_YAML_SET) == True
+    #     assert os.path.isfile(dump_file) == False # ensure file does not exist
+    #
+    #     dump_success = wkg_set.dump_config_to_yaml_file(dump_file)
+    #     assert dump_success == True
+    #
+    #     #compare two files
+    #     assert os.path.isfile(dump_file) == True # ensure file now exists
+    #     print(f'Dump TOML file: {}')
+    #     #assert calculate_md5(FULL_TEST_ICON_YAML_SET) == calculate_md5(dump_file)
+    #
+    #     # compare structures obtained when loading the files
+    #     assert compare_struct_from_yaml_file(FULL_TEST_ICON_YAML_SET, dump_file) == True
+    #
+    #     #assert False
 
 
 @pytest.mark.deskentrystruct

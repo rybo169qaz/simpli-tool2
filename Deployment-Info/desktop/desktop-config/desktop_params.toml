@@ -1,0 +1,70 @@
+# This is a toml document
+
+title = "Config data for real desktop icons"
+
+[common]
+desktop_categories = "AudioVideo;Player"
+desktop_kde_protocols = "ftp,http,https,mms,rtmp,rtsp,sftp,smb"
+desktop_keywords = "Player;Capture;DVD;Audio;Video;Server;Broadcast;"
+
+
+[entries]
+
+[entries.zoom_general]
+enabled = "true"
+icon = ".simpli/config/zoom"
+description = "General"
+tool_command = ".local/bin/simpli-zoom"
+command_args = "general"
+comment = "Zoom - general"
+
+[entries.zoom_cov_west]
+enabled = "true"
+icon = ".simpli/config/zoom"
+description = "Cov West (main)"
+tool_command = ".local/bin/simpli-zoom"
+command_args = "west"
+comment = "Zoom - West main"
+
+
+[entries.zoom_cov_grosv]
+enabled = "true"
+icon = ".simpli/config/zoom"
+description = "Grosv Rd (main)"
+tool_command = ".local/bin/simpli-zoom"
+command_args = "grosv"
+comment = "Zoom - grosv main"
+
+[entries.coventry_east_sunday_cil-zoom]
+enabled = "true"
+icon = ".simpli/config/firefox_mozilla_browser_icon_128px"
+description = "Cov East Sunday Zoom - browser"
+tool_command = "/usr/bin/firefox"
+command_args = "cilmeet-me.zoom.us/j/97134544582?pwd=MEJvZlkxbGdWaHhGUmhFS0J5WThxZz09"
+comment = "Youtube - Cov East main"
+
+[entries.vlc_autumn_1]
+enabled = "true"
+icon = ".simpli/config/VLC_icon" # "VLC_icon"
+description = "Autumn video"
+tool_command = "/usr/bin/vlc"
+command_args = "--loop /home/robert/.simpli/media/Autumn.mp4"
+comment = "VLC - Autumn video - local"
+
+
+[entries.vlc_CDVideo_The-Bible-God-And-Creation]
+enabled = "false"
+icon = ".simpli/config/CDVideo_R-CV-LOGO-BC-AC@2x-150x150"
+description = "CDV(v): Bible God and Creation"
+tool_command = "/usr/bin/vlc"
+command_args = "http://www.youtube.com/watch?v=lbA5FWftfao"
+comment = "VLC - CDVideo - Bible God and Creation"
+
+
+[entries.browser_CDVideo_The-Bible-God-And-Creation]
+enabled = "false"
+icon = ".simpli/config/CDVideo_R-CV-LOGO-BC-AC@2x-150x150" # "VLC_icon"
+description = "CDV: Bible God and Creation"
+tool_command = "/usr/bin/firefox"
+command_args = "christadelphianvideo.org/studyvideo/the-bible-god-and-creation/"
+comment = "Youtube - CDVideo - Bible God and Creation"

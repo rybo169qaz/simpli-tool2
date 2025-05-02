@@ -210,6 +210,7 @@ def add_user_home_if_relative(the_user, the_path):
         full_path = '/home/' + the_user + '/' + the_path
     return full_path
 
+
 def derive_desktop_category(global_data, category_data, icon_base_dir, template_desktop_file, populate_specials,
                             desktop_env):
     common_data = dict()
@@ -306,6 +307,19 @@ class IconText:
         self.template_text = template_text
         self.args_to_replace = args_to_replace
 
+        self.common_dict = dict()
+        self.common_dict.update({"user": "robert"})
+        self.common_dict.update({"client_hostname": platform.node()})
+        self.args_to_replace.update(self.common_dict)
+        self._expand_paths()
+
+    def _expand_paths(self):
+        keys_to_modify = ['tool_command', 'icon']
+        for item_key in keys_to_modify:
+            if item_key in self.args_to_replace:
+                self.args_to_replace[item_key] = add_user_home_if_relative(self.common_dict['user'],
+                                                                                 self.args_to_replace[item_key])
+
     def __str__(self):
         print(f'vvvv Template text vvvv\n{self.template_text}\n^^^^\n')
         pp = pprint.PrettyPrinter(indent=4)
@@ -372,7 +386,7 @@ class DeskEntryCreator:
     """
     default_template_text = """
     [Desktop Entry]
-    Version=1.0
+    Version=1.0 xyz
     Name={{ description }}
     GenericName=Generic {{ description }}
     Comment=Comment {{ description }}
@@ -472,7 +486,8 @@ class DeskIcon:
         self.dest_dir = base_dir
         self.template_file = template_file
         self.provided_args = provided_args # dictionary
-        self.FILE_PREFIX = 'X' + SIMPLI_PREFIX
+        self.extra_prefix = '' # 'X'
+        self.FILE_PREFIX = self.extra_prefix + SIMPLI_PREFIX
         self.is_valid = False
         self._validate_args()
 
@@ -496,7 +511,6 @@ class DeskIcon:
         if len(entryname) == 0:
             raise ValueError('Entry name is zero length')
 
-        #self.paths_are_valid()
 
     def dest_dir_is_valid(self):
         if os.path.isdir(self.dest_dir):
@@ -516,8 +530,6 @@ class DeskIcon:
         else:
             return False
 
-    # def valid(self):
-    #     return self.is_valid
 
     def get_filename(self):
         """The full filename of the desktop file that would be created."""
@@ -561,6 +573,7 @@ class DeskIcon:
                 template_string = file.read()
             text_content = IconText(template_string, self.provided_args).gen_icon_text()
             if text_content is None:
+                print(f'TemplateFile=={self.template_file}')
                 resp = IconCreationStatus.FAILURETOPROCESSTEMPLATE
             else:
                 filename = self.get_filename()
@@ -584,7 +597,8 @@ class DeskIcon:
         return resp
 
     def generate_trusted_desktop_file(self):
-        self.generate_desktop_file(make_trusted=True)
+        resp = self.generate_desktop_file(make_trusted=True)
+        return resp
 
 
 
@@ -649,7 +663,7 @@ class IconSet:
             self.toml_entries = self.the_dict.get('entries')
             if self.toml_entries is None:
                 self._dump_structure()
-                sys.exit('Structure is missing the "toml_entries" section in the icon file.')
+                sys.exit(f'Structure is missing the "toml_entries" section in the icon file ({toml_set_file}).')
             # we should check that for each there are the two entries : "entry" and "enabled"
 
     def _validate_yaml(self, yaml_set_file):
@@ -663,7 +677,7 @@ class IconSet:
             self.entries = self.the_dict.get('entries')
             if self.entries is None:
                 self._dump_structure()
-                sys.exit('Structure is missing the "entries" section in the icon file.')
+                sys.exit(f'Structure is missing the "entries" section in the icon file ({yaml_set_file}).')
             # we should check that for each there are the two entries : "entry" and "enabled"
 
     def _dump_specific_struct(self, my_struct, header):
@@ -824,31 +838,43 @@ class IconSet:
             #     print(f"Exception Name: {type(exception).__name__}")
             #     print(f"Exception Desc: {exception}")
 
-    def dump_config_to_yaml_file(self, dump_name):
-        is_successful = False
-        thedict = dict({})
-        thedict['common'] = self.common
-        thedict['entries'] = self.entries
-        yaml_string = yaml.dump(thedict)
-
-        if os.path.isfile(dump_name):
-            return False # file must NOT exist
-        file = open(dump_name, "w")
-        yaml.dump(thedict, file)
-        file.close()
-
-        if os.path.isfile(dump_name):
-            return True # file must exist
-        else:
-            return False
-
-    def dump_config_to_toml_file(self, dump_toml_name):
-        pass
+    # def dump_config_to_yaml_file(self, dump_name):
+    #     is_successful = False
+    #     thedict = dict({})
+    #     thedict['common'] = self.common
+    #     thedict['entries'] = self.entries
+    #     yaml_string = yaml.dump(thedict)
+    #
+    #     if os.path.isfile(dump_name):
+    #         return False # file must NOT exist
+    #     file = open(dump_name, "w")
+    #     yaml.dump(thedict, file)
+    #     file.close()
+    #
+    #     if os.path.isfile(dump_name):
+    #         return True # file must exist
+    #     else:
+    #         return False
+    #
+    # def dump_config_to_toml_file(self, dump_toml_name):
+    #     pass
 
 
 
 
 def derive_all_desktops(template_file, yaml_source_data, base_dir_for_icons, type_of_desktop):
+
+    fname = 'derive_all_desktops'
+    def show_invocation_args(tfile, srcy, dest_base_dir, tdesk):
+        print(f'{fname}: ')
+        print(f'\tTemplate= {tfile}')
+        print(f'\tSourceData= {srcy}')
+        print(f'\tDestBaseDir= {dest_base_dir}')
+        print(f'\tDesktopType= {tdesk}')
+        print('')
+
+    show_invocation_args(template_file, yaml_source_data, base_dir_for_icons, type_of_desktop)
+    #return None
 
     with open(yaml_source_data) as stream:
         try:
@@ -878,6 +904,20 @@ def derive_all_desktops(template_file, yaml_source_data, base_dir_for_icons, typ
 
 def new_create_icons():
     print(f'')
+
+
+def legacy_invoke(template_file, config_file, desktop_dir):
+
+    host_name = 'dev'
+    if host_name != 'dev':
+        myhome = '/home/simpli'
+        simpli_config_dir = os.path.join(myhome, '.simpli/config')
+        template_file =  os.path.join(simpli_config_dir, 'template.desktop')
+        config_file = os.path.join(simpli_config_dir, 'desktop_known.yml')
+        desktop_dir = os.path.join(myhome, 'xDesktop')
+
+    derive_all_desktops(template_file, config_file, desktop_dir, 'xfce')
+
 
 def create_desktop_icon_main():
     tool_name = os.path.basename(sys.argv[0])
@@ -947,4 +987,8 @@ def create_desktop_icon_main():
 
 
 if __name__ == "__main__":
-    create_desktop_icon_main()
+    newmode = True
+    if newmode:
+        legacy_invoke()
+    else:
+        create_desktop_icon_main()
