@@ -8,11 +8,11 @@ import json
 import os.path
 import platform
 import pprint
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 import time
 import tomli as tomllib
 
-import psutil
+#import psutil
 #import re
 import sys
 import yaml
@@ -39,6 +39,13 @@ class Optype(Enum):
     DEBUG = 1
     INFO = 2
     ERROR = 3
+
+
+class InvocationMode(Enum):
+    ORIGINAL = 1
+    LEGACYSIM = 2
+    NEW = 3
+
 
 def renderop(the_string, output_type=Optype.INFO):
     global debug_mode
@@ -85,16 +92,6 @@ def silentremove(filename):
             raise # re-raise exception if a different error occurred
 
 
-def get_mac():
-    my_mac = None
-    for interface in psutil.net_if_addrs():
-        # Check if the interface has a valid MAC address
-        if psutil.net_if_addrs()[interface][0].address:
-            # Print the MAC address for the interface
-            my_mac = psutil.net_if_addrs()[interface][0].address
-            print(f'MAC {my_mac}')
-            break
-    return my_mac
 
 # def get_network_physical_address(netInterfaceName):
 #   nics = psutil.net_if_addrs()
@@ -902,8 +899,24 @@ def derive_all_desktops(template_file, yaml_source_data, base_dir_for_icons, typ
     derive_desktop_category(common_dict, category_data['terminal'], base_dir_for_icons, template, True, type_of_desktop)
 
 
-def new_create_icons():
-    print(f'')
+def new_create_icons(template_file, config_file, desktop_dir):
+    print(f'USING IconSet')
+    iconset = IconSet(template_file, config_file, desktop_dir)
+    print('IconSet details:\n{0}\n'.format(str(iconset)))
+    print('Current Working Dir:\n{0}\n'.format(os.getcwd()))
+
+
+    # Check files are present
+    if iconset.is_valid_set():
+        print(f'Valid files given')
+    else:
+        print(f'Invalid files specified')
+        exit_msg(25, 'Invalid fies pecified')
+
+
+    list_files_to_create = iconset.list_fullpath_icons_to_create()
+    string_of_files = '\n\t'.join(list_files_to_create)
+    print(f'List of files to create: \n{string_of_files}\n')
 
 
 def legacy_invoke(template_file, config_file, desktop_dir):
@@ -988,7 +1001,21 @@ def create_desktop_icon_main():
 
 if __name__ == "__main__":
     newmode = True
-    if newmode:
-        legacy_invoke()
-    else:
+    #the_mode = InvocationMode.ORIGINAL
+    #the_mode = InvocationMode.LEGACYSIM
+    the_mode = InvocationMode.NEW
+
+    template = 'template.desktop'
+    config = 'desktop_known.yml'
+    dest = '/home/robertryan/zDesktop'
+
+    if the_mode == InvocationMode.LEGACYSIM:
+        legacy_invoke(template, config, dest)
+    elif the_mode == InvocationMode.ORIGINAL:
         create_desktop_icon_main()
+    elif the_mode == InvocationMode.NEW:
+        new_create_icons(template, config, dest)
+    else:
+        exit_msg(23, 'invalid invocation mode')
+
+

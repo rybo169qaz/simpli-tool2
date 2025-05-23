@@ -1,0 +1,22 @@
+#!/bin/bash
+
+BASE_DIR='.'
+DESKTOP_CONFIG_DIR="desktop/desktop-config"
+UTIL_DIR="utils"
+
+printf "PYINSTALLER PATH:"
+type pyinstaller
+printf "END PYINSTALLER PATH"
+
+pyinstaller -n dir-util-pkg --onedir --log-level INFO \
+	--noconfirm \
+	--debug=imports \
+	--hidden-import pydantic \
+	--add-data="${DESKTOP_CONFIG_DIR}/template.desktop:." \
+	--add-data="${DESKTOP_CONFIG_DIR}/desktop_known.yml:." \
+	--add-data="${DESKTOP_CONFIG_DIR}/desktop_params.toml:." \
+	--paths=${BASE_DIR} \
+	${UTIL_DIR}/create_desktop_icons.py
+
+#--hidden-import psutil \
+# --debug=imports \

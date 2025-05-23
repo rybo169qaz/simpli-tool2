@@ -5,6 +5,20 @@ This contains instructions for preparing the target platforms to run the simplip
 
 Installing Ansible
 
+## Preparing the node
+- Prepare memory stick with Linux Mint 654 bit xfce
+- Insert memory stick into USB port on node
+- Boot device
+- Specify user as follows
+    - User: **Simpliface**
+    - username **simp**
+    - password **p**
+    - 
+- Specify machine name as 
+    - machine name: e.g. **fut-b-s720** for a Fujitsi Futuro S720
+- Specify logon automatically
+
+
 ## Getting Ansible
 
 ### Startup steps

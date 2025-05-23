@@ -57,11 +57,18 @@
         - python3-psutil
         - python3-jinja2
         - python3-passlib
+        - python3-pydantic
+        - python3-tomli
 
     - name: 5. Install python package
       ansible.builtin.pip:
         name: jinja2
       when: 1>2
+
+    - name: 5b. Install python package
+      community.general.pipx:
+        name: enum
+      when: 1>0
 
     - name: 6. Install sound related packages # require reboot
       apt:

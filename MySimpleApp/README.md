@@ -2,11 +2,12 @@
 SimpliPlay package
 
 ## History
-- 3rd May : I have create a docker containert allow running of the tool for TEXT ONLY
+- 3rd May 2024 : I have create a docker container to allow running of the tool for TEXT ONLY
 
-- pre 3rd May : This provides the means to create a standalone python package (for linux or Windows)
+- pre 3rd May 2024 : This provides the means to create a standalone python package (for linux or Windows)
 
 ## Overview
+
 
 ### Update Python interpeter to correct version
 

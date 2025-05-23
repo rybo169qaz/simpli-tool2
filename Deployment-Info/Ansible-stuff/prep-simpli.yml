@@ -39,6 +39,7 @@
         - utils
         - packages
         - logs
+        - fish
       tags: copy
 
     - name: 3B. create home dir sub folders
