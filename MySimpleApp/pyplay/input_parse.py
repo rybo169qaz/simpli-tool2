@@ -1,4 +1,4 @@
-from beaker.cache import clsmap
+#from beaker.cache import clsmap
 from my_enums import *
 from report import exit_with_message
 

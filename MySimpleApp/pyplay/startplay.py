@@ -1,7 +1,7 @@
 import sys
 import inspect
 
-from sqlobject.converters import ClassType
+#from sqlobject.converters import ClassType
 
 #from MySimpleApp.pyplay.pytest_unittests.test_input_parse import TestXInputParser
 from av_player import *
@@ -19,6 +19,8 @@ from environ import Environ
 
 #import input_parse
 from input_parse import *
+from repl2 import replloop
+from loguru import logger
 
 
 required_version = (3,10)
@@ -58,6 +60,7 @@ def show_passed_args(the_args):
     mod_mess(__name__, f"player == {the_args.player}")
     mod_mess(__name__, f"Repeat interval == {the_args.repeat}")
     mod_mess(__name__, f"Action == {the_args.action}")
+    mod_mess(__name__, f"CLIargs == {the_args.cliargs}")
     mod_mess(__name__, f"\n")
 
 
@@ -203,9 +206,13 @@ def main():
                         default=5,
                         help='Repeat interval. 0 == no repeat; positive values are delay in seconds\n')
 
-    parser.add_argument("action", type=str, choices=['listw', 'listl', 'repl', 'help', 'unit'],
+    parser.add_argument("action", type=str, choices=['listw', 'listl', 'repl', 'repl2', 'help', 'unit'],
                         default = 'repl',
                         help='The action')
+
+    parser.add_argument('-c', '--cliargs', required=False, type=str,
+                        default="",
+                        help='CLI args to pas to the REPL\n')
 
     args = parser.parse_args(args=action_cmnd)
     show_passed_args(args)
@@ -287,6 +294,12 @@ def main():
         repl_obj = Repl(welldb, player_obj, stor_obj, repeat=True, interval=3, verbose=True, dummy=False)
         repl_obj.repl_loop(initial_cmd=args_to_pass)
         exit_with_message(f'Command completed (qr)', 0)
+
+    elif the_action == 'repl2':
+        logger.debug(f'ACTIONING repl2. The passed string is "{args.cliargs}"')
+        #print(f'DOING repl2. The passed string is "{args.cliargs}"')
+        replloop(args.cliargs)
+
 
     exit(0)
 
