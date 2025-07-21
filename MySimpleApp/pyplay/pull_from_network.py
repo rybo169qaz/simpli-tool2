@@ -57,11 +57,6 @@ class PullFromNetwork:
     '''
 
     def __init__(self, src_url, dest_dir):
-        #def __init__(self, yt_obj: YouTubeDownloadObj) :
-            # self.ytube_obj = copy.deepcopy(yt_obj)
-            # self.src_url = yt_obj.src_url #src_url
-            # self.dest_dir = yt_obj.dest_dir #dest_dir
-
         self.src_url = src_url
         self.dest_dir = dest_dir
 
@@ -167,7 +162,6 @@ class PullFromNetwork:
             self.get_required(True)
         return False if self.get_file_path() is None else True
 
-
     def get_filename(self):
         '''
         the filename within the directory
@@ -214,40 +208,6 @@ class PullFromNetwork:
             self.get_required(False)
         return False if self.refined_meta is None else True
 
-    # def pull_media(self):
-    #     '''
-    #     Download the specified media
-    #     :return:
-    #     True if the file has been downloaded
-    #     False if it is currently not downloaded (also if non-existant on internet)
-    #     '''
-    #     mycwd = os.getcwd()
-    #     print(f'CWD=={mycwd}')
-    #     full_url = self.src_url # YOUTUBE_PREFIX + self.src_url
-    #     print(f'Attempting to download: Youtube={self.src_url} ; Full URL== {full_url}')
-    #
-    #     paths_arg = {'paths': 'home'}
-    #     output_arg = "%(title)s.%(ext)s"
-    #
-    #     yt_opts = dict({})
-    #     yt_opts['output'] = output_arg
-    #     yt_opts['restrict-filenames'] = True
-    #
-    #     ydl = YoutubeDL(yt_opts)
-    #     url_list = [full_url]
-    #     try:
-    #         yresp = ydl.download(url_list)
-    #         self.downloaded = True
-    #         print(f'Finished download of {url_list}')
-    #         resp = True
-    #     except Exception as exc:  # DownloadError
-    #
-    #         print(f"Exception Name2: {type(exc).__name__}")
-    #         print(f"Exception Desc2: {exc}")
-    #         resp = False
-    #
-    #     return resp # (isvalid, is_writing, is_written)
-
     def media_is_local(self):
         '''
         Indicates if copy of media is local
@@ -271,22 +231,8 @@ class PullFromNetwork:
             else:
                 raise FileNotFoundError # we should never find this to be the case
 
-
-def test_dictprint(description: str, url: str, file_handle: str ='xxx'):
-    d = {"name": "shakshi", "age": 21}
-    #print(json.dumps(d, indent=4))
-    #print(json.dumps(d.__dict__, indent=4))
-    #
-
-    pfx = 'simpli_' + file_handle + '_'
-    tempdir = tempfile.TemporaryDirectory(dir="/tmp", prefix=pfx).name
-    print(f'\n\nTEST DICR: {description} (using YouTube URL={url} , destdir={tempdir})')
-    os.mkdir(tempdir, 0o777)  # we create the dest dir
-    pfn1 = PullFromNetwork(url, tempdir)
-    print_headed_dictionary(d, 'testdict')
-    x = pfn1.get_metadata()
-
 def analyse(description: str, url: str, file_handle: str ='xxx'):
+    print(f'\nThe video has the following description: {description}')
     pfx = 'simpli_' + file_handle + '_'
     tempdir = tempfile.TemporaryDirectory(dir="/tmp", prefix=pfx).name
     print(f'\n\nITEM: {description} (using YouTube URL={url} , destdir={tempdir})')
@@ -308,20 +254,20 @@ def analyse(description: str, url: str, file_handle: str ='xxx'):
         play_obj = VlcRawPlay(pfn1.get_file_path())
         play_obj.play_it()
 
-    print(f'\nEND\n\n')
+    print(f'\nEnd of videio {description}\n\n')
 
 def basic_test():
-    TEST_YT_VID11 = TestYouTubeDownloadObj('2PuFyjAs7JA', 'Test Video 11sec', 'JC', 11,
+    TEST_YT_VID11 = TestYouTubeDownloadObj('2PuFyjAs7JA', 'Test Video lasting 11 seconds and which shows different resolutions of video image.', 'JC', 11,
                                                   title='4K 2K 1080p 720p 480p video resolution test')
 
-
-    #test_dictprint(TEST_YT_VID11.friend, TEST_YT_VID11.src)
+    print(f'Perfoming basic test(s)')
     analyse(TEST_YT_VID11.friend, TEST_YT_VID11.src)
 
     #analyse('short 11 second yt video', '2PuFyjAs7JA') # ref_url1 = 'https://www.youtube.com/watch?v=2PuFyjAs7JA'
     #analyse('CDvideo TFTD June 1st', 'https://youtu.be/nK3jQv9iZ_g')
     #analyse('Non-existant', 'https://youtu.be/bc987qwe')
     #analyse('Operation Rising lion', 'https://www.youtube.com/watch?v=5T4rDrOI9DA')
+    print(f'END OF MAIN TESTS')
 
 if __name__ == "__main__":
     basic_test()
