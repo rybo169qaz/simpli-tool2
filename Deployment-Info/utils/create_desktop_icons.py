@@ -1009,6 +1009,9 @@ if __name__ == "__main__":
     config = 'desktop_known.yml'
     dest = '/home/robertryan/zDesktop'
 
+    print(f'DEST dir is : {dest}')
+    exit_msg(0, 'ending while in testing phase')
+
     if the_mode == InvocationMode.LEGACYSIM:
         legacy_invoke(template, config, dest)
     elif the_mode == InvocationMode.ORIGINAL:
