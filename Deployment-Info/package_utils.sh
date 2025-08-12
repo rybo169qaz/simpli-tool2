@@ -62,7 +62,7 @@ else
     exit 0
 
   else
-    printf "Unknown option"
+    printf "Unknown option."
     show_help
     exit 1
   fi
