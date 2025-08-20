@@ -16,7 +16,7 @@ import tomli as tomllib
 #import re
 import sys
 import yaml
-#from pathlib import Path
+from pathlib import Path
 ##from getmac import get_mac_address as gma
 
 from jinja2 import Environment, FileSystemLoader
@@ -561,9 +561,11 @@ class DeskIcon:
         # print('vvvvv')
         # pp.pprint(self.provided_args)
         # print('^^^^')
+        print(f'generate_desktop_file')
         if self.provided_args.get('enabled') != 'true':
             resp = IconCreationStatus.ICONNOTENABLED
         else:
+            print(f'generate_desktop_file')
             # attempt to create file as it is enabled
             #print(f'Template={self.template_file}')
             with open(self.template_file, 'r') as file:
@@ -574,12 +576,13 @@ class DeskIcon:
                 resp = IconCreationStatus.FAILURETOPROCESSTEMPLATE
             else:
                 filename = self.get_filename()
-                #print(f'generate_desktop_file filename={filename}')
+                print(f'generate_desktop_file filename={filename}')
                 try:
                     with open(filename, mode="w", encoding="utf-8") as message:
                         message.write(text_content)
                     renderop(f"... Created {filename}", Optype.DEBUG)
                     os.chmod(filename, 0o755)
+                    print(f'File created filename={filename}')
                     resp = IconCreationStatus.ICONFILECREATED
                     if make_trusted:
                         make_desktop_file_trusted_by_xfce(filename)
@@ -588,8 +591,8 @@ class DeskIcon:
                 except AssertionError as exception:
                     resp = IconCreationStatus.ASSERTERROR
                 except BaseException as exception:
-                    # print(f"Exception Name: {type(exception).__name__}")
-                    # print(f"Exception Desc: {exception}")
+                    print(f"Exception Name: {type(exception).__name__}")
+                    print(f"Exception Desc: {exception}")
                     resp = IconCreationStatus.OTHERERROR
         return resp
 
@@ -807,8 +810,7 @@ class IconSet:
                 iconobj = DeskIcon(self.target_dir, self.template_file, atts)
                 #print(f'IconSet::generate_all_icons : {str(iconobj)} \n')
                 if not fake_it:
-                    iconobj.generate_desktop_file()
-                    print(f'TRYING TO GNERATE DESKTOP FILE')
+                    respy = iconobj.generate_desktop_file()
             except ValueError as exception:
                 desc = str(exception)
                 inval_entry = (desc, atts)
@@ -817,7 +819,8 @@ class IconSet:
 
         bad_entries = len(invalid_entries)
         renderop(f'IconSet::generate_all_icons:', Optype.INFO)
-        renderop(f'\tNumber of entries that failed={bad_entries}', Optype.INFO)
+        if bad_entries != 0:
+            renderop(f'\tNumber of entries that failed={bad_entries}', Optype.INFO)
         if bad_entries > 0:
             for item in invalid_entries:
                 descrip, the_struct = item
@@ -872,6 +875,7 @@ def derive_all_desktops(template_file, yaml_source_data, base_dir_for_icons, typ
 
     show_invocation_args(template_file, yaml_source_data, base_dir_for_icons, type_of_desktop)
     #return None
+    #exit_msg(0, 'derive_all_desktops : EXITING')
 
     with open(yaml_source_data) as stream:
         try:
@@ -905,8 +909,8 @@ def new_create_icons(template_file, config_file, desktop_dir):
     print('IconSet details:\n{0}\n'.format(str(iconset)))
     print('Current Working Dir:\n{0}\n'.format(os.getcwd()))
 
-
     # Check files are present
+
     if iconset.is_valid_set():
         print(f'Valid files given')
     else:
@@ -917,6 +921,9 @@ def new_create_icons(template_file, config_file, desktop_dir):
     list_files_to_create = iconset.list_fullpath_icons_to_create()
     string_of_files = '\n\t'.join(list_files_to_create)
     print(f'List of files to create: \n{string_of_files}\n')
+
+    iconset.generate_all_icons(False)
+    print(f'Files generated')
 
 
 def legacy_invoke(template_file, config_file, desktop_dir):
@@ -1005,19 +1012,31 @@ if __name__ == "__main__":
     #the_mode = InvocationMode.LEGACYSIM
     the_mode = InvocationMode.NEW
 
-    template = 'template.desktop'
-    config = 'desktop_known.yml'
-    dest = '/home/robertryan/zDesktop'
+    REPO_ROOT = str(Path.home())
+    DEPLOYMENT_DIR = REPO_ROOT + '/' + 'PROJ3/SIMPLITOOL/GITREPO/Deployment-Info'
+    DESKTOP_CONFIG_DIR = DEPLOYMENT_DIR + '/' +  'desktop/desktop-config/'
 
-    print(f'DEST dir is : {dest}')
-    exit_msg(0, 'ending while in testing phase')
+    template_file = 'template.desktop'
+    config_file = 'desktop_known.yml'
+    config_file = 'desktop_params.toml'
+
+    dest_dir = REPO_ROOT + '/' + 'zdesktop'
+
+    if os.path.isdir(dest_dir) is not True:
+        print(f'Creating fir {dest_dir}')
+        os.mkdir(dest_dir)
+
+    print(f'DEST dir is : {dest_dir}')
+    #exit_msg(0, 'ending while in testing phase')
 
     if the_mode == InvocationMode.LEGACYSIM:
-        legacy_invoke(template, config, dest)
+        legacy_invoke(template_file, config_file, dest_dir)
     elif the_mode == InvocationMode.ORIGINAL:
         create_desktop_icon_main()
     elif the_mode == InvocationMode.NEW:
-        new_create_icons(template, config, dest)
+        full_template_path = DESKTOP_CONFIG_DIR + template_file
+        full_config_path = DESKTOP_CONFIG_DIR + config_file
+        new_create_icons(full_template_path, full_config_path, dest_dir)
     else:
         exit_msg(23, 'invalid invocation mode')
 

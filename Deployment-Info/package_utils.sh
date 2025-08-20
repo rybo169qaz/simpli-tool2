@@ -56,7 +56,7 @@ else
   elif [ $1 == 'CREATE_UTILS_PKGDIR' ]
   then
     # Note that this tool ONLY calls the create_desktop_icons tool
-    source utils/make_util_dir_pkg
+    source package_create_desktop_icons
     printf "BASH: Finished packaging into a dir: dist/dir-package \n"
     printf "BASH: Execute dist/dir-package/dir-package\n"
     exit 0

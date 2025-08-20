@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# execute in the   Deployment-Info  directory
 BASE_DIR='.'
 DESKTOP_CONFIG_DIR="desktop/desktop-config"
 UTIL_DIR="utils"

@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# execute in the   Deployment-Info  directory
+# creates a DIRECTORY package AND a binary FILE
+BASE_DIR='.'
+UTIL_DIR="utils"
+DEST_DIR='dir-createpng-pkg'  # this is within deployment-Info/dist
+DEST_FILE='create_png_pkg'
+
+printf "PYINSTALLER PATH:"
+type pyinstaller
+printf "END PYINSTALLER PATH"
+
+printf "Create directory"
+pyinstaller -n ${DEST_DIR} --onedir --log-level INFO \
+	--noconfirm \
+	--debug=imports \
+	--paths=${BASE_DIR} \
+	${UTIL_DIR}/create_png_icon.py
+printf "Look in the dist / ${DEST_DIR} subdiectory"
+
+printf "Create file"
+pyinstaller -n ${DEST_FILE} --onefile --log-level INFO \
+	--noconfirm \
+	--debug=imports \
+	--paths=${BASE_DIR} \
+	${UTIL_DIR}/create_png_icon.py
+printf "Use the dist / ${DEST_FILE}"
